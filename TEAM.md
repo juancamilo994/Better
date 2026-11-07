@@ -55,6 +55,10 @@
 
 Full details are in [PRD §9](./PRD.md#9-system-architecture-v1).
 
+> **MVP (decided 2026-11-07): everything runs locally on one machine.** The harness is a local, loopback-only service (`harness/README.md`, default `http://127.0.0.1:3000`) and is the **source of truth** for projects, runs, comparisons and handoffs (SQLite + disk). The web app (Next.js, port **3001**) calls the harness's `/api` from its server routes. Calls are synchronous: one capture at a time, and the result returns when done. **Supabase, Vercel hosting, Realtime progress and C2–C5 below are deferred to post-MVP.** C1 (rubric) still applies, made flexible (see §5 C1 note).
+
+Target architecture (post-MVP):
+
 1. **Web app** (Next.js on Vercel) creates projects and evaluations in **Supabase** and calls the **Harness** over HTTPS.
 2. **Harness** (a separate, long-running service) loads the URL in a headless browser, captures evidence, scores it against the **rubric**, generates recommendations with declarative patches, and renders before/after previews. It writes status and results to Supabase and uploads images to Supabase Storage.
 3. **Web app** subscribes to Supabase Realtime for progress and results, renders Views 1–5 and assembles the final prompt.
@@ -68,15 +72,20 @@ Full details are in [PRD §9](./PRD.md#9-system-architecture-v1).
 |---|---|---|
 | No auth, no profiles in V1 | **Locked** | — |
 | One URL (single page) per project | **Locked** | — |
-| Live previews: **hybrid**: real patches in headless browser + Illustrative fallback | **Locked** | — |
+| Live previews: approach **owned by Paul**. Juan proposes hybrid (real patches in headless browser + Illustrative fallback); Paul decides hybrid / illustrative-only / tutorial-only | **Delegated**: awaiting Paul (see §12.1) | Paul |
 | Patches are **declarative** (CSS + whitelisted DOM ops), no arbitrary JS | **Proposed**: Paul to confirm | Paul |
-| Persistence: **Supabase** (Postgres + Storage + Realtime) | **Locked** | Juan |
-| Web: Next.js (App Router) + TS + Tailwind + Framer Motion, on Vercel | **Locked** | Juan |
-| Harness language, runtime, hosting | **Delegated** | Paul |
-| LLM provider(s) and models | **Delegated** | Paul |
-| Scale, anchors, weights, overall formula | **Delegated** (placeholder: 1–4 ordinal) | Elle |
-| Async pattern: harness writes status/results to Supabase; web subscribes | **Proposed**: Paul to confirm | Paul + Juan |
-| Previews rendered eagerly after scoring (not only on click) | **Proposed**: Paul to confirm | Paul |
+| **MVP runs locally** on one machine; harness `/api` + SQLite is the source of truth | **Locked** (2026-11-07) | Paul + Juan |
+| Persistence: **Supabase** (Postgres + Storage + Realtime) | **Deferred** to post-MVP | Juan |
+| Web: Next.js (App Router) + TS + Tailwind + Framer Motion. Local for MVP (port 3001); Vercel post-MVP | **Locked** | Juan |
+| Harness: Node 24 + TS + Playwright + Express, local, loopback-only | **Decided** by Paul | Paul |
+| LLM provider(s) and models: SubQ `subq-snap-1.1` today; **paid models are approved**, provider choice is Paul's | **Delegated** | Paul |
+| **Overall score = sum of the axis scores**, per viewport, computed deterministically (no model tokens). Shown as `score / max` | **Locked** (2026-11-07) | Juan |
+| Generic fix text (pre-written per rubric finding) is acceptable. If a fix appears, the issue was detected on the design | **Locked** (2026-11-07) | — |
+| Fewer than 3 fixes per axis is acceptable | **Locked** (2026-11-07) | — |
+| Rubric lives **in the repo** under `/rubric` (not Google Docs); the harness loads it from there | **Locked** (2026-11-07) | Elle |
+| Scale, anchors, weights | **Delegated** (placeholder: 1–4 ordinal) | Elle |
+| Async pattern: harness writes status/results to Supabase; web subscribes | **Deferred** to post-MVP (synchronous local calls for MVP) | Paul + Juan |
+| Previews rendered eagerly after scoring (not only on click) | **Proposed**: depends on Paul's preview decision | Paul |
 | Git: branches + PRs, folder ownership via CODEOWNERS | **Locked** | — |
 | Max 3 fixes per run: **soft cap** with warning | **Locked** | Juan |
 
@@ -88,6 +97,8 @@ These are the seams where our work meets. **They matter more than any single imp
 The notation below is TypeScript-style for readability only; it does **not** imply the harness must be TS. Once agreed (milestone M1), each contract becomes a JSON Schema in `/contracts/schemas` with fixtures in `/contracts/fixtures`, and that file becomes the source of truth.
 
 Every contract is **versioned** (semver). Breaking changes bump the major version and need sign-off from all affected owners (see §7.4).
+
+> **MVP status (2026-11-07):** for the local MVP, **C2–C5 are superseded by the harness's local `/api`** (documented in `harness/README.md`, types in `harness/src/domain.ts`). They remain the post-MVP target. **C1 stays**, but must be **flexible**: the harness validates only the fields it needs and passes everything else through. Elle can then add UI fields (`shortName`, `icon`, `summary`, `whatMatters`, …) without breaking the harness, and axes and the scale come from the file rather than code. Overall score for MVP = **sum of axis scores** (see §4).
 
 ### C1 — Rubric (`rubric/rubric.json`) · Producer: Elle · Consumers: Paul, Juan
 
@@ -407,7 +418,16 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 | 2026-11-07 | Scale and overall formula delegated to Elle; UI reads them from `rubric.json` | Juan | The rubric owns semantics; the UI stays generic |
 | 2026-11-07 | Branches + PRs, folder ownership via CODEOWNERS | Juan | Clean separation across three parallel workstreams |
 | 2026-11-07 | Direct pushes to `main` allowed during the planning phase only; branches + PRs once development starts | Juan | Fast iteration on alignment docs; protect `main` once code lands |
+| 2026-11-07 | Harness: Node 24 + TS + Playwright + Express, local loopback service, SQLite store, SubQ judge | Paul | Runnable evidence-bound baseline; see `harness/README.md` |
+| 2026-11-07 | **MVP runs locally**: web app calls harness `/api` synchronously; harness is source of truth; Supabase/Vercel/Realtime deferred | Juan | Paul's local harness works today; avoids integration work before the demo |
+| 2026-11-07 | **Overall score = sum of axis scores** (per viewport, deterministic, no tokens) | Juan | Simple, explainable, cheap; supersedes the weighted-normalized proposal |
+| 2026-11-07 | Generic fixes OK; fewer than 3 fixes per axis OK | Juan | A fix only appears if the issue was detected on the design |
+| 2026-11-07 | Live preview approach is Paul's decision (hybrid proposed by Juan) | Juan | Paul owns the harness and its feasibility |
+| 2026-11-07 | Paid models approved; provider choice is Paul's | Juan | Real evaluations on public URLs need a live judge |
+| 2026-11-07 | Rubric source of truth is the repo (`/rubric`), not Google Docs | Juan | Compact, versioned, readable by every agent |
+| 2026-11-07 | Paul's UI ideas (`harness/docs/implementation-plan.md`) are input for the Paper mockup stage, not spec | Juan | UI decisions are made in the mockup stage |
 | 2026-11-07 | Soft cap of 3 fixes per prompt (warning, not block) | Juan | Keeps score changes attributable without frustrating users |
+| 2026-11-07 | Harness-only checkpoint; no actual-site previews, personality mode or video judging | Paul | Explicit user scope; local API and provisional rubric are documented pending shared contracts |
 
 ---
 
@@ -415,14 +435,16 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 
 | ID | Question | Owner | Status |
 |---|---|---|---|
-| Q-P1 | Harness language, runtime and hosting (Railway / Fly / Render / local for demo)? | Paul | Open |
-| Q-P2 | LLM provider(s) and models; single-pass or multi-sample scoring? | Paul | Open |
-| Q-P3 | OK with harness writing directly to Supabase (C5) vs. returning results over HTTP? | Paul | Open |
-| Q-P4 | OK with declarative patches only (no arbitrary JS)? Any ops missing from `DomOp`? | Paul | Open |
-| Q-P5 | Eager preview rendering after scoring: acceptable time and cost for ~24 previews (8 axes × 3)? | Paul | Open |
-| Q-P6 | How will INT (interaction states) be evidenced: interaction probes (hover/focus) or Illustrative only for V1? | Paul + Elle | Open |
-| Q-E1 | Final scale: keep ordinal 1–4? How do criterion scores roll up to an axis score? | Elle | Open |
-| Q-E2 | Overall formula and display max (proposal: weighted sum ÷ weighted max × 100)? | Elle | Open |
+| Q-P1 | Harness language, runtime and hosting (Railway / Fly / Render / local for demo)? | Paul | RESOLVED: Node 24 + TS + Playwright + Express, local only |
+| Q-P2 | LLM provider(s) and models; single-pass or multi-sample scoring? | Paul | ANSWERED: SubQ `subq-snap-1.1`, one attempt per criterion. Paid calls now approved; provider is Paul's call |
+| Q-P3 | OK with harness writing directly to Supabase (C5) vs. returning results over HTTP? | Paul | RESOLVED: local HTTP + SQLite for MVP; Supabase deferred |
+| Q-P4 | OK with declarative patches only (no arbitrary JS)? Any ops missing from `DomOp`? | Paul | Open: depends on preview decision (Q-P7) |
+| Q-P5 | Eager preview rendering after scoring: acceptable time and cost for ~24 previews (8 axes × 3)? | Paul | Open: depends on preview decision (Q-P7) |
+| Q-P6 | How will INT (interaction states) be evidenced: interaction probes (hover/focus) or Illustrative only for V1? | Paul + Elle | ANSWERED: apparent affordances judged from stills; verified behavior/motion abstain without evidence |
+| Q-P7 | Live previews: deferred because tests showed it's harder than expected, or not yet explored? Hybrid vs. illustrative-only vs. tutorial-only? | Paul | Open (see §12.1) |
+| Q-P8 | Local API additions for the UI: `DELETE /api/projects/:id`, latest-run summary in `GET /api/projects`, `overall` per viewport on runs | Paul | Open (see §12.1) |
+| Q-E1 | Final scale: keep ordinal 1–4? How do criterion scores roll up to an axis score? | Elle | Open (Paul's provisional roll-up: lower weighted median) |
+| Q-E2 | Overall formula and display max (proposal: weighted sum ÷ weighted max × 100)? | Elle | RESOLVED by Juan: sum of axis scores, `max` = scale max × number of axes |
 | Q-E3 | The rubric mentions a **"taste channel"**: is that the onboarding swipe data? Is it scored separately, shown separately, or ignored in V1? | Elle + Juan | Open |
 | Q-E4 | Should any axis be excluded from the overall score in V1 (e.g. ADAPT if mobile capture fails)? | Elle | Open |
 | Q-J1 | GitHub handles for Paul and Elle (for CODEOWNERS)? | Juan | RESOLVED: `@laulpogan`, `@elle-mcdougald` |
@@ -434,14 +456,43 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 
 | Owner | Now | Next | Blocked on |
 |---|---|---|---|
-| Juan | PRD.md + TEAM.md (alignment) | Repo skeleton, `/contracts` schemas + fixtures, Paper designs | Feedback from Paul and Elle on §4–§5 |
-| Paul | — | Review §4–§5, answer Q-P1…Q-P6, harness stub | — |
+| Juan | Reviewed Paul's harness (PR #1); MVP decisions logged | Paper designs for Views 1–5, web app scaffold against harness `/api` | Paul's answers on Q-P7, Q-P8 |
+| Paul | Harness checkpoint on `feat/better-evaluation-loop` (draft PR #1) | Q-P7 preview decision, Q-P8 API additions, flexible rubric loading from `/rubric`, overall score | — |
 | Elle | Placeholder rubric drafted | `rubric/rubric.json` v0.1, answer Q-E1…Q-E4 | — |
+
+Paul update, 2026-11-07: local harness and team handoff are in draft PR #1. 28 tests, lint, typecheck, build and built-server Chromium end-to-end verification passed. Next: agree C1–C5 mapping with Juan and Elle. Full rubric scoring needs live SubQ; a composite needs the approved aggregation rule. Supabase and web UI remain unwired.
 
 ---
 
 ## 12. Feedback inbox
 
+### 12.1 Juan → Paul: reply to the harness checkpoint (2026-11-07, also posted on PR #1)
+
+Thanks: the scope discipline, evidence/security work and verification (28 tests + Chromium e2e in `9c72c6b`) are excellent. Points 2 and 5 below unblock the two items you flagged as pending ("a composite needs the approved aggregation rule" and "full rubric scoring needs live SubQ"). Decisions and asks:
+1. **Live before/after previews: your call, but we need your reasoning (Q-P7).** Did you defer them because tests showed they're harder than expected, or because you haven't explored them yet? My view on the hybrid approach: most of the hard work already exists in your harness: Playwright capture, frozen state, and `ElementFact`s with positions.
+   - *Live:* re-open the frozen page, inject scoped CSS plus a few whitelisted DOM ops (`setStyle`, `setText`, `hide`, `move`), screenshot the affected area, and diff the pixels. Above a threshold, mark it **Live**. Otherwise mark it **Illustrative**: the before screenshot plus an annotation box built from facts you already capture.
+   - *Fits SubQ's choice-only answers:* let the judge also *choose the target element* from the element facts (as options) alongside the finding. Each finding then maps to a patch template filled in with that element, e.g. raise the contrast or size of the chosen CTA. No free-text generation is needed.
+   - *Options:* (a) hybrid, (b) illustrative only, (c) tutorial-style only. You own this; please choose and log it in §9.
+2. **The overall score must be present. This is the approved aggregation rule.** Keep it simple: **the sum of the axis scores**, per viewport, computed in code with no model tokens. Suggested shape on each run: `overall: Record<Viewport, { score, max, assessedAxes, totalAxes }>`, with `max` = scale max × number of axes. The UI shows desktop as the headline and mobile alongside it. Unassessed axes stay visible as gaps in the chart.
+3. **Generic fixes are fine**, and fewer than 3 per axis is fine. If a fix appears, the issue was detected on the design.
+4. **Integration: approved: the MVP runs locally with your model.** The web app (Next.js on port 3001) calls your `/api` from its server routes on `127.0.0.1:3000`. Your store is the source of truth; Supabase is deferred to post-MVP. Onboarding maps to your `profile`: `task`/`audience` from the project description, `taste` = liked card labels, `avoid` = passed card labels. Small additions the UI needs (Q-P8): `DELETE /api/projects/:id` (cascade runs and evidence), a latest-run summary in `GET /api/projects` (status, createdAt, overall per viewport), and `overall` on runs (point 2). Synchronous calls with a spinner are fine for MVP.
+5. **Paid models are approved**, so you can enable live SubQ (`BETTER_ALLOW_PAID_CALLS=true`) or switch provider. The provider and model choice is yours.
+6. **The rubric is a flexible system; Elle's final version is still coming.** Please don't hard-code it:
+   - Load it from `/rubric/rubric.json` (path configurable), and derive the axes and their order from the file rather than the `AXES` constant.
+   - Take the scale from the file, with anchors as an array sized to the scale rather than a fixed 4-item list.
+   - Validate only the fields the harness needs (`axes[].id/title`; `criteria[].id/axis/channel/lane/instructions/requires/anchors/weight/findings`) and pass unknown fields through, so Elle can add UI fields (`shortName`, `icon`, `summary`, `whatMatters`) without breaking you.
+   - Keep your per-run snapshot and hash.
+   - Your provisional `config/rubric.json` can be Elle's starting point.
+7. **Elle's work lives in the repo** under `/rubric`, not in the Google Doc. It's more compact, versioned, and easy for every agent to manage. Please point the harness and README there.
+8. **Your UI ideas** in `harness/docs/implementation-plan.md` are welcome. We'll consider them at the Paper mockup stage; until then please treat them as input, not spec.
+
+### 12.2 Inbox
+
 Append feedback addressed to another workstream. Format: `- [YYYY-MM-DD] from → to: message` (and mark `RESOLVED` when addressed).
 
 - [2026-11-07] Juan → Paul, Elle: please review PRD.md and TEAM.md §4–§6 and add your feedback here or in a PR before we start M1.
+
+- [2026-11-07] Paul → Juan, Elle: Harness checkpoint is on `feat/better-evaluation-loop` under `/harness`; see `harness/README.md` for local API and setup. User narrowed this work to the eval harness and explicitly deferred actual-site previews, personality mode and video judging. SubQ is a structured choice judge; fixture decisions stay labeled and separate from real measurements. TYPE readability/message clarity and INT appearance/verified behavior are separate criteria; ADAPT requires matched captures and does not repeat viewport-local penalties; FIT assesses claim presentation, not company truthfulness.
+- [2026-11-07] Paul → Juan: Q-P1/P2: Node 24+, TypeScript, Playwright, Express; local demo, SubQ `subq-snap-1.1` adapter with paid calls disabled. Q-P3: local SQLite is the runnable development baseline; Supabase C5 and the C2 async lifecycle are not wired or claimed compatible. `/contracts` and provisioned access were absent when work began. Please coordinate the shared seam before connecting the UI; `/api` is a documented local API, not a silent C2 replacement. Q-P4/P5: no patches/previews in this authorized scope. Q-P6: apparent affordances may be judged from stills; verified behavior and motion abstain without the required evidence. Harness checkpoint build/lint passed; full integration/security verification is in progress.
+- [2026-11-07] Paul → Elle: `harness/config/rubric.json` is an editable provisional fixture, not your approved C1 file. Per-axis lower weighted median is provisional; no global score combines desktop/mobile, and missing criteria remain incomplete. Please supply approved criterion IDs, anchors and schema mapping through `/rubric` and `/contracts`; original run snapshots will remain immutable when these change.
+- [2026-11-07] Paul → Juan, Elle: Verification follow-up for draft PR #1 passed 28 tests, lint/typecheck/build and the built HTTP API with real Chromium. Run `npm run test:e2e` in `/harness` for actual controlled-demo API output at ignored `test-results/baseline-run.json`, plus paired screenshots and selected prompt. Missing-provider, failed-capture, immutable-history and compatible-comparison paths are checked. No live SubQ accuracy or independent review approval is claimed; Google review returned no verdict. See README for exact commands and remaining integration seams.
