@@ -1,0 +1,21 @@
+# Folder ownership — see TEAM.md §1. Later rules override earlier ones.
+
+# Default: Juan (scaffolding, docs, repo conventions)
+*                           @juancamilo994
+
+# Web app, design, DB
+/apps/web/                  @juancamilo994
+/design/                    @juancamilo994
+/supabase/                  @juancamilo994 @laulpogan
+
+# Harness
+/harness/                   @laulpogan
+
+# Rubric
+/rubric/                    @elle-mcdougald
+/Placeholder\ rubric.md     @elle-mcdougald
+
+# Shared contracts and alignment docs: everyone
+/contracts/                 @juancamilo994 @laulpogan @elle-mcdougald
+/TEAM.md                    @juancamilo994 @laulpogan @elle-mcdougald
+/PRD.md                     @juancamilo994 @laulpogan @elle-mcdougald
