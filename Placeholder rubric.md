@@ -1,3 +1,5 @@
+> **Superseded (2026-11-07):** the proposed **Combined rubric** (10 weighted criteria /100, transcribed by Paul into `harness/config/rubric.json`) is the current scoring model. This file remains as boundary definitions and history — see PRD §6. Elle's final version will land at `/rubric/rubric.json`.
+
  Proposed eight-axis rubric
 Criteria have one home to avoid double-counting. Other axes may link the same evidence without adding another penalty.
 

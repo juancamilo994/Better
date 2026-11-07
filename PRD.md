@@ -154,6 +154,8 @@ Purpose: hand the user an actionable prompt and close the loop.
 
 The **rubric is owned by Elle** and lives in `/rubric`. **Current model (adopted 2026-11-07, transcribed by Paul from Elle's source doc): the "Combined" rubric** — 10 weighted criteria whose weights total 100, scored with anchored point choices; plus supporting checks that never deduct. The earlier [`Placeholder rubric.md`](./Placeholder%20rubric.md) (8 axes, 1–4) remains as background; its boundaries carry over (single penalty home per issue, evidence-bound, taste ≠ quality, screenshots flag but don't certify):
 
+**Placeholder axes (superseded by Combined — kept as boundary definitions):**
+
 | Code | Axis | Scope (abridged) |
 |---|---|---|
 | HIER | Hierarchy & wayfinding | Focal point, primary vs. secondary actions, grouping, reading order, location cues |
@@ -180,7 +182,7 @@ The **rubric is owned by Elle** and lives in `/rubric`. **Current model (adopted
 
 ## 7. Live before/after previews (the key technical challenge)
 
-**Decision: hybrid approach.** Real patches are rendered on the user's page in a headless browser. If a patch can't be applied cleanly, an annotated illustrative fallback is shown instead.
+**Status (updated 2026-11-07): previews are deferred by explicit scope decision on the harness side (TEAM.md Q-P7).** The MVP ships **Illustrative previews only**: the web app annotates the captured "before" screenshot with element boxes computed from captured geometry facts — measured targets for deterministic checks, honest gaps elsewhere. The hybrid approach below remains the agreed technical direction if previews are picked back up: real patches rendered on the user's page in a headless browser, falling back to annotated illustration when a patch can't be applied cleanly.
 
 ### 7.1 How "Live" previews work
 
