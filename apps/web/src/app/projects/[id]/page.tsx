@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { api } from '@/lib/harness';
 import { reevaluateAction } from '@/lib/actions';
+import { RadarChart } from '@/components/RadarChart';
 import type { Run } from '@/lib/harness/types';
 
 export const dynamic = 'force-dynamic';
@@ -60,8 +61,10 @@ export default async function ScorePage({
         {mobileQuality && <p>Mobile: {mobileQuality.cappedTotal ?? mobileQuality.observedSubtotal ?? '—'} / 100{mobileQuality.band ? ` — ${mobileQuality.band}` : ''}</p>}
       </section>
 
+      <RadarChart run={run} />
+
       <section aria-label="Score by criterion">
-        <h2>By criterion (placeholder for spider chart)</h2>
+        <h2>By criterion</h2>
         <ul>
           {quality?.criteria.map(c => (
             <li key={c.id}>{c.title}: {c.points ?? 'not assessed'} / {c.max}</li>
