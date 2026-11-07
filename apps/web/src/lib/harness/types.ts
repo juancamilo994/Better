@@ -190,6 +190,14 @@ export interface QualitySummary {
   cappedTotal: number | null;
   band: string | null;
   unresolved: string[];
+  /** Layer 3 detector ledger (native + operator detectors). */
+  layer3?: {
+    status: string;
+    coverage: { covered: number; total: number; unrunRuleIds?: string[] };
+    review?: { topFixes?: { priority: string; criterion: string | null; source: string; label: string; detail?: string }[] };
+    strengths?: string[];
+    criteria?: { id: string; deducted: number; final: number | null; reason?: string }[];
+  };
 }
 
 export interface Run {

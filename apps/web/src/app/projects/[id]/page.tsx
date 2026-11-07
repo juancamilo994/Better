@@ -92,6 +92,22 @@ export default async function ScorePage({
         </section>
       )}
 
+      {quality?.layer3 && (
+        <section aria-label="Detector review">
+          <h2>Detector review <small>{quality.layer3.coverage.covered}/{quality.layer3.coverage.total} checks ran</small></h2>
+          {quality.layer3.review?.topFixes && quality.layer3.review.topFixes.length > 0 && (
+            <ul>
+              {quality.layer3.review.topFixes.map((f, i) => (
+                <li key={i}><strong>[{f.priority}]</strong> {f.label}{f.detail ? ` — ${f.detail}` : ''}</li>
+              ))}
+            </ul>
+          )}
+          {quality.layer3.strengths && quality.layer3.strengths.length > 0 && (
+            <p>Kept as strengths: {quality.layer3.strengths.join(' · ')}</p>
+          )}
+        </section>
+      )}
+
       {shot && (
         <figure>
           {/* eslint-disable-next-line @next/next/no-img-element */}
