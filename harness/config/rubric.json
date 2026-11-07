@@ -1,5 +1,5 @@
 {
-  "version": "elle-combined-proposed-2026-11-07.2",
+  "version": "elle-combined-proposed-2026-11-07.3",
   "status": "Proposed Combined rubric from Elle's source document; intermediate point calibration remains unresolved.",
   "axes": [
     {
@@ -129,11 +129,10 @@
       "channel": "quality",
       "lane": "visual",
       "role": "points",
-      "instructions": "Count verified steps and fields for the core action. Effort must match the task. Check an obvious next action and progressive disclosure of advanced options. Static captures cannot establish completed flow. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "instructions": "Count verified steps and fields for the core action. Effort must match the task. Check an obvious next action and progressive disclosure of advanced options. Static captures cannot establish completed flow. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties. Static-evidence scoring (harness proposal pending Elle): score only what the screenshot, text and DOM show. Full points mean every check visible in static evidence passes; operation, timing, keyboard behavior and motion stay unverified and are reported by supporting checks, never inferred.",
       "requires": [
         "screenshot",
-        "text",
-        "runtime"
+        "text"
       ],
       "anchors": [
         "Main failure described in this criterion is present.",
@@ -164,11 +163,10 @@
       "channel": "quality",
       "lane": "visual",
       "role": "points",
-      "instructions": "List verified actions besides scrolling and reading, tied to content. Feedback target is under 100 ms, separate from the under 400 ms deal-breaker. Static images establish apparent affordances only; never timing, keyboard behavior or motion. Motion remains unassessed without video; no video judge in MVP. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "instructions": "List verified actions besides scrolling and reading, tied to content. Feedback target is under 100 ms, separate from the under 400 ms deal-breaker. Static images establish apparent affordances only; never timing, keyboard behavior or motion. Motion remains unassessed without video; no video judge in MVP. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties. Static-evidence scoring (harness proposal pending Elle): score only what the screenshot, text and DOM show. Full points mean every check visible in static evidence passes; operation, timing, keyboard behavior and motion stay unverified and are reported by supporting checks, never inferred.",
       "requires": [
         "screenshot",
-        "text",
-        "runtime"
+        "text"
       ],
       "anchors": [
         "Main failure described in this criterion is present.",
@@ -370,11 +368,10 @@
       "channel": "quality",
       "lane": "visual",
       "role": "points",
-      "instructions": "Check familiar behavior, error prevention, visible status and position, useful navigation with a way back, easy targets and matched desktop/mobile adaptation. Keep single-viewport defects in their normal criterion without double penalties. Recommended targets 44\u201348 px differ from the 24 px deal-breaker minimum. No full WCAG conformance claim. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "instructions": "Check familiar behavior, error prevention, visible status and position, useful navigation with a way back, easy targets and matched desktop/mobile adaptation. Keep single-viewport defects in their normal criterion without double penalties. Recommended targets 44\u201348 px differ from the 24 px deal-breaker minimum. No full WCAG conformance claim. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties. Static-evidence scoring (harness proposal pending Elle): score only what the screenshot, text and DOM show. Full points mean every check visible in static evidence passes; operation, timing, keyboard behavior and motion stay unverified and are reported by supporting checks, never inferred.",
       "requires": [
         "screenshot",
         "text",
-        "runtime",
         "pair"
       ],
       "anchors": [
@@ -741,7 +738,8 @@
       "Overlapping issues require one scoring home; supporting checks never add deductions. AI-isms belong under Originality without an authorship claim.",
       "Missing evidence stays unknown. No missing-evidence normalization or cross-viewport total.",
       "Simplified usability checks do not establish complete WCAG conformance. Contrast, adaptation and error-prevention calibration need more examples.",
-      "The 75% on-scale spacing threshold and the distinct-type-size count are harness proposals pending Elle's confirmation; both are supporting checks with no deduction."
+      "The 75% on-scale spacing threshold and the distinct-type-size count are harness proposals pending Elle's confirmation; both are supporting checks with no deduction.",
+      "Flow, Interaction and Usability points are scored from static evidence so a total can exist; their behavioral checks remain unverified. Pending Elle's confirmation."
     ],
     "feedbackTargetMs": 100,
     "feedbackDealBreakerMs": 400,

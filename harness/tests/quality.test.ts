@@ -64,7 +64,8 @@ test('source bands, nine gates and required evidence stay explicit',()=>{
  const policy=rubric.combined!;assert.equal(policy.dealBreakers.length,9);
  for(const [score,label] of [[0,4],[39,4],[40,3],[59,3],[60,2],[74,2],[75,1],[89,1],[90,0],[100,0]])assert.equal(policy.bands.find(b=>score>=b.min&&score<=b.max)?.label,policy.bands[label].label);
  assert.match(missingEvidence(rubric.criteria.find(c=>c.id==='TYPOGRAPHY-POINTS')!,capture(),capture('mobile'),profile)!,/measurements/);
- assert.match(missingEvidence(rubric.criteria.find(c=>c.id==='INTERACTION-POINTS')!,capture(),capture('mobile'),profile)!,/Static inputs/);
+ assert.equal(missingEvidence(rubric.criteria.find(c=>c.id==='INTERACTION-POINTS')!,capture(),capture('mobile'),profile),null); // static-evidence scoring; behavior stays in supporting checks
+ assert.match(missingEvidence(rubric.criteria.find(c=>c.id==='INT-02')!,capture(),capture('mobile'),profile)!,/Static inputs/);
  const staticClaim={...failure,id:'BODY_CONTRAST'};assert.equal(combinedQuality(configured(),results(),'desktop',[staticClaim]).capApplied,false);
  const measured={...staticClaim,evidenceKind:'measurement' as const};assert.equal(combinedQuality(configured(),results(),'desktop',[measured]).capApplied,true);
 });
