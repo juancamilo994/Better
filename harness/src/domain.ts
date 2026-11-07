@@ -101,7 +101,7 @@ export interface Run {
   manifest: { os: string; browser: string; readiness: string; expectedText: string | null; deviceScale: number; input: Record<Viewport, string>; state: string; capturedBuildHash: string; repositorySource: 'not_connected'; referenceIds: string[] };
   judgeAttempts: { viewport: Viewport; criterionId: string; status: string; code: string }[];
 }
-export interface Project { id: string; name: string; url: string; source: Run['source']; createdAt: string; profile: Profile }
+export interface Project { id: string; name: string; url: string; source: Run['source']; createdAt: string; profile: Profile; archivedAt?: string }
 export interface Handoff { id: string; runId: string; createdAt: string; selectedIds: string[]; deferredIds: string[]; prompt: string }
 export interface Correction { id: string; runId: string; criterionId: string; viewport: Viewport; createdAt: string; note: string }
 export class AppError extends Error { status: number; constructor(message: string, status = 400) { super(message); this.status = status; } }

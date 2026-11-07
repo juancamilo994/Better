@@ -7,7 +7,7 @@ import { loadRubric } from './config.ts';
 import { publicTarget } from './capture/network.ts';
 import { DEMO_URL } from './capture/demo.ts';
 import { evaluateProject } from './evaluation/pipeline.ts';
-import { compareRuns } from './evaluation/aggregation.ts';
+import { compareRuns, overall, runSummary } from './evaluation/aggregation.ts';
 import { loadCheckRegistry } from './evaluation/evidence.ts';
 import { Store } from './store.ts';
 import { adjudicationSchema, detectorResultSchema, loadDetectorRegistry } from './evaluation/layer3.ts';
@@ -29,7 +29,7 @@ export function createApp(store: Store) {
     try { hostname = new URL(`http://${host}`).hostname; } catch { return res.status(403).json({ error: 'Invalid host.' }); }
     if (!['localhost', '127.0.0.1', '[::1]'].includes(hostname)) return res.status(403).json({ error: 'Local harness only.' });
     if (req.headers.origin && req.headers.origin !== `http://${host}`) return res.status(403).json({ error: 'Cross-origin requests are not allowed.' });
-    if (req.method !== 'GET' && !req.is('application/json')) return res.status(415).json({ error: 'Use application/json.' });
+    if (!['GET', 'DELETE'].includes(req.method) && !req.is('application/json')) return res.status(415).json({ error: 'Use application/json.' });
     next();
   });
   app.use(express.json({ limit: '512kb' }));
@@ -42,25 +42,26 @@ export function createApp(store: Store) {
   app.get('/api/rubric', (_req, res) => res.json(loadRubric()));
   app.get('/api/detector-rules', (_req, res) => res.json(loadDetectorRegistry(loadRubric())));
   app.get('/api/check-registry', (_req,res)=>res.json(loadCheckRegistry(loadRubric())));
-  app.get('/api/projects', (_req, res) => res.json(store.listProjects()));
+  app.get('/api/projects', (_req, res) => res.json(store.listProjects().map(p => { const latest = store.latestRun(p.id); return { ...p, latestRun: latest ? runSummary(latest) : null }; })));
+  app.delete('/api/projects/:id', (req, res) => res.json(store.archiveProject(idSchema.parse(req.params.id))));
   app.post('/api/projects', async (req, res) => {
     const input = createSchema.parse(req.body);
     if (!input.demo && !input.url) throw new AppError('A public URL is required.');
     if (!input.demo && loadRubric().combined && (!input.profile?.audience.trim() || !input.profile?.task.trim() || !input.profile?.feeling?.trim())) throw new AppError('Provide who the site is for, the desired feeling and one core job.');
     const url = input.demo ? DEMO_URL : (await publicTarget(input.url!)).url.href;
     const project = store.createProject({ id: randomUUID(), name: input.name, url, source: input.demo ? 'controlled_demo' : 'public_url', createdAt: new Date().toISOString(), profile: input.profile ?? defaultProfile });
-    res.status(201).json(project);
+    res.status(201).json({ ...project, latestRun: null });
   });
-  app.get('/api/projects/:id', (req, res) => { const id = idSchema.parse(req.params.id); res.json({ project: store.project(id), runs: store.runs(id) }); });
+  app.get('/api/projects/:id', (req, res) => { const id = idSchema.parse(req.params.id); res.json({ project: store.project(id), runs: store.runs(id).map(run => ({ ...run, overall: overall(run) })) }); });
   app.post('/api/projects/:id/runs', async (req, res) => {
     const id = idSchema.parse(req.params.id); const options = evaluateSchema.parse(req.body);
     store.project(id);
     if (busy) throw new AppError('A capture is already running. Retry after it finishes.', 409);
     busy = true;
-    try { res.status(201).json(await evaluateProject(store, id, options)); }
+    try { const run = await evaluateProject(store, id, options); res.status(201).json({ ...run, overall: overall(run) }); }
     finally { busy = false; }
   });
-  app.get('/api/runs/:id', (req, res) => { const id = idSchema.parse(req.params.id); res.json({ run: store.run(id), handoffs: store.handoffs(id), corrections: store.corrections(id) }); });
+  app.get('/api/runs/:id', (req, res) => { const id = idSchema.parse(req.params.id); res.json({ run: { ...store.run(id), overall: overall(store.run(id)) }, handoffs: store.handoffs(id), corrections: store.corrections(id) }); });
   app.get('/api/runs/:id/compare/:baseline', (req, res) => res.json(compareRuns(store.run(idSchema.parse(req.params.baseline)), store.run(idSchema.parse(req.params.id)))));
   app.get('/api/runs/:id/evidence/:evidenceId', async (req, res) => {
     const { artifact, bytes } = await store.evidence(idSchema.parse(req.params.id), String(req.params.evidenceId));

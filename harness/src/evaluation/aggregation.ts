@@ -37,3 +37,17 @@ export function compareRuns(baseline: Run, current: Run) {
     failures: current.results.filter(r => r.provenance !== 'fixture' && r.status === 'assessed' && r.score === (current.rubric.criteria.find(c => c.id === r.criterionId)?.role === 'points' ? 0 : 1)).map(r => ({ criterionId: r.criterionId, viewport: r.viewport, evidenceIds: r.evidenceIds })),
   };
 }
+
+// Headline numbers per viewport, derived on read so stored runs stay immutable.
+// Fixture runs report their labeled sample summary; real runs never mix it in.
+export function overall(run: Run) {
+  const sample = run.mode === 'fixture' && !!run.fixtureQuality;
+  const source = sample ? run.fixtureQuality : run.quality;
+  if (!source) return null;
+  const view = (viewport: 'desktop' | 'mobile') => {
+    const q = source[viewport];
+    return { rawTotal: q.rawTotal, cappedTotal: q.cappedTotal, band: q.band, assessedCriteria: q.coverage.assessedCriteria, capApplied: q.capApplied, layer3: q.layer3 ? { status: q.layer3.status, cappedTotal: q.layer3.cappedTotal, provisional: q.layer3.provisional } : null };
+  };
+  return { sample, desktop: view('desktop'), mobile: view('mobile') };
+}
+export const runSummary = (run: Run) => ({ id: run.id, createdAt: run.createdAt, status: run.status, mode: run.mode, buildLabel: run.buildLabel, overall: overall(run) });

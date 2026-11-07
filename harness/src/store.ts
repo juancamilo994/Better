@@ -31,7 +31,17 @@ export class Store {
     this.db.prepare('INSERT INTO projects (id,data) VALUES (?,?)').run(project.id, JSON.stringify(project));
     return project;
   }
-  listProjects(): Project[] { return this.db.prepare('SELECT data FROM projects ORDER BY rowid DESC').all().map(row => JSON.parse(String(row.data))); }
+  // Archived projects leave the list; their append-only runs stay readable by ID.
+  listProjects(): Project[] { return this.db.prepare('SELECT data FROM projects ORDER BY rowid DESC').all().map(row => JSON.parse(String(row.data)) as Project).filter(p => !p.archivedAt); }
+  archiveProject(id: string): Project {
+    const project = { ...this.project(id), archivedAt: new Date().toISOString() };
+    this.db.prepare('UPDATE projects SET data=? WHERE id=?').run(JSON.stringify(project), id);
+    return project;
+  }
+  latestRun(projectId: string): Run | null {
+    const row = this.db.prepare('SELECT data FROM runs WHERE project_id=? ORDER BY rowid DESC LIMIT 1').get(projectId);
+    return row ? JSON.parse(String(row.data)) : null;
+  }
   project(id: string): Project {
     const row = this.db.prepare('SELECT data FROM projects WHERE id=?').get(id);
     if (!row) throw new AppError('Project not found.', 404);
