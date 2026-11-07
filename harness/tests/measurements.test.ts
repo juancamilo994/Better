@@ -16,7 +16,7 @@ function measured(viewport: 'desktop' | 'mobile', m: Partial<Measurements>): Cap
 }
 const find = (observations: ReturnType<typeof dealBreakerObservations>, id: string) => observations.find(o => o.id === id);
 
-test('one measured contrast failure is a verified deal-breaker failure that applies the cap', () => {
+test('one measured contrast failure is a verified deal-breaker failure that flags the run', () => {
   const c = measured('desktop', { contrast: [{ outcome: 'pass', target: 'p', expected: 4.5 }, { outcome: 'fail', target: '.muted', ratio: 2.8, expected: 4.5 }] });
   const observations = dealBreakerObservations([c], 'desktop');
   assert.deepEqual({ ...find(observations, 'BODY_CONTRAST') }, { id: 'BODY_CONTRAST', applicable: true, verdict: 'fail', verified: true, evidenceIds: ['run:desktop:measurements'], evidenceKind: 'measurement' });

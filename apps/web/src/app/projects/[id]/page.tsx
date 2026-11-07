@@ -59,28 +59,21 @@ export default async function ScorePage({
       <section aria-label="Overall score">
         <h2>Overall (desktop){sample && ' — sample'}</h2>
         <p>
-          {displayQuality?.cappedTotal ?? displayQuality?.observedSubtotal ?? '—'} / 100
-          {band ? ` — ${band}` : ''}
+          {/* run.overall is derived on read, so pre-change runs report raw totals too */}
+          {run.overall?.desktop?.cappedTotal ?? displayQuality?.cappedTotal ?? displayQuality?.observedSubtotal ?? '—'} / 100
+          {(run.overall?.desktop?.band ?? band) ? ` — ${run.overall?.desktop?.band ?? band}` : ''}
         </p>
         {sample && <p><small>Sample scores — illustrative, not measured.</small></p>}
         {displayQuality && displayQuality.coverage.assessedCriteria < displayQuality.coverage.totalCriteria && (
           <p>{displayQuality.coverage.assessedCriteria}/{displayQuality.coverage.totalCriteria} criteria assessed — gaps are unknown, not zero.</p>
         )}
         {displayQuality?.capApplied && (
-          <p>
-            Deal-breaker cap applied (max {displayQuality.cap})
-            {displayQuality.rawTotal !== null && displayQuality.rawTotal !== displayQuality.cappedTotal
-              ? ` — raw score before cap: ${displayQuality.rawTotal}/100`
-              : ''}.
-          </p>
+          <p role="alert">Verified deal-breaker failure — flagged as a warning; the score is unchanged. See below.</p>
         )}
         {displayMobile && (
           <p>
-            Mobile: {displayMobile.cappedTotal ?? displayMobile.observedSubtotal ?? '—'} / 100
-            {displayMobile.capApplied && displayMobile.rawTotal !== null && displayMobile.rawTotal !== displayMobile.cappedTotal
-              ? ` (raw ${displayMobile.rawTotal})`
-              : ''}
-            {displayMobile.band ? ` — ${displayMobile.band}` : ''}
+            Mobile: {run.overall?.mobile?.cappedTotal ?? displayMobile.cappedTotal ?? displayMobile.observedSubtotal ?? '—'} / 100
+            {(run.overall?.mobile?.band ?? displayMobile.band) ? ` — ${run.overall?.mobile?.band ?? displayMobile.band}` : ''}
           </p>
         )}
       </section>

@@ -175,9 +175,10 @@ export function scoreLayer3(rubric: Rubric, registry: DetectorRegistry, quality:
   const known = criteria.filter(c => c.final !== null);
   const layer3Total = status === 'complete' && known.length === criteria.length ? known.reduce((s, c) => s + c.final!, 0) : null;
   const gateFailure = gates.some(g => g.verdict === 'fail' && g.verified);
-  if (gates.some(g => g.verdict === 'fail' && !g.verified)) unresolved.push('A gate rule fired in an unattested detector result; it does not apply the cap until verified.');
+  if (gates.some(g => g.verdict === 'fail' && !g.verified)) unresolved.push('A gate rule fired in an unattested detector result; it is reported but does not affect the total.');
+  // Gates flag (capApplied) but never reduce totals — same decision as quality.ts.
   const capApplied = quality.capApplied || gateFailure;
-  const cappedTotal = layer3Total === null ? null : capApplied ? Math.min(layer3Total, policy.gateCap) : layer3Total;
+  const cappedTotal = layer3Total;
   const pendingAdvisoryPoints = criteria.reduce((s, c) => s + c.pendingAdvisoryPoints, 0);
   if (pendingAdvisoryPoints) unresolved.push(`${pendingAdvisoryPoints} advisory point(s) await adjudication of whether the pattern is deliberate; totals are provisional.`);
   return {

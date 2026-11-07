@@ -54,9 +54,9 @@ test('three AI-tell flags cap Originality at 5; order ambiguity and missing floo
   assert.equal(score([fixture(['gradient-text', 'nested-cards'])]).originalityCapApplied, false);
 });
 
-test('a verified gate failure caps the total at 49; an unattested one does not', () => {
+test('a verified gate failure flags the run without reducing the total; an unattested one does not', () => {
   const gate = score([fixture(['broken-image'])]);
-  assert.equal(gate.gates.find(g => g.ruleId === 'broken-image')!.verdict, 'fail'); assert.equal(gate.capApplied, true); assert.equal(gate.cappedTotal, 49);
+  assert.equal(gate.gates.find(g => g.ruleId === 'broken-image')!.verdict, 'fail'); assert.equal(gate.capApplied, true); assert.equal(gate.cappedTotal, 100);
   assert.equal(gate.review.topFixes[0].priority, 'P0');
   const external = adaptDetectorResult(registry, { tool: 'impeccable', version: '3', url: 'https://example.com/', attested: false, rulesRun: 'all-mapped', findings: [{ antipattern: 'broken-image' }, { antipattern: 'not-a-rule' }] }, 'https://example.com/', 'desktop');
   const unattested = score([external]);

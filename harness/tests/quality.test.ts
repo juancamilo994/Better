@@ -25,9 +25,9 @@ test('ten proposed weights total 100; wrong sum and duplicate scoring homes are 
  const bad=structuredClone(rubric);bad.axes[0].weight=13;assert.equal(rubricSchema.safeParse(bad).success,false);
  const duplicate=structuredClone(rubric);duplicate.criteria.push(structuredClone(duplicate.criteria[0]));assert.equal(rubricSchema.safeParse(duplicate).success,false);
 });
-test('verified applicable runtime failure caps at 49 while preserving raw total and points',()=>{
- const q=combinedQuality(configured(),results(),'desktop',[failure]);assert.equal(q.rawTotal,100);assert.equal(q.cappedTotal,49);assert.equal(q.capApplied,true);assert.equal(q.criteria[0].points,12);assert.equal(q.band,'test-low');
- const changed=configured();changed.combined!.cap=30;assert.equal(combinedQuality(changed,results(),'desktop',[failure]).cappedTotal,30);
+test('verified applicable runtime failure flags the gate without reducing the raw total',()=>{
+ const q=combinedQuality(configured(),results(),'desktop',[failure]);assert.equal(q.rawTotal,100);assert.equal(q.cappedTotal,100);assert.equal(q.capApplied,true);assert.equal(q.criteria[0].points,12);assert.equal(q.band,'test-high');
+ const changed=configured();changed.combined!.cap=30;assert.equal(combinedQuality(changed,results(),'desktop',[failure]).cappedTotal,100);
  for(const observation of [{...failure,applicable:false},{...failure,applicable:null},{...failure,verified:false},{...failure,evidenceIds:[]},{...failure,evidenceKind:'static' as const},{...failure,verdict:'unknown' as const},{...failure,verdict:'pass' as const}])assert.equal(combinedQuality(configured(),results(),'desktop',[observation]).capApplied,false);
 });
 test('unknown points remain null; no prorating, invented zero or complete total',()=>{

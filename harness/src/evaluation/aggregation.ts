@@ -44,9 +44,14 @@ export function overall(run: Run) {
   const sample = run.mode === 'fixture' && !!run.fixtureQuality;
   const source = sample ? run.fixtureQuality : run.quality;
   if (!source) return null;
+  // Runs stored before the cap removal keep their flattened cappedTotal/band on
+  // disk; derive-on-read reports the authoritative raw total and fresh band.
+  const bands = run.rubric.combined?.bands ?? [];
   const view = (viewport: 'desktop' | 'mobile') => {
     const q = source[viewport];
-    return { rawTotal: q.rawTotal, cappedTotal: q.cappedTotal, band: q.band, assessedCriteria: q.coverage.assessedCriteria, capApplied: q.capApplied, layer3: q.layer3 ? { status: q.layer3.status, cappedTotal: q.layer3.cappedTotal, provisional: q.layer3.provisional } : null };
+    const total = q.rawTotal ?? q.cappedTotal;
+    const band = total === null ? null : bands.find(b => total >= b.min && total <= b.max)?.label ?? q.band;
+    return { rawTotal: q.rawTotal, cappedTotal: total, band, assessedCriteria: q.coverage.assessedCriteria, capApplied: q.capApplied, layer3: q.layer3 ? { status: q.layer3.status, cappedTotal: q.layer3.layer3Total ?? q.layer3.cappedTotal, provisional: q.layer3.provisional } : null };
   };
   return { sample, desktop: view('desktop'), mobile: view('mobile') };
 }

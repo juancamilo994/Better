@@ -13,8 +13,8 @@ What the harness leaves unresolved as of 2026-11-07 (`ec3fd82`, PR #1). Each ite
 7. **Intermediate points.** Anchors allow zero, exact half and full only. "About half", "about 2 points per usability failure" and per-AI-flag costs are not allocated.
 8. **Layout stability.** The source names no criterion for it. It is provisionally Usability.
 9. **Harness proposals.** The 75% on-scale spacing threshold and the distinct-type-size count are Paul's proposals. The spacing check fails on 5 of 6 real sites tested; it likely needs loosening.
-10. **Weights, cap of 49, tie-breaker.** All are still marked proposed in the source.
-11. **Deal-breaker sensitivity.** Gates fail on a single measured node (contrast) or 1 px of reflow overflow. Observed 2026-11-07: 3/3 real sites capped at 49 via BODY_CONTRAST + MOBILE_REFLOW — Teleprompter (raw 88; contrast 1/45 nodes; reflow +30 px), Bitzy (raw 93; contrast 49/181; reflow +36 px), Cerebral Valley (raw 89; contrast 11/341; reflow +142 px). Severity varies wildly under the same verdict — one node counts the same as 27% of nodes, 1 px the same as 142 px. Needs a severity threshold or graduated cap decision.
+10. **Weights, cap of 49, tie-breaker.** All are still marked proposed in the source. The cap is no longer applied — see item 11.
+11. **Deal-breaker cap — decided.** Product decision (Juan, 2026-11-07): the flat 49 cap is removed; verified gate failures surface as warnings (`capApplied` flags presence) and totals keep the full 0–100 scale. Trigger for the decision: 3/3 real sites capped at 49 while severity ranged 1/45–49/181 contrast nodes and +30–+142 px reflow overflow — the cap destroyed differentiation. If Elle wants floor enforcement back, the alternative on the table is a severity-scaled deduction, not a binary ceiling. The Originality cap (AI-tell flags) is a separate criterion-level mechanism and is unchanged.
 
 ## Calibration: Elle and a second reviewer
 

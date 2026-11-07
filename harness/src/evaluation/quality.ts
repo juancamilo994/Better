@@ -27,8 +27,11 @@ export function combinedQuality(rubric: Rubric, results: Result[], viewport: Vie
     const verified = !!o?.verified && o.evidenceKind === rule.requires && o.evidenceIds.length > 0;
     return { id: rule.id, applicable: o?.applicable ?? null, verdict: verified ? o.verdict : 'unknown', verified, evidenceIds: verified ? o.evidenceIds : [], evidenceKind: verified ? o.evidenceKind : 'none' } as DealBreakerObservation;
   });
+  // Product decision 2026-11-07: the flat deal-breaker cap is removed. Verified
+  // gate failures surface as warnings (capApplied flags their presence) but
+  // never reduce the total — the full 0–100 scale stays in use.
   const capApplied = dealBreakers.some(o => o.applicable === true && o.verified && o.verdict === 'fail');
-  const cappedTotal = rawTotal === null ? null : capApplied ? Math.min(rawTotal, policy.cap) : rawTotal;
+  const cappedTotal = rawTotal;
   const unresolved = [...policy.unresolved];
   if (criteria.some(c => c.points === null)) unresolved.push('Incomplete criterion points: no full total or missing-evidence normalization.');
   if (dealBreakers.some(o => o.verdict === 'unknown' && o.applicable !== false)) unresolved.push('Applicable deal-breaker status is not fully established.');
