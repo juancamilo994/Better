@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# IDE / editors
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
