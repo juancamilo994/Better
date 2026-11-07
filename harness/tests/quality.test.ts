@@ -73,12 +73,23 @@ test('source bands, nine gates and required evidence stay explicit',()=>{
 test('real SubQ parsing wires canonical issue ownership and rejects overlapping penalty homes',()=>{
  const c=rubric.criteria.find(c=>c.id==='ORIGINALITY-POINTS')!;
  const input={criterion:c,capture:capture(),profile,issues:rubric.combined!.issueCatalog,source:'controlled_demo' as const,demoVersion:'baseline' as const,images:[{evidenceId:'test:desktop:screenshot',mediaType:'image/png' as const,base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='}]};
- const request=buildRequest(input,'test');assert.ok(request.questions.issue);
+ const request=buildRequest(input,'test');assert.deepEqual(Object.keys(request.questions.issue!.criteria),['none','TEMPLATE','NOVELTY']);assert.equal('finding' in request.questions,false);
  const answer=(choice:string,options:string[])=>({type:'choice',choice,confidence:.8,probabilities:Object.fromEntries(options.map(o=>[o,o===choice?1:0]))});
- const response=(issue:string)=>({model:'test',usage:{input_tokens:1,output_tokens:0},answers:{rating:answer('0',['0','5','10','not_assessed']),finding:answer(c.findings[0].id,['none',c.findings[0].id]),evidence:answer('test:desktop:screenshot',['none','test:desktop:screenshot']),issue:answer(issue,['none',...input.issues.map(i=>i.id)])}});
+ const response=(issue:string)=>({model:'test',usage:{input_tokens:1,output_tokens:0},answers:{rating:answer('0',['0','5','10','not_assessed']),evidence:answer('test:desktop:screenshot',['none','test:desktop:screenshot']),issue:answer(issue,['none','TEMPLATE','NOVELTY'])}});
  const own=parseResponse(response('TEMPLATE'),input,'test');assert.equal(own.issueId,'TEMPLATE');assert.equal(own.status,'assessed');
- const duplicate=parseResponse(response('HIERARCHY'),input,'test');assert.equal(duplicate.status,'not_assessed');assert.equal(duplicate.score,null);
+ assert.throws(()=>parseResponse(response('HIERARCHY'),input,'test'),/invalid_response/); // a foreign-home issue is not even offered
+ const unnamed=parseResponse(response('none'),input,'test');assert.equal(unnamed.status,'not_assessed');assert.match(unnamed.reason,/without an identified defect/);
  const judge={version:'test',provenance:'subq' as const,evaluate:async()=>own};assert.equal(validateDecision(own,input,judge).issueId,'TEMPLATE');
  assert.throws(()=>validateDecision({...own,issueId:'HIERARCHY'},input,judge),/invalid_issue_ownership/);
  const points=results();points[5]={...points[5],score:0,issueId:'HIERARCHY'};assert.throws(()=>combinedQuality(rubric,points,'desktop'),/penalty home/);
+});
+
+test('single-issue points criteria derive their defect from the rating instead of asking for it',()=>{
+ const c=rubric.criteria.find(c=>c.id==='HIER-POINTS')!;
+ const input={criterion:c,capture:capture(),profile,issues:rubric.combined!.issueCatalog,source:'controlled_demo' as const,demoVersion:'baseline' as const,images:[{evidenceId:'test:desktop:screenshot',mediaType:'image/png' as const,base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='}]};
+ const request=buildRequest(input,'test');assert.equal('issue' in request.questions,false);assert.equal('finding' in request.questions,false);
+ const answer=(choice:string,options:string[])=>({type:'choice',choice,confidence:.8,probabilities:Object.fromEntries(options.map(o=>[o,o===choice?1:0]))});
+ const response=(rating:string)=>({model:'test',usage:{input_tokens:1,output_tokens:0},answers:{rating:answer(rating,['0','6','12','not_assessed']),evidence:answer('test:desktop:screenshot',['none','test:desktop:screenshot'])}});
+ const half=parseResponse(response('6'),input,'test');assert.equal(half.issueId,'HIERARCHY');assert.equal(half.findingId,'HIER_IMPROVE');assert.equal(half.score,6);
+ const full=parseResponse(response('12'),input,'test');assert.equal(full.issueId,undefined);assert.equal(full.findingId,null);
 });
