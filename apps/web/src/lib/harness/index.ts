@@ -1,6 +1,6 @@
 import { harness as real } from './client';
 import { fixtureProject, fixtureProjectDetail, fixtureRubric, fixtureRun, fixtureRunDetail } from './fixtures';
-import type { CreateProjectInput, CreateRunInput, Handoff, Project, ProjectDetail, Rubric, RunDetail } from './types';
+import type { CreateProjectInput, Handoff, Project, ProjectDetail, Rubric, RunDetail } from './types';
 
 const MOCK = process.env.BETTER_MOCK_MODE === '1';
 
@@ -28,7 +28,8 @@ const mock = {
     prompt: `# Improve the UI\n\nApply only these changes:\n\n${selectedIds.map(id => `- ${id}`).join('\n')}`,
   }),
   createCorrection: async () => ({}),
-  evidenceUrl: (runId: string, evidenceId: string) => `/api/mock-evidence/${encodeURIComponent(runId)}/${encodeURIComponent(evidenceId)}`,
+  evidenceUrl: (runId: string, evidenceId: string) =>
+    `/mock/${evidenceId.includes(':mobile:') ? 'mobile' : 'desktop'}.png?run=${encodeURIComponent(runId)}`,
 };
 
 export const api = MOCK ? mock : real;

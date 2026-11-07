@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { api } from '@/lib/harness';
 import { SuggestionPicker } from '@/components/SuggestionPicker';
+import { buildPreviews } from '@/lib/preview';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,7 @@ export default async function RecommendationsPage({
     const axis = run.rubric.criteria.find(c => c.id === s.criterionId)?.axis ?? 'other';
     byAxis.set(axis, [...(byAxis.get(axis) ?? []), s]);
   }
+  const previews = Object.fromEntries(buildPreviews(run, api.evidenceUrl));
 
   return (
     <main>
@@ -35,7 +37,7 @@ export default async function RecommendationsPage({
         {[...byAxis.entries()].map(([axis, items]) => (
           <details key={axis} open>
             <summary>{axisTitle.get(axis) ?? axis} ({items.length})</summary>
-            <SuggestionPicker projectId={id} runId={run.id} suggestions={items} />
+            <SuggestionPicker projectId={id} runId={run.id} suggestions={items} previews={previews} />
           </details>
         ))}
         {run.suggestions.length === 0 && <p>Nothing major to fix on this run.</p>}

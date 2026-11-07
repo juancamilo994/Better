@@ -3,15 +3,19 @@
 import { useState } from 'react';
 import { createHandoffAction } from '@/lib/actions';
 import type { Suggestion } from '@/lib/harness/types';
+import type { PreviewModel } from '@/lib/preview';
+import { IllustrativePreview } from './IllustrativePreview';
 
 export function SuggestionPicker({
   projectId,
   runId,
   suggestions,
+  previews = {},
 }: {
   projectId: string;
   runId: string;
   suggestions: Suggestion[];
+  previews?: Record<string, PreviewModel>;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +43,7 @@ export function SuggestionPicker({
               <br />
               <small>{s.problem}</small>
             </label>
+            {previews[s.id] && <IllustrativePreview preview={previews[s.id]} />}
           </li>
         ))}
       </ul>
