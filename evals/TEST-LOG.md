@@ -165,3 +165,22 @@ This also makes scores move smoothly when a page really improves, instead of in 
 5. **All failed runs share one fingerprint** (`439083f3...`, the hash of an empty capture), so two unrelated failures would compare as "unchanged". Low risk; worth guarding. Owner: harness.
 
 **Next edge cases to run** (need the live judge): a stronger injection (repeated, and inside an image); a dynamic page scored 3 times to measure real-world drift; the bad-vs-clean pair tests on the fixed harness; and a page whose brief is copied with stray whitespace.
+
+### 2026-11-08 00:45 UTC: fixes for the first two holes (PR #15), and issues for the rest
+
+Each hole from edge case testing is now a GitHub issue: #6 brief wording, #7 live content, #8 contrast cap, #9 failure messages, #10 failed-run fingerprint, #12 probability-weighted scoring, #13 prompt injection, #14 pair tests with the live judge.
+
+**#6 Brief wording.** Expected: three typed variants of one brief produce identical judge requests. Result: PASS in unit tests (byte-identical requests). Fault injection: with normalization switched off, the test fails.
+
+**#7 Live content.** Expected: two loads of a page with a live clock get the same layout fingerprint. Result: PARTIAL. Clock times and digits are now ignored; on time.is 176 of 177 elements match between loads. The one difference is a sentence that changes per visitor ("Your time is exact!" vs "Your clock is 0.4 seconds behind"), which an exact-match fingerprint can't absorb. Follow-up options are in #7.
+
+**#9 and #10 (draft branch `yitzy/capture-failure-messages`, not in the PR).** Live capture with the judge off:
+
+| Case | Expected | Result |
+|---|---|---|
+| 404 page | Says "page not found" | PASS: "the site returned HTTP 404 (page not found). Check the URL." |
+| Bot wall (nytimes.com) | Says refused or bot protection | PASS: "the site refused access (HTTP 403). Pages behind a login or bot protection can't be scored." |
+| Public redirect to 127.0.0.1 | Says private address | FAIL: reports HTTP 403, because the relay answers the blocked hop with a 403. Described in #9 |
+| Three failed runs | Three different fingerprints | PASS: `incomplete:<runId>` each |
+
+Suite on PR #15: 64/64. Suite on the draft branch: 65/65.
