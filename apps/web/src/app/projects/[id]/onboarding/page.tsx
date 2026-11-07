@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { api } from '@/lib/harness';
 import { startRunAction } from '@/lib/actions';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ export default async function OnboardingPage({ params }: { params: Promise<{ id:
         <label>Liked styles (taste) <input name="taste" placeholder="Minimal & airy, Editorial" maxLength={1000} /></label>
         <label>Passed styles (avoid) <input name="avoid" placeholder="Dense dashboards" maxLength={1000} /></label>
         <label>Brand notes <input name="brand" placeholder="Optional" maxLength={1000} /></label>
-        <button type="submit">Run first evaluation</button>
+        <SubmitButton pendingLabel="Evaluating…" evaluating>Run first evaluation</SubmitButton>
       </form>
     </main>
   );

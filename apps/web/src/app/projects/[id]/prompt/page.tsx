@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { api } from '@/lib/harness';
 import { reevaluateAction } from '@/lib/actions';
 import { CopyButton } from '@/components/CopyButton';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +39,7 @@ export default async function PromptPage({
         <h2>Applied the changes?</h2>
         <p>Once your agent ships a new version at the same URL, re-assess to see how the score moved.</p>
         <form action={reevaluateAction.bind(null, id)}>
-          <button type="submit">Re-assess the URL</button>
+          <SubmitButton pendingLabel="Evaluating…" evaluating>Re-assess the URL</SubmitButton>
         </form>
       </section>
     </main>

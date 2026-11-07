@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { api } from '@/lib/harness';
 import { reevaluateAction } from '@/lib/actions';
 import { RadarChart } from '@/components/RadarChart';
+import { SubmitButton } from '@/components/SubmitButton';
+import { ghostQuality, scoreDelta } from '@/lib/history';
 import type { Run } from '@/lib/harness/types';
 
 export const dynamic = 'force-dynamic';
@@ -68,7 +70,7 @@ export default async function ScorePage({
         {displayMobile && <p>Mobile: {displayMobile.cappedTotal ?? displayMobile.observedSubtotal ?? '—'} / 100{displayMobile.band ? ` — ${displayMobile.band}` : ''}</p>}
       </section>
 
-      <RadarChart run={run} qualitySource={sample} sample={!!sample} />
+      <RadarChart run={run} qualitySource={sample} sample={!!sample} ghost={ghostQuality(runs, run)} />
 
       <section aria-label="Score by criterion">
         <h2>By criterion</h2>
@@ -101,20 +103,27 @@ export default async function ScorePage({
       <section aria-label="History">
         <h2>Runs ({runs.length})</h2>
         <ul>
-          {runs.map(r => (
-            <li key={r.id}>
-              <Link href={`/projects/${id}?run=${r.id}`}>
-                {new Date(r.createdAt).toLocaleString()} — {r.status} — desktop {r.quality?.desktop.cappedTotal ?? '—'}/100
-              </Link>
-            </li>
-          ))}
+          {runs.map(r => {
+            const d = scoreDelta(runs, r);
+            const score = r.quality?.desktop.cappedTotal ?? r.quality?.desktop.observedSubtotal
+              ?? r.fixtureQuality?.desktop.cappedTotal ?? r.fixtureQuality?.desktop.observedSubtotal;
+            return (
+              <li key={r.id}>
+                <Link href={`/projects/${id}?run=${r.id}`}>
+                  {new Date(r.createdAt).toLocaleString()} — {r.status} — desktop {score ?? '—'}/100
+                </Link>
+                {d.value !== null && <strong> ({d.value > 0 ? '+' : ''}{d.value})</strong>}
+                {!d.comparable && r.id !== run.id && <small> (not comparable)</small>}
+              </li>
+            );
+          })}
         </ul>
       </section>
 
       <nav>
         <Link href={`/projects/${id}/recommendations?run=${run.id}`}>See recommendations →</Link>
         <form action={reevaluateAction.bind(null, id)} style={{ display: 'inline' }}>
-          <button type="submit">Re-assess</button>
+          <SubmitButton pendingLabel="Evaluating…" evaluating>Re-assess</SubmitButton>
         </form>
       </nav>
     </main>

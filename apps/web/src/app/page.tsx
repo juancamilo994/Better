@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { api, isMock } from '@/lib/harness';
 import { beginOnboardingAction } from '@/lib/actions';
 import { HarnessError } from '@/lib/harness/client';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +45,7 @@ export default async function ProjectsPage({
           <label>Name <input name="name" required maxLength={120} /></label>
           <label>URL <input name="url" type="url" placeholder="https://…" /></label>
           <label><input name="demo" type="checkbox" /> Demo project (controlled page, no URL needed)</label>
-          <button type="submit">Create</button>
+          <SubmitButton pendingLabel="Continuing…">Create</SubmitButton>
         </form>
       </section>
     </main>

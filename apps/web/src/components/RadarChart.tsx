@@ -14,12 +14,16 @@ export function RadarChart({
   run,
   qualitySource,
   sample = false,
+  ghost,
 }: {
   run: Run;
   qualitySource?: Record<Viewport, QualitySummary>;
   sample?: boolean;
+  /** Previous comparable run's quality — drawn as a dashed ghost polygon. */
+  ghost?: Record<Viewport, QualitySummary>;
 }) {
   const chart: RadarData = buildRadar(run, undefined, qualitySource);
+  const ghostChart: RadarData | null = ghost ? buildRadar(run, undefined, ghost) : null;
   const n = chart.axes.length;
   if (n === 0) return null;
 
@@ -36,6 +40,16 @@ export function RadarChart({
           const [x, y] = vertexPoint(i, n, 1, R, CX, CY);
           return <line key={a.id} x1={CX} y1={CY} x2={x} y2={y} stroke="#e5e7eb" strokeWidth="1" />;
         })}
+        {ghostChart?.series.map(s => s.segments.length > 0 && (
+          <path
+            key={`ghost-${s.viewport}`}
+            d={seriesPath(s, n, R, CX, CY)}
+            fill="none"
+            stroke="#9ca3af"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+          />
+        ))}
         {chart.series.map(s => s.segments.length > 0 && (
           <path
             key={s.viewport}
@@ -74,6 +88,7 @@ export function RadarChart({
             {s.partial && ' (gaps)'}
           </span>
         ))}
+        {ghostChart && <span> · dashed = previous comparable run</span>}
         {sample && <span> · Sample data — illustrative, not measured</span>}
       </figcaption>
     </figure>
