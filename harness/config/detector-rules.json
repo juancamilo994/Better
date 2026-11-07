@@ -1,0 +1,1136 @@
+{
+  "version": "elle-layer3-2026-11-07.1",
+  "status": "proposed",
+  "source": "https://docs.google.com/document/d/1A50rMO06UQiaeDj67-xp4jiZ86p0gcjOvnlKP7e6nqQ/edit (Layer 3 rules tab)",
+  "detectors": {
+    "impeccable": {
+      "mappingBasis": "Rule IDs from the Impeccable detector registry (local copy 1fe9c41, 45 rules). Rules Elle lists without a known ID stay unmapped; a run supplying only known IDs covers only those rules."
+    }
+  },
+  "policy": {
+    "flagPoints": 2,
+    "advisoryPoints": 1,
+    "advisoryRequiresAdjudication": true,
+    "repeatCountsOncePerCriterion": true,
+    "aiTellOriginality": {
+      "criterion": "ORIGINALITY",
+      "minimumFlags": 3,
+      "capPoints": 5
+    },
+    "gateCap": 49,
+    "multiCriterionCharging": "each-mapped-criterion",
+    "unresolved": [
+      "Multi-criterion rules charge each mapped criterion, read from \"a rule firing many times counts once per criterion\". Confirm that a two-criterion flag costs 2 points in each.",
+      "Order of Layer 3 deductions and the Originality cap is unspecified. When the two orders give different points, the criterion is reported unknown.",
+      "No zero floor is specified. A criterion whose deductions exceed its raw points is reported unknown, not clamped.",
+      "Layer 3 deductions can overlap a defect the visual judge already penalized under Layers 1/2; the source supersedes one-defect-one-criterion, so no deduplication is applied.",
+      "Four off-system rules are listed as \"Flag / Advisory\" without a split; they deduct nothing until resolved.",
+      "Typography thresholds conflict: criterion 9 warns above about five text sizes, the craft kit allows 6 to 8; criterion 9 sets a 16 px body minimum, Layer 3 flags body under 12 px and UI text under 11 px; the craft kit wants 50 to 75 characters per line, Layer 3 flags over about 80.",
+      "Style flags describe patterns. They never establish AI authorship."
+    ]
+  },
+  "rules": [
+    {
+      "id": "side-tab-accent-border",
+      "title": "Side-tab accent border",
+      "catches": "Thick colored border on one side of a card, the most recognizable AI-UI tell",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "side-tab"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "border-accent-on-rounded-element",
+      "title": "Border accent on rounded element",
+      "catches": "Thick accent border on a rounded card; the border clashes with the corners",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "border-accent-on-rounded"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "overused-font",
+      "title": "Overused font",
+      "catches": "Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, Space Grotesk: too common to feel distinctive",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY",
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "overused-font"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": [
+        {
+          "id": "common-face-with-distinctive-move",
+          "reason": "Elle allows one common face when the design has another distinctive move.",
+          "requires": "adjudication"
+        }
+      ]
+    },
+    {
+      "id": "flat-type-hierarchy",
+      "title": "Flat type hierarchy",
+      "catches": "Heading and body sizes less than 1.25\u00d7 apart at every step",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "HIER",
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "flat-type-hierarchy"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "gradient-text",
+      "title": "Gradient text",
+      "catches": "Gradient fills on text, especially headings and metrics",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "gradient-text"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "ai-color-palette",
+      "title": "AI color palette",
+      "catches": "Purple or violet gradients, cyan on dark",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "AUDIENCE",
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "ai-color-palette"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "cream-beige-palette",
+      "title": "Cream / beige palette",
+      "catches": "Warm cream page backgrounds, the default \"tasteful\" AI surface",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "AUDIENCE",
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "cream-palette"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "nested-cards",
+      "title": "Nested cards",
+      "catches": "Cards inside cards",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "DENSITY",
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "nested-cards"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "monotonous-spacing",
+      "title": "Monotonous spacing",
+      "catches": "One spacing value everywhere, no rhythm",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "monotonous-spacing"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "bounce-or-elastic-easing",
+      "title": "Bounce or elastic easing",
+      "catches": "Bouncy motion instead of smooth deceleration",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "INTERACTION"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "bounce-easing"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "pulsing-status-dot",
+      "title": "Pulsing status dot",
+      "catches": "Pulsing dots faking liveness",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "INTERACTION",
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "decorative-blinking-cursor",
+      "title": "Decorative blinking cursor",
+      "catches": "A typing cursor animated where no input exists",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "shape-assembled-illustration",
+      "title": "Shape-assembled illustration",
+      "catches": "Scenes built from piles of basic SVG shapes, reading as clip art",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "VISUAL"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "glowing-shadow-accents",
+      "title": "Glowing shadow accents",
+      "catches": "Colored glows and halos, especially on dark backgrounds",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "dark-glow"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "radial-gradient-halo",
+      "title": "Radial-gradient halo",
+      "catches": "Saturated radial glow fading out behind a dark page",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "radial-spotlight-glow",
+      "title": "Radial spotlight glow",
+      "catches": "Accent-colored spotlight cloud behind a hero",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "auto-scrolling-marquee",
+      "title": "Auto-scrolling marquee",
+      "catches": "Content that scrolls by itself",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "INTERACTION"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "icon-tile-above-heading",
+      "title": "Icon tile above heading",
+      "catches": "Small rounded-square icon box stacked above each heading",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "icon-tile-stack"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "italic-serif-display-headline",
+      "title": "Italic serif display headline",
+      "catches": "Oversized italic serif as the hero headline",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY",
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "italic-serif-display"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "hero-eyebrow-pill-chip",
+      "title": "Hero eyebrow / pill chip",
+      "catches": "Tiny tracked uppercase label or pill directly above a hero headline",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY",
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "hero-eyebrow-chip"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": [
+        {
+          "id": "reference-docs",
+          "reason": "Reference docs are exempt from kicker-label flags.",
+          "requires": "adjudication"
+        }
+      ]
+    },
+    {
+      "id": "kicker-above-heading",
+      "title": "Kicker above heading",
+      "catches": "Tiny tracked uppercase label as its own line above any heading",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY",
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "repeated-section-kickers"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": [
+        {
+          "id": "reference-docs",
+          "reason": "Reference docs are exempt; remove kickers on product and marketing screens.",
+          "requires": "adjudication"
+        }
+      ]
+    },
+    {
+      "id": "numbered-section-labels",
+      "title": "Numbered section labels",
+      "catches": "Small \"01, 02, 03\" labels beside section headings",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "numbered-section-markers"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "em-dash-overuse",
+      "title": "Em-dash overuse",
+      "catches": "8+ em-dashes saturating body copy",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "em-dash-overuse"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "marketing-buzzword",
+      "title": "Marketing buzzword",
+      "catches": "\"Streamline\", \"empower\", \"supercharge\", \"world-class\", \"cutting-edge\"",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "AUDIENCE",
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "marketing-buzzword"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "aphoristic-cadence",
+      "title": "Aphoristic cadence",
+      "catches": "3+ sections ending on lines like \"Not a feature. A platform.\"",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "aphoristic-cadence"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "oversized-hero-headline",
+      "title": "Oversized hero headline",
+      "catches": "A full sentence at display size filling the first screen",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "HIER"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "oversized-h1"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "crushed-letter-spacing",
+      "title": "Crushed letter spacing",
+      "catches": "Tracking so tight letters lose their shapes",
+      "category": "ai-tell",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "extreme-negative-tracking"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "hairline-border-wide-shadow",
+      "title": "Hairline border + wide shadow",
+      "catches": "Every card in a row wearing both",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "gpt-thin-border-wide-shadow"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "repeating-stripes",
+      "title": "Repeating stripes",
+      "catches": "Striped gradient surfaces as decoration",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "repeating-stripes-gradient"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "decorative-grid-background",
+      "title": "Decorative grid background",
+      "catches": "Hairline grid-paper backgrounds",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "codex-grid-background"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "theater-framing-copy",
+      "title": "\"Theater\" framing copy",
+      "catches": "Dismissing something as \"theater\"",
+      "category": "ai-tell",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "ORIGINALITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "theater-slop-phrase"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "broken-image",
+      "title": "Broken image",
+      "catches": "Empty or placeholder image sources",
+      "category": "quality",
+      "severity": "flag",
+      "gate": true,
+      "criteria": [],
+      "detectorIds": {
+        "impeccable": [
+          "broken-image"
+        ]
+      },
+      "nativeVerifier": "broken-image",
+      "exceptions": []
+    },
+    {
+      "id": "script-error-on-load",
+      "title": "Script error on load",
+      "catches": "JavaScript that crashes while the page loads",
+      "category": "quality",
+      "severity": "error",
+      "gate": true,
+      "criteria": [],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": "script-error",
+      "exceptions": []
+    },
+    {
+      "id": "content-invisible-at-rest",
+      "title": "Content invisible at rest",
+      "catches": "Most text still hidden after reveal animations should have run",
+      "category": "quality",
+      "severity": "error",
+      "gate": true,
+      "criteria": [],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "text-occluded",
+      "title": "Text occluded",
+      "catches": "Text covered by another element",
+      "category": "quality",
+      "severity": "flag",
+      "gate": true,
+      "criteria": [],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "low-contrast-text",
+      "title": "Low contrast text",
+      "catches": "Below 4.5:1 for body or 3:1 for large text",
+      "category": "quality",
+      "severity": "flag",
+      "gate": true,
+      "criteria": [],
+      "detectorIds": {
+        "impeccable": [
+          "low-contrast"
+        ]
+      },
+      "nativeVerifier": "low-contrast",
+      "exceptions": []
+    },
+    {
+      "id": "grey-on-color",
+      "title": "Grey on color",
+      "catches": "Grey text on a colored background",
+      "category": "quality",
+      "severity": "flag",
+      "gate": true,
+      "criteria": [],
+      "detectorIds": {
+        "impeccable": [
+          "gray-on-color"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "one-column-stretches-the-first-screen",
+      "title": "One column stretches the first screen",
+      "catches": "One column runs far past the fold while its neighbor ends early",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "HIER"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "repeated-container-text",
+      "title": "Repeated container text",
+      "catches": "The same text 3+ times inside one card",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "DENSITY"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "organic-clip-path",
+      "title": "Organic clip-path",
+      "catches": "Blob or torn-edge shapes faked with clip-path",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "VISUAL"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "buried-raster",
+      "title": "Buried raster",
+      "catches": "An image hidden under a near-opaque wash",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "VISUAL"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "hard-offset-shadow",
+      "title": "Hard offset shadow",
+      "catches": "Unblurred shadow offset 4 px+; fine if neobrutalist on purpose",
+      "category": "quality",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": [
+        {
+          "id": "deliberate-neobrutalism",
+          "reason": "Fine if neobrutalist on purpose.",
+          "requires": "adjudication"
+        }
+      ]
+    },
+    {
+      "id": "cards-flush-against-scroller-edge",
+      "title": "Cards flush against scroller edge",
+      "catches": "Carousel cards cut off at one edge",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "cramped-padding",
+      "title": "Cramped padding",
+      "catches": "Text too close to its container's edge",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "cramped-padding"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "heading-rhythm",
+      "title": "Heading rhythm",
+      "catches": "Less space above a heading than below it",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "off-system-font",
+      "title": "Off-system font",
+      "catches": "Values outside the documented design system",
+      "category": "quality",
+      "severity": "unresolved",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "design-system-font"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": [],
+      "severityNote": "Source lists \"Flag / Advisory\" for the four off-system rules without saying which is which."
+    },
+    {
+      "id": "off-system-color",
+      "title": "Off-system color",
+      "catches": "Values outside the documented design system",
+      "category": "quality",
+      "severity": "unresolved",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "design-system-color"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": [],
+      "severityNote": "Source lists \"Flag / Advisory\" for the four off-system rules without saying which is which."
+    },
+    {
+      "id": "off-system-radius",
+      "title": "Off-system radius",
+      "catches": "Values outside the documented design system",
+      "category": "quality",
+      "severity": "unresolved",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "design-system-radius"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": [],
+      "severityNote": "Source lists \"Flag / Advisory\" for the four off-system rules without saying which is which."
+    },
+    {
+      "id": "off-system-size",
+      "title": "Off-system size",
+      "catches": "Values outside the documented design system",
+      "category": "quality",
+      "severity": "unresolved",
+      "gate": false,
+      "criteria": [
+        "SYSTEM"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": [],
+      "severityNote": "Source lists \"Flag / Advisory\" for the four off-system rules without saying which is which."
+    },
+    {
+      "id": "line-length",
+      "title": "Line length",
+      "catches": "Lines wider than about 80 characters",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "line-length"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "tight-leading",
+      "title": "Tight leading",
+      "catches": "Line height below 1.3\u00d7 the font size",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "tight-leading"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "justified-text",
+      "title": "Justified text",
+      "catches": "Justified narrow columns with rivers of white",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "justified-text"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "straggler",
+      "title": "Straggler",
+      "catches": "One word alone on a paragraph's last line",
+      "category": "quality",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "unbalanced-heading",
+      "title": "Unbalanced heading",
+      "catches": "A heading's last line far shorter than the one above",
+      "category": "quality",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "tiny-body-text",
+      "title": "Tiny body text",
+      "catches": "Body text under 12 px",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "tiny-text"
+        ]
+      },
+      "nativeVerifier": "tiny-text",
+      "exceptions": []
+    },
+    {
+      "id": "undersized-ui-text",
+      "title": "Undersized UI text",
+      "catches": "Buttons, labels or links under 11 px",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": []
+      },
+      "nativeVerifier": "undersized-ui-text",
+      "exceptions": []
+    },
+    {
+      "id": "all-caps-body",
+      "title": "All-caps body",
+      "catches": "Long passages in uppercase",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "all-caps-body"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "wide-tracking-on-body",
+      "title": "Wide tracking on body",
+      "catches": "Letter-spacing over 0.05 em on body text",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "TYPOGRAPHY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "wide-tracking"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "body-text-at-the-screen-edge",
+      "title": "Body text at the screen edge",
+      "catches": "Paragraphs closer than 16 px to the viewport edge",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "USABILITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "body-text-viewport-edge"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "skipped-heading-level",
+      "title": "Skipped heading level",
+      "catches": "An h1 followed by an h3, with no h2",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "USABILITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "skipped-heading"
+        ]
+      },
+      "nativeVerifier": "skipped-heading",
+      "exceptions": []
+    },
+    {
+      "id": "content-overflow",
+      "title": "Content overflow",
+      "catches": "Content spilling out of its container",
+      "category": "quality",
+      "severity": "flag",
+      "gate": false,
+      "criteria": [
+        "USABILITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "text-overflow"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    },
+    {
+      "id": "clipped-popover",
+      "title": "Clipped popover",
+      "catches": "Menus or tooltips cut off by an overflow container",
+      "category": "quality",
+      "severity": "advisory",
+      "gate": false,
+      "criteria": [
+        "USABILITY"
+      ],
+      "detectorIds": {
+        "impeccable": [
+          "clipped-overflow-container"
+        ]
+      },
+      "nativeVerifier": null,
+      "exceptions": []
+    }
+  ]
+}
