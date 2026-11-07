@@ -56,7 +56,7 @@ export function createApp(store: Store) {
   app.get('/api/runs/:id/evidence/:evidenceId', async (req, res) => {
     const { artifact, bytes } = await store.evidence(idSchema.parse(req.params.id), String(req.params.evidenceId));
     res.set('Content-Disposition', `attachment; filename="${artifact.file}"`);
-    res.type(artifact.kind === 'screenshot' ? 'image/png' : 'text/plain').send(bytes);
+    res.type(['screenshot', 'full_screenshot'].includes(artifact.kind) ? 'image/png' : 'text/plain').send(bytes);
   });
   app.post('/api/runs/:id/handoffs', (req, res) => {
     const input = z.object({ selectedIds: z.array(z.string().max(200)).min(1).max(100) }).strict().parse(req.body);

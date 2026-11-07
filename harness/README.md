@@ -38,6 +38,8 @@ Writes require `Content-Type: application/json`. Captures are synchronous and bo
 
 `axes` contains measured/real-judge aggregates only. `fixtureAxes` contains sample-only aggregates. Both are viewport-specific. Null/incomplete axes must remain gaps in a chart. `results` preserves individual criterion statuses, coverage, provenance and evidence references. No cross-device overall score is supplied. Suggestions from fixtures carry `provenance: "fixture"`; label them SAMPLE DATA. Expected effects are hypotheses; only new evaluations produce deltas.
 
+For the paste-a-URL flow: capture and criterion results work through this API. The product input UI is not included here. A full visual rubric result still needs live SubQ execution; a composite still needs Elle's approved aggregation rule. Do not display the limited deterministic checks or demo fixtures as a complete website-quality score.
+
 ## Rubric and scoring boundaries
 
 `config/rubric.json` is a **provisional harness fixture based on the document**, not Elle's approved `/rubric/rubric.json` or C1 contract. Edit definitions, weights, anchors and thresholds there; each run stores the complete rubric and a content hash. Reevaluations retain that snapshot unless `useLatestRubric` is true. Profiles are editable through a run request and snapshotted; no old result is overwritten. Changing content with the same version label still makes runs incomparable.
@@ -67,6 +69,8 @@ Fresh Chromium contexts use no host cookies or credentials. HTTP resources pass 
 
 Readiness requires successful HTML, idle network, loaded fonts/images and optional expected text. Required resource failures invalidate capture. Scripts, CSS animation and media are frozen before screenshot/DOM/style/text capture; DOM is checked again afterward. Metadata records policy, browser, OS, modality, dimensions, time, state, content hash and artifact checksums. Captures are bounded to 160 requests, 32 MiB relayed bytes and 12,000px height. This is a conservative default-state capture, not evidence of interactive or temporal behavior. Canvas/video state and unusual network protocols warrant isolated infrastructure before public hosting.
 
+Each viewport saves five artifacts: a viewport PNG, a separate full-page PNG, rendered HTML, sampled styles/geometry and text. PNG dimensions are recorded. The judge receives the viewport PNG so horizontal overflow cannot silently widen its mobile input. Chromium's compositor clock stays running while page scripts and animations are frozen; pausing virtual time caused a second-screenshot timeout during verification.
+
 Saved HTML is rendered DOM, **not original repository source**. Downloads use attachment disposition, plain text and a restrictive content policy. Model requests contain selected rendered facts/text and screenshots, not raw scripts, cookies, private repositories or input values. Treat all captured content as untrusted. Avoid submitting URLs containing secrets or private data.
 
 ## Integration seams and verification
@@ -83,3 +87,17 @@ npm run test:e2e
 ```
 
 Tests use temporary state directories and fake model transports; the end-to-end test launches the built server and real Chromium. Test artifacts stay under ignored `test-results/`. No credentials or captured customer content belongs in fixtures or commits.
+
+Verified November 7, 2026: 28 tests passed, plus lint, TypeScript checking, build and the built-server Chromium end-to-end test. That test verifies paired evidence checksums/dimensions, selected-only prompts, measured improvements, illustrative flat/regressed fixture scores, unassessed gaps, incompatible-profile rejection, failed captures, restart persistence and the missing-provider setup state. Its `baseline-run.json` is actual controlled-demo API output for integration work. Model responses in unit tests are authored mocks; they do not verify live SubQ execution or rubric accuracy.
+
+Exact commands used for the final checks (equivalent to the package scripts):
+
+```sh
+node --experimental-strip-types --test tests/*.test.ts
+node node_modules/eslint/bin/eslint.js .
+node node_modules/typescript/bin/tsc --noEmit
+node scripts/build.mjs
+node --experimental-strip-types tests/e2e.ts
+```
+
+Production dependency audit found no vulnerabilities; the development dependency audit reported 10 moderate findings through `minimatch`. Independent Google review returned no verdict, so this remains a draft pending review.

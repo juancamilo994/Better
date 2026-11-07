@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-export const AXES = ['HIER', 'LAY', 'TYPE', 'ACC', 'CRAFT', 'INT', 'ADAPT', 'FIT'] as const;
 export type Viewport = 'desktop' | 'mobile';
 export type Channel = 'quality' | 'taste' | 'ai-isms' | 'motion' | 'reference';
 export const profileSchema = z.object({
@@ -16,7 +15,7 @@ const findingSchema = z.object({
   dependencies: z.array(z.string()).default([]), conflicts: z.array(z.string()).default([]),
 });
 export const criterionSchema = z.object({
-  id: z.string().regex(/^[A-Z0-9-]+$/), axis: z.enum(AXES).nullable(),
+  id: z.string().regex(/^[A-Z0-9-]+$/), axis: z.string().nullable(),
   title: z.string(), channel: z.enum(['quality', 'taste', 'ai-isms', 'motion', 'reference']),
   lane: z.enum(['deterministic', 'visual', 'unsupported']),
   rule: z.enum(['overflow', 'small-text', 'image-alt']).optional(),
@@ -27,20 +26,24 @@ export const criterionSchema = z.object({
 });
 export type Criterion = z.infer<typeof criterionSchema>;
 export const rubricSchema = z.object({
-  version: z.string(), status: z.string(), axes: z.array(z.object({ id: z.enum(AXES), title: z.string() })),
+  version: z.string(), status: z.string(), axes: z.array(z.object({ id: z.string().min(1), title: z.string() })).min(1),
   criteria: z.array(criterionSchema),
 }).superRefine((r, ctx) => {
-  if (r.axes.map(a => a.id).join() !== AXES.join()) ctx.addIssue({ code: 'custom', message: 'Keep the eight radar axes in order.' });
+  if (new Set(r.axes.map(a => a.id)).size !== r.axes.length) ctx.addIssue({ code: 'custom', message: 'Axis IDs must be unique.' });
   if (new Set(r.criteria.map(c => c.id)).size !== r.criteria.length) ctx.addIssue({ code: 'custom', message: 'Criterion IDs must be unique.' });
   for (const c of r.criteria) {
+    if (c.axis && !r.axes.some(a => a.id === c.axis)) ctx.addIssue({ code: 'custom', message: 'Unknown axis.' });
     if (c.channel === 'quality' && !c.axis) ctx.addIssue({ code: 'custom', message: 'Quality criteria need a home axis.' });
     if (c.channel !== 'quality' && c.axis) ctx.addIssue({ code: 'custom', message: 'Separate channels must not add radar penalties.' });
     if (c.lane === 'deterministic' && !c.rule) ctx.addIssue({ code: 'custom', message: 'Deterministic criteria need a rule.' });
+    if (c.lane === 'visual' && !c.findings.length) ctx.addIssue({ code: 'custom', message: 'Visual criteria need at least one bounded finding option.' });
     if (new Set(c.findings.map(f => f.id)).size !== c.findings.length) ctx.addIssue({ code: 'custom', message: 'Finding IDs must be unique.' });
   }
+  const findings = r.criteria.flatMap(c => c.findings.map(f => f.id));
+  if (new Set(findings).size !== findings.length) ctx.addIssue({ code: 'custom', message: 'Each issue must have one scoring home.' });
 });
 export type Rubric = z.infer<typeof rubricSchema>;
-export interface Artifact { id: string; runId: string; viewport: Viewport; state: 'default-frozen'; kind: 'screenshot' | 'dom' | 'styles' | 'text'; file: string; sha256: string; bytes: number }
+export interface Artifact { id: string; runId: string; viewport: Viewport; state: 'default-frozen'; kind: 'screenshot' | 'full_screenshot' | 'dom' | 'styles' | 'text'; file: string; sha256: string; bytes: number; width?: number; height?: number }
 export interface ElementFact { id: string; tag: string; text: string; fontSize: number; lineHeight: string; color: string; background: string; width: number; height: number; x: number; y: number; alt: string | null }
 export interface Capture {
   viewport: Viewport; width: number; height: number; status: 'ready' | 'failed'; reason?: string;

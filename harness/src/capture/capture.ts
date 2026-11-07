@@ -31,7 +31,7 @@ export async function capturePage(project: Project, runId: string, directory: st
       let totalBytes = 0;
       let requests = 0;
       let documentHash = '';
-      await context.routeWebSocket('**/*', route => { blockedRequests++; route.close(); });
+      await context.routeWebSocket('**/*', route => { blockedRequests++; resourceFailure = true; route.close(); });
       await context.route('**/*', async route => {
         try {
           if (route.request().method() !== 'GET' || ++requests > 160) throw new Error('Request blocked.');
@@ -71,15 +71,21 @@ export async function capturePage(project: Project, runId: string, directory: st
         if (resourceFailure) throw new Error('A resource was blocked or failed. This capture cannot be graded.');
         if (expectedText && !(await page.locator('body').innerText()).includes(expectedText)) throw new Error('Expected page marker is missing.');
         await page.addStyleTag({ content: '* , *::before, *::after { animation-play-state: paused !important; transition: none !important; caret-color: transparent !important; }' });
-        await page.evaluate(() => { document.querySelectorAll('video,audio').forEach(el => (el as HTMLMediaElement).pause()); window.scrollTo(0, 0); });
+        await page.evaluate(() => {
+          document.querySelectorAll('video,audio').forEach(el => (el as HTMLMediaElement).pause());
+          document.getAnimations().forEach(animation => animation.pause());
+          document.querySelectorAll('svg').forEach(svg => svg.pauseAnimations());
+          window.scrollTo(0, 0);
+        });
         const session = await context.newCDPSession(page);
         await session.send('Emulation.setScriptExecutionDisabled', { value: true });
-        await session.send('Emulation.setVirtualTimePolicy', { policy: 'pause' });
+        // Leave compositor time running: pausing Chromium's virtual clock can
+        // stall the second screenshot. Page scripts and animations are frozen.
         const snapshot = await page.evaluate(() => {
           const visible = Array.from(document.querySelectorAll('h1,h2,h3,p,a,button,label,input,textarea,select,img,li')).filter(el => {
             const rect = el.getBoundingClientRect();
             const style = getComputedStyle(el);
-            return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+            return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && el.checkVisibility({ opacityProperty: true, visibilityProperty: true });
           });
           const elements = visible.slice(0, 1200).map((el, index) => {
             const rect = el.getBoundingClientRect(); const style = getComputedStyle(el);
@@ -87,17 +93,20 @@ export async function capturePage(project: Project, runId: string, directory: st
           });
           return { html: document.documentElement.outerHTML, height: document.documentElement.scrollHeight, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth, elements, text: document.body.innerText, title: document.title, truncated: visible.length > 1200 };
         });
-        if (!snapshot.text.trim() || snapshot.height > 12_000 || snapshot.html.length > 4_000_000) throw new Error('Empty page or capture size limit exceeded.');
-        const screenshot = await page.screenshot({ fullPage: true, type: 'png', timeout: 12_000 });
+        if (!snapshot.text.trim() || snapshot.height > 12_000 || snapshot.scrollWidth > 12_000 || snapshot.html.length > 4_000_000) throw new Error('Empty page or capture size limit exceeded.');
+        const screenshot = await page.screenshot({ fullPage: false, type: 'png', timeout: 12_000 });
+        const fullScreenshot = await page.screenshot({ fullPage: true, type: 'png', timeout: 12_000 });
         const finalHtml = await page.evaluate(() => document.documentElement.outerHTML);
         if (finalHtml !== snapshot.html || resourceFailure) throw new Error('Page changed during capture or a resource failed.');
         const artifacts: Artifact[] = [];
         const save = async (kind: Artifact['kind'], bytes: Buffer, extension: string) => {
           const file = `${viewport}.${extension}`;
           await writeFile(join(directory, file), bytes, { flag: 'wx' });
-          artifacts.push({ id: `${runId}:${viewport}:${kind}`, runId, viewport, state: 'default-frozen', kind, file, sha256: hash(bytes), bytes: bytes.length });
+          const dimensions = ['screenshot', 'full_screenshot'].includes(kind) ? { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) } : {};
+          artifacts.push({ id: `${runId}:${viewport}:${kind}`, runId, viewport, state: 'default-frozen', kind, file, sha256: hash(bytes), bytes: bytes.length, ...dimensions });
         };
         await save('screenshot', screenshot, 'png');
+        await save('full_screenshot', fullScreenshot, 'full.png');
         await save('dom', Buffer.from(snapshot.html), 'html');
         await save('styles', Buffer.from(JSON.stringify(snapshot.elements, null, 2)), 'styles.json');
         await save('text', Buffer.from(snapshot.text), 'txt');

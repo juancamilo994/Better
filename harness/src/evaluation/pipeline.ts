@@ -7,7 +7,7 @@ import { type DemoVersion } from '../capture/demo.ts';
 import { AGGREGATION_VERSION, CAPTURE_VERSION, PROMPT_VERSION, hash, loadRubric, objectHash } from '../config.ts';
 import { AppError, type Capture, type Profile, type Result, type Run } from '../domain.ts';
 import { FixtureJudge } from '../judges/fixture.ts';
-import { JudgeError, type Judge, type JudgeInput } from '../judges/interface.ts';
+import { JudgeError, validateDecision, type Judge, type JudgeInput } from '../judges/interface.ts';
 import { SubQJudge } from '../judges/subq.ts';
 import { Store } from '../store.ts';
 import { aggregate } from './aggregation.ts';
@@ -59,7 +59,7 @@ export async function evaluateProject(store: Store, projectId: string, options: 
           if (hash(bytes) !== artifact.sha256) throw new JudgeError('evidence_integrity_failed');
           input.images.push({ evidenceId: artifact.id, mediaType: 'image/png', base64: bytes.toString('base64') });
         }
-        const result = await judge.evaluate(input);
+        const result = validateDecision(await judge.evaluate(input), input, judge);
         results.push(result);
         judgeAttempts.push({ viewport: capture.viewport, criterionId: criterion.id, status: result.status, code: judge.provenance === 'fixture' ? 'labeled_fixture' : 'validated_response' });
       } catch (error) {

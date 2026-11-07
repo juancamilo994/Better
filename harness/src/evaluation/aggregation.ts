@@ -1,9 +1,9 @@
-import { AXES, type AxisScore, type Result, type Rubric, type Run, type Viewport } from '../domain.ts';
+import { type AxisScore, type Result, type Rubric, type Run, type Viewport } from '../domain.ts';
 
 // Lower weighted median: retain ordinal anchors, avoid invented decimal precision.
 // Each issue has one rubric home. Viewports and fixture/real evidence never mix.
 export function aggregate(rubric: Rubric, results: Result[], viewport: Viewport, fixtures = false): AxisScore[] {
-  return AXES.map(axis => {
+  return rubric.axes.map(({ id: axis }) => {
     const criteria = rubric.criteria.filter(c => c.channel === 'quality' && c.axis === axis && c.weight > 0 && (!fixtures || c.lane === 'visual'));
     const available = criteria.map(c => ({ criterion: c, result: results.find(r => r.criterionId === c.id && r.viewport === viewport) }));
     const applicable = available.filter(x => x.result?.status !== 'not_applicable');

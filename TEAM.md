@@ -408,6 +408,7 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 | 2026-11-07 | Branches + PRs, folder ownership via CODEOWNERS | Juan | Clean separation across three parallel workstreams |
 | 2026-11-07 | Direct pushes to `main` allowed during the planning phase only; branches + PRs once development starts | Juan | Fast iteration on alignment docs; protect `main` once code lands |
 | 2026-11-07 | Soft cap of 3 fixes per prompt (warning, not block) | Juan | Keeps score changes attributable without frustrating users |
+| 2026-11-07 | Harness-only checkpoint; no actual-site previews, personality mode or video judging | Paul | Explicit user scope; local API and provisional rubric are documented pending shared contracts |
 
 ---
 
@@ -438,6 +439,8 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 | Paul | — | Review §4–§5, answer Q-P1…Q-P6, harness stub | — |
 | Elle | Placeholder rubric drafted | `rubric/rubric.json` v0.1, answer Q-E1…Q-E4 | — |
 
+Paul update, 2026-11-07: local harness and team handoff are in draft PR #1. 28 tests, lint, typecheck, build and built-server Chromium end-to-end verification passed. Next: agree C1–C5 mapping with Juan and Elle. Full rubric scoring needs live SubQ; a composite needs the approved aggregation rule. Supabase and web UI remain unwired.
+
 ---
 
 ## 12. Feedback inbox
@@ -449,3 +452,4 @@ Append feedback addressed to another workstream. Format: `- [YYYY-MM-DD] from �
 - [2026-11-07] Paul → Juan, Elle: Harness checkpoint is on `feat/better-evaluation-loop` under `/harness`; see `harness/README.md` for local API and setup. User narrowed this work to the eval harness and explicitly deferred actual-site previews, personality mode and video judging. SubQ is a structured choice judge; fixture decisions stay labeled and separate from real measurements. TYPE readability/message clarity and INT appearance/verified behavior are separate criteria; ADAPT requires matched captures and does not repeat viewport-local penalties; FIT assesses claim presentation, not company truthfulness.
 - [2026-11-07] Paul → Juan: Q-P1/P2: Node 24+, TypeScript, Playwright, Express; local demo, SubQ `subq-snap-1.1` adapter with paid calls disabled. Q-P3: local SQLite is the runnable development baseline; Supabase C5 and the C2 async lifecycle are not wired or claimed compatible. `/contracts` and provisioned access were absent when work began. Please coordinate the shared seam before connecting the UI; `/api` is a documented local API, not a silent C2 replacement. Q-P4/P5: no patches/previews in this authorized scope. Q-P6: apparent affordances may be judged from stills; verified behavior and motion abstain without the required evidence. Harness checkpoint build/lint passed; full integration/security verification is in progress.
 - [2026-11-07] Paul → Elle: `harness/config/rubric.json` is an editable provisional fixture, not your approved C1 file. Per-axis lower weighted median is provisional; no global score combines desktop/mobile, and missing criteria remain incomplete. Please supply approved criterion IDs, anchors and schema mapping through `/rubric` and `/contracts`; original run snapshots will remain immutable when these change.
+- [2026-11-07] Paul → Juan, Elle: Verification follow-up for draft PR #1 passed 28 tests, lint/typecheck/build and the built HTTP API with real Chromium. Run `npm run test:e2e` in `/harness` for actual controlled-demo API output at ignored `test-results/baseline-run.json`, plus paired screenshots and selected prompt. Missing-provider, failed-capture, immutable-history and compatible-comparison paths are checked. No live SubQ accuracy or independent review approval is claimed; Google review returned no verdict. See README for exact commands and remaining integration seams.

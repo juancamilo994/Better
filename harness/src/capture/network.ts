@@ -27,7 +27,9 @@ const resolveHost: Resolver = host => lookup(host, { all: true, verbatim: true }
 export async function publicTarget(input: string, resolver: Resolver = resolveHost) {
   const url = publicUrl(input);
   const hostname = url.hostname.replace(/^\[|\]$/g, '');
-  const addresses = await resolver(hostname);
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_resolve, reject) => { timer = setTimeout(() => reject(new AppError('DNS resolution timed out.')), 5_000); });
+  const addresses = await Promise.race([resolver(hostname), timeout]).finally(() => clearTimeout(timer));
   if (!addresses.length || addresses.some(a => !isPublicAddress(a.address))) {
     throw new AppError('Private, local, reserved and metadata destinations are blocked.');
   }
@@ -41,7 +43,7 @@ export async function publicGet(input: string, resolver: Resolver = resolveHost)
   const { url, address } = await publicTarget(input, resolver);
   return new Promise<{ status: number; headers: Record<string, string>; body: Buffer }>((resolve, reject) => {
     const request = (url.protocol === 'https:' ? https : http).request(url, {
-      method: 'GET', agent: false, timeout: 12_000,
+      method: 'GET', agent: false, timeout: 12_000, family: address.family,
       headers: { 'User-Agent': 'BetterCapture/0.1', 'Accept-Encoding': 'identity', Accept: '*/*' },
       lookup: (_host, _options, callback) => callback(null, address.address, address.family),
     }, response => {
@@ -64,6 +66,9 @@ export async function publicGet(input: string, resolver: Resolver = resolveHost)
     });
     request.on('error', reject);
     request.on('timeout', () => request.destroy(new Error('Resource timed out.')));
+    // Absolute deadline also stops a peer that keeps sending tiny chunks.
+    const deadline = setTimeout(() => request.destroy(new Error('Resource deadline exceeded.')), 12_000);
+    request.on('close', () => clearTimeout(deadline));
     request.end();
   });
 }
