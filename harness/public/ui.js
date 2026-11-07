@@ -11,14 +11,46 @@ function chart(axes, scores = []) {
  for (const radius of [48,96,144,192]) draw('polygon', { points: axes.map((_,i)=>pos(i,radius).join(',')).join(' '), class:'grid' });
  axes.forEach((a,i) => { const p = pos(i,192), label = pos(i,232); draw('line',{x1:340,y1:280,x2:p[0],y2:p[1],class:'axis'}); const s = scores.find(s=>s.id===a.id); const max = a.weight; const known = s?.points !== null && s?.points !== undefined && max; const q = pos(i, known ? 192*s.points/max : 192); draw('circle',{cx:q[0],cy:q[1],r:known?6:5,class:known?'point':'unknown'}); draw('text',{x:label[0],y:label[1],'text-anchor':'middle',class:'criterion-label'}, a.title); const number=pos(i,218); draw('text',{x:number[0],y:number[1],'text-anchor':'middle',class:'criterion-number'},String(i+1)); el('li',`${a.title}: ${known?s.points+' / '+max:'Unknown'}`,$('chart-legend')); if (known) { const next = scores.find(s=>s.id===axes[(i+1)%axes.length].id); if (next?.points !== null && next?.points !== undefined) { const end = pos((i+1)%axes.length,192*next.points/axes[(i+1)%axes.length].weight); draw('line',{x1:q[0],y1:q[1],x2:end[0],y2:end[1],class:'known'}); } } });
 }
+function scoreTable(axes, scores = []) {
+ $('score-values').replaceChildren();
+ const previous=history.find(h=>h.id===run?.parentRunId);
+ const compatible=previous&&JSON.stringify(previous.versions)===JSON.stringify(run.versions);
+ for(const axis of axes){
+  const current=scores.find(c=>c.id===axis.id)?.points, before=previous?.quality?.[$('viewport').value]?.criteria.find(c=>c.id===axis.id)?.points;
+  const row=el('tr',undefined,$('score-values')),heading=el('th',axis.title,row);heading.scope='row';
+  el('td',`${current===null||current===undefined?'Unknown':current} / ${axis.weight??'Unspecified'}`,row);
+  const delta=compatible&&current!==null&&current!==undefined&&before!==null&&before!==undefined?current-before:null;
+  el('td',delta===null?(previous&&!compatible?'Not comparable':'No comparable value'):delta===0?'Unchanged':delta>0?`Increased by ${delta}`:`Decreased by ${-delta}`,row);
+ }
+}
+function assessmentDetails(viewport){
+ $('task-coverage').replaceChildren();$('structured-findings').replaceChildren();$('strengths').replaceChildren();
+ const a=run?.assessment;
+ if(!a){el('p','No curated-check ledger in this historical run.',$('task-coverage'));return;}
+ for(const strength of a.strengths)el('li',strength.text,$('strengths'));
+ if(!a.strengths.length)el('li','No additional product strengths verified. Preserve essential labels, errors, instructions and working alternatives.',$('strengths'));
+ for(const step of a.taskSteps){
+  const section=el('section',undefined,$('task-coverage'));el('h3',step.goal,section);el('p','Intended outcome: '+step.intendedOutcome,section);
+  for(const state of a.stateCoverage.filter(s=>s.taskStep===step.id&&s.viewport===viewport)){
+   const detail=el('details',undefined,section);el('summary',`${state.state}: ${state.coverage}`,detail);el('p',`${state.reason} Required evidence: ${state.requiredEvidence.join(', ')}.`,detail);
+   for(const check of a.ledger.filter(c=>c.taskStep===step.id&&c.viewport===viewport&&c.state===state.state))el('p',`${check.checkId}: ${check.coverage}. ${check.reason} Missing evidence: ${check.missingEvidence.join(', ')||'none by kind; check verifier status'}. Exception: ${check.exceptionStatus}.`,detail);
+  }
+ }
+ for(const f of a.findings.filter(f=>f.viewport===viewport)){
+  const article=el('article',undefined,$('structured-findings'));el('h3',`${f.primaryCriterion} · ${f.issueFamilyId} · ${f.kind}`,article);
+  el('p',`${f.taskStep} / ${f.state} · ${f.coverageStatus} · severity ${f.severity} · verifier ${f.verifier} · exception ${f.exceptionStatus}`,article);
+  el('p','Observed: '+f.observedImpact,article);if(f.hypothesizedImpact)el('p','Hypothesis: '+f.hypothesizedImpact,article);
+  const group=a.reconciliations.find(g=>g.findingIds.includes(f.id));if(group)el('p',`${group.relation}: ${group.review||'One underlying defect; no extra check deduction.'}`,article);
+ }
+}
 function render() {
  const r = run?.rubric || rubric, viewport = $('viewport').value, q = run?.quality?.[viewport];
- chart(r.axes, q?.criteria); $('context').textContent = project ? project.name + ' — ' + project.url : 'One core job. Ten criteria. Evidence behind every result.';
+ chart(r.axes, q?.criteria); scoreTable(r.axes,q?.criteria);assessmentDetails(viewport); $('context').textContent = project ? project.name + ' — ' + project.url : 'One core job. Ten criteria. Evidence behind every result.';
  $('coverage').textContent = q ? `${q.coverage.assessedCriteria}/${q.coverage.totalCriteria} criteria assessed · ${q.coverage.assessedWeight}/100 proposed weight covered` : 'No combined-rubric evaluation yet';
  $('totals').replaceChildren(); if(q) { for(const [label,value] of [['Raw total',q.rawTotal],['Capped total',q.cappedTotal],['Observed subtotal (incomplete)',q.observedSubtotal]]) el('div',`${label}: ${value===null?'Unknown':value}`, $('totals')); el('strong',q.band || 'Band unknown', $('totals')); el('div',q.capApplied?`Verified failure: proposed cap ${q.cap} applies.`:'No verified deal-breaker failure established.', $('totals')); }
  $('policy-note').textContent = (r.combined?.unresolved || ['Historical rubric snapshot.']).join(' '); $('policy').textContent = JSON.stringify(r.combined || r,null,2);
  $('actions').hidden = !run; $('start').hidden = !!project; $('fixes').replaceChildren(); $('prompt-panel').hidden=true;
- for(const s of run?.suggestions || []) { const article=el('article',undefined,$('fixes')), label=el('label',undefined,article), box=el('input',undefined,label); box.type='checkbox';box.value=s.id; el('span',s.label,label); el('p',`${s.viewport} · ${s.provenance==='fixture'?'SAMPLE DATA':s.provenance}: ${s.problem}`,article);el('p',s.change,article); }
+ for(const s of run?.suggestions || []) { const article=el('article',undefined,$('fixes')), label=el('label',undefined,article), box=el('input',undefined,label); box.type='checkbox';box.value=s.id; const f=run?.assessment?.findings.find(f=>f.suggestionId===s.id); const conflict=f&&run.assessment.reconciliations.find(g=>g.findingIds.includes(f.id)&&g.relation==='conflicting');if(conflict){box.disabled=true;el('p','Human review required: '+conflict.review,article);} el('span',s.label,label); el('p',`${s.viewport} · ${s.provenance==='fixture'?'SAMPLE DATA':s.provenance}: ${s.problem}`,article);el('p',s.change,article); }
  $('empty-fixes').textContent = run?.suggestions.length?'Select only the changes you want in your implementation prompt.':'No supported fixes available. Review evidence and unresolved scoring policy.';
  $('handoff').hidden=!run?.suggestions.length; $('evidence').replaceChildren();
  if(q) for(const c of q.criteria){ const article=el('article',undefined,$('evidence'));el('h3',`${c.title}: ${c.points===null?'Unknown':c.points} / ${c.max}`,article);el('p',c.reason,article); }

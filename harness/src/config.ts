@@ -8,4 +8,4 @@ export const objectHash = (value: unknown) => hash(JSON.stringify(value));
 export const loadRubric = (path = process.env.BETTER_RUBRIC_PATH || 'config/rubric.json') => rubricSchema.parse(JSON.parse(readFileSync(resolve(path), 'utf8')));
 export const CAPTURE_VERSION = 'chromium-frozen-get-v2';
 export const AGGREGATION_VERSION = 'combined-points-and-legacy-ordinal-v2';
-export const PROMPT_VERSION = 'configured-anchor-choices-v2';
+export const PROMPT_VERSION = 'independent-visual-and-grounded-handoff-v3';

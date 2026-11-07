@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdtemp, mkdir } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
@@ -15,7 +15,9 @@ import type { Run } from '../src/domain.ts';
 const state = await mkdtemp(join(tmpdir(), 'better-ui-'));
 const output = resolve('test-results');
 await mkdir(output, { recursive: true });
-const server = spawn(process.execPath, ['dist/server.js'], { env: { ...process.env, PORT: '0', BETTER_DATA_DIR: state, BETTER_RUBRIC_PATH: 'config/rubric.json', BETTER_JUDGE: 'fixture', BETTER_ALLOW_PAID_CALLS: 'false', SUBQ_API_KEY: '' }, stdio: ['ignore', 'pipe', 'pipe'] });
+const registryPath=join(state,'checks.json');
+await writeFile(registryPath,await readFile('config/check-registry.json'));
+const server = spawn(process.execPath, ['dist/server.js'], { env: { ...process.env, PORT: '0', BETTER_DATA_DIR: state, BETTER_RUBRIC_PATH: 'config/rubric.json', BETTER_CHECK_REGISTRY_PATH:registryPath, BETTER_JUDGE: 'fixture', BETTER_ALLOW_PAID_CALLS: 'false', SUBQ_API_KEY: '' }, stdio: ['ignore', 'pipe', 'pipe'] });
 let browser;
 try {
  const base = await new Promise<string>((resolve, reject) => {
@@ -32,8 +34,20 @@ try {
  await page.goto(base); await page.locator('#fingerprint .criterion-label').first().waitFor();
  assert.equal(await page.locator('#fingerprint .criterion-label').count(),10);
  assert.equal(await page.locator('#brief input[required]').count(),4);
+ assert.equal(await page.locator('#score-values tr').count(),10);
+ assert.equal(await page.locator('#score-values tr').first().locator('td').first().textContent(),'Unknown / 12');
+ const disclosure=page.locator('#scores-details > summary');
+ await disclosure.hover();assert.match(await disclosure.evaluate(e=>getComputedStyle(e).textDecorationLine),/underline/);
+ await disclosure.click();assert.equal(await page.locator('#score-table').isVisible(),true);
+ const pointerValues=await page.locator('#score-values').innerText();
+ await disclosure.click();await disclosure.focus();await page.keyboard.press('Enter');
+ assert.equal(await page.locator('#score-table').isVisible(),true);
+ assert.equal(await page.locator('#score-values').innerText(),pointerValues);
+ await page.keyboard.press('Space');assert.equal(await page.locator('#score-table').isVisible(),false);
  // Synthetic chart values test rendering only; never saved as evaluation evidence.
- await page.evaluate('chart(rubric.axes,rubric.axes.map((a,i)=>({id:a.id,points:i%2?a.weight:0})))');
+ await page.evaluate('chart(rubric.axes,rubric.axes.map((a,i)=>({id:a.id,points:i%2?a.weight:0})));scoreTable(rubric.axes,rubric.axes.map((a,i)=>({id:a.id,points:i%2?a.weight:0})))');
+ assert.equal(await page.locator('#score-values tr').first().locator('td').first().textContent(),'0 / 12');
+ assert.equal(await page.locator('#score-values tr').nth(1).locator('td').first().textContent(),'12 / 12');
  assert.equal(await page.locator('#fingerprint .point').count(),10);
  await page.reload();await page.locator('#fingerprint .criterion-label').first().waitFor();
  assert.equal(await page.locator('#fingerprint .unknown').count(),10);
@@ -43,6 +57,10 @@ try {
  await page.locator('#demo').click();
  const response=await resultPromise; assert.equal(response.status(),201);const run=await response.json() as Run;
  await page.waitForFunction(()=>document.getElementById('status')?.textContent?.startsWith('Saved'));
+ assert.equal(run.status,'partial');assert.equal(run.assessment?.registry.checks.length,14);
+ assert.equal(run.assessment?.stateCoverage.length,12);
+ assert.ok(run.assessment?.stateCoverage.filter(s=>s.state!=='default').every(s=>s.coverage==='unknown'));
+ assert.ok(run.versions.checks?.startsWith('curated-checks-1.0.0:'));
  assert.equal(run.rubric.axes.length,10); assert.equal(run.quality?.desktop.dealBreakers.length,9);
  assert.equal(run.quality?.desktop.rawTotal,null);assert.equal(run.quality?.desktop.cappedTotal,null);
  assert.equal(run.captures.every(c=>c.status==='ready'),true);
@@ -53,6 +71,9 @@ try {
  const boxes=page.locator('#fixes input');assert.ok(await boxes.count()>0);await boxes.first().check();
  await page.locator('#handoff').click();await page.locator('#prompt-panel').waitFor({state:'visible'});
  assert.match(await page.locator('#prompt').inputValue(),/Selected/);
+ assert.match(await page.locator('#prompt').inputValue(),/Preserve these/);
+ assert.match(await page.locator('#prompt').inputValue(),/does not establish conversion or satisfaction/);
+ await page.locator('#scores-details > summary').click();
  const saved=await (await page.request.get(base+'/api/runs/'+run.id)).json();assert.equal(saved.handoffs[0].selectedIds.length,1);
  await page.screenshot({path:join(output,'ui-desktop-result.png'),fullPage:true});
  for(const width of [360,400]){
@@ -61,13 +82,18 @@ try {
   await page.screenshot({path:join(output,`ui-mobile-${width}.png`),fullPage:true});
  }
  await page.setViewportSize({width:1440,height:1000});
+ const updatedRegistry=JSON.parse(await readFile(registryPath,'utf8'));updatedRegistry.version='curated-checks-test-2';await writeFile(registryPath,JSON.stringify(updatedRegistry));
  const nextPromise=page.waitForResponse(r=>r.url().endsWith('/runs')&&r.request().method()==='POST',{timeout:120000});await page.locator('#reevaluate').click();
- const next=await (await nextPromise).json() as Run;assert.equal(next.parentRunId,run.id);assert.equal(next.projectId,run.projectId);
+ const next=await (await nextPromise).json() as Run;assert.equal(next.parentRunId,run.id);assert.equal(next.projectId,run.projectId);assert.equal(next.versions.checks,run.versions.checks);assert.deepEqual(next.assessment?.registry,run.assessment?.registry);
  await page.waitForFunction(()=>document.querySelectorAll('#runs option').length===2);
  await page.locator('#runs').selectOption(run.id);await page.locator('#viewport').selectOption('mobile');
  await page.reload();await page.locator('#projects').selectOption(run.projectId);await page.waitForFunction(()=>document.querySelectorAll('#runs option').length===2);
  await page.locator('#runs').selectOption(run.id);
  assert.equal(await page.locator('#fingerprint .criterion-label').count(),10);
+ const latestResponse=await page.request.post(`${base}/api/projects/${run.projectId}/runs`,{data:{useLatestChecks:true,expectedText:'deliberately absent readiness marker'}});
+ assert.equal(latestResponse.status(),201);const latest=await latestResponse.json() as Run;
+ assert.equal(latest.assessment?.registry.version,'curated-checks-test-2');assert.notEqual(latest.versions.checks,run.versions.checks);assert.equal(latest.status,'failed');
+ assert.deepEqual((await (await page.request.get(base+'/api/runs/'+run.id)).json()).run.assessment.registry,run.assessment?.registry);
  assert.deepEqual(errors,[]);
  // Exercise the real pipeline with an authored provider transport, never a paid request.
  const store=new Store(await mkdtemp(join(tmpdir(),'better-provider-pipeline-')));
@@ -77,6 +103,7 @@ try {
   const judge=new SubQJudge({apiKey:'test-only',allowPaid:true,model:'test',transport:(async(_url,init)=>{
    calls++;
    const body=JSON.parse(String(init?.body));
+   assert.equal(Object.hasOwn(body,'detectorCounts'),false);assert.equal(Object.hasOwn(body,'results'),false);assert.equal(Object.hasOwn(body,'findings'),false);
    const finding=Object.keys(body.questions.finding.criteria).find(id=>id!=='none')!;
    const penalty=['HIER_IMPROVE','ORIGINALITY_IMPROVE'].includes(finding);
    const answers=Object.fromEntries(Object.entries(body.questions).map(([name,value])=>{

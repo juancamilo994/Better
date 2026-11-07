@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Assessment } from './evaluation/evidence.ts';
 
 export type Viewport = 'desktop' | 'mobile';
 export type Channel = 'quality' | 'taste' | 'ai-isms' | 'motion' | 'reference';
@@ -6,6 +7,7 @@ export const profileSchema = z.object({
   version: z.string().min(1).max(80), task: z.string().min(1).max(600),
   audience: z.string().min(1).max(600), feeling: z.string().min(1).max(600).optional(), taste: z.string().max(1000),
   avoid: z.string().max(1000), brand: z.string().max(1000),
+  taskSteps: z.array(z.object({ id: z.string().min(1).max(80), goal: z.string().min(1).max(600), intendedOutcome: z.string().min(1).max(600) })).min(1).max(20).refine(steps=>new Set(steps.map(s=>s.id)).size===steps.length,'Task step IDs must be unique.').optional(),
 });
 export type Profile = z.infer<typeof profileSchema>;
 const findingSchema = z.object({
@@ -90,6 +92,7 @@ export interface Run {
   captures: Capture[]; results: Result[]; suggestions: Suggestion[];
   axes: Record<Viewport, AxisScore[]>; fixtureAxes: Record<Viewport, AxisScore[]>;
   quality?: Record<Viewport, QualitySummary>;
+  assessment?: Assessment;
   manifest: { os: string; browser: string; readiness: string; expectedText: string | null; deviceScale: number; input: Record<Viewport, string>; state: string; capturedBuildHash: string; repositorySource: 'not_connected'; referenceIds: string[] };
   judgeAttempts: { viewport: Viewport; criterionId: string; status: string; code: string }[];
 }

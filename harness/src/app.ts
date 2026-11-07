@@ -8,11 +8,12 @@ import { publicTarget } from './capture/network.ts';
 import { DEMO_URL } from './capture/demo.ts';
 import { evaluateProject } from './evaluation/pipeline.ts';
 import { compareRuns } from './evaluation/aggregation.ts';
+import { loadCheckRegistry } from './evaluation/evidence.ts';
 import { Store } from './store.ts';
 
 const defaultProfile = { version: 'profile-1', task: 'Help visitors find the next useful action.', audience: 'First-time visitors', feeling: 'Welcoming and practical', taste: '', avoid: '', brand: '' };
 const createSchema = z.object({ name: z.string().min(1).max(120), url: z.string().max(2000).optional(), demo: z.boolean().optional(), profile: profileSchema.optional() }).strict();
-const evaluateSchema = z.object({ buildLabel: z.string().max(200).optional(), demoVersion: z.enum(['baseline', 'revised']).optional(), expectedText: z.string().max(500).optional(), profile: profileSchema.optional(), useLatestRubric: z.boolean().optional() }).strict();
+const evaluateSchema = z.object({ buildLabel: z.string().max(200).optional(), demoVersion: z.enum(['baseline', 'revised']).optional(), expectedText: z.string().max(500).optional(), profile: profileSchema.optional(), useLatestRubric: z.boolean().optional(), useLatestChecks: z.boolean().optional() }).strict();
 const idSchema = z.uuid();
 
 export function createApp(store: Store) {
@@ -38,6 +39,7 @@ export function createApp(store: Store) {
   });
   app.get('/api/health', (_req, res) => res.json({ ok: true, mode: process.env.BETTER_JUDGE || 'fixture', paidCallsEnabled: process.env.BETTER_ALLOW_PAID_CALLS === 'true', busy }));
   app.get('/api/rubric', (_req, res) => res.json(loadRubric()));
+  app.get('/api/check-registry', (_req,res)=>res.json(loadCheckRegistry(loadRubric())));
   app.get('/api/projects', (_req, res) => res.json(store.listProjects()));
   app.post('/api/projects', async (req, res) => {
     const input = createSchema.parse(req.body);

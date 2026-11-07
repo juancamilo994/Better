@@ -17,3 +17,10 @@ Canonical issue catalog goes through the live judge request/response boundary: f
 ## Verification
 
 Unit tests cover100 weights, verified cap/unknown evidence, bands, duplicate prevention and configured choices. Legacy built API E2E preserves snapshots. Built UI real Chromium test covers brief/capture/handoff/history and desktop/mobile; synthetic chart values test rendering only. Artifacts ignored. Static SubQ cannot establish timing/keyboard/motion. Under100ms target differs from under 400 ms deal-breaker. No full WCAG claim. Personality/previews/video/tournament deferred.
+
+
+## Curated checks extension
+
+Preserve the ten-criterion rubric byte-for-byte. Add a versioned registry snapshot/hash per run, explicit evidence statuses, task-step/default-empty-loading-partial-error-success coverage, structured findings and post-visual reconciliation. Registry checks remain supporting evidence: no new deductions, normalization or score policy. Use one canonical defect identity across overlapping checks/states. Preserve conflicts for review and verified task/accessibility failures over preference. No detector counts enter the first visual judgment.
+
+Add six paired calibration-candidate HTML fixtures plus runtime assertions, not validated human ground truth. Exercise registry applicability/exceptions, unknown evidence, reconciliation, deduplication, strength-preserving selected-only prompts and frozen versions. Public captures remain static; unsupported runtime/recording checks stay unknown. Native UI adds a readable exact-value score table with textual changes and task/state ledger. Verify desktop/360/400px, keyboard disclosure, hover parity, console/network. No paid inference, installations, site editing, gesture/manipulation/analytics expansion.

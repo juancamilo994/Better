@@ -13,11 +13,12 @@ import { Store } from '../store.ts';
 import { combinedQuality } from './quality.ts';
 import { aggregate } from './aggregation.ts';
 import { deterministic, missingEvidence, unassessed } from './checks.ts';
+import { buildAssessment, groundedSuggestions, loadCheckRegistry, reconciledScores } from './evidence.ts';
 import { explain } from './explanations.ts';
 
 export interface EvaluateOptions {
   buildLabel?: string; demoVersion?: DemoVersion; expectedText?: string;
-  profile?: Profile; useLatestRubric?: boolean;
+  profile?: Profile; useLatestRubric?: boolean; useLatestChecks?: boolean;
 }
 export function configuredJudge(): Judge {
   const mode = process.env.BETTER_JUDGE || 'fixture';
@@ -30,6 +31,7 @@ export async function evaluateProject(store: Store, projectId: string, options: 
   const project = store.project(projectId);
   const parent = store.runs(projectId).at(-1);
   const rubric = options.useLatestRubric || !parent ? loadRubric() : parent.rubric;
+  const registry = rubric.combined ? (!options.useLatestChecks && parent?.assessment?.registry || loadCheckRegistry(rubric)) : undefined;
   const profile = options.profile ?? parent?.profile ?? project.profile;
   if (rubric.combined && (!profile.audience.trim() || !profile.task.trim() || !profile.feeling?.trim())) throw new AppError('Before evaluation, provide the audience, desired feeling and one core job.');
   const expectedText = options.expectedText ?? parent?.manifest.expectedText ?? undefined;
@@ -45,7 +47,8 @@ export async function evaluateProject(store: Store, projectId: string, options: 
   const judgeAttempts: Run['judgeAttempts'] = [];
   for (const capture of captures) {
     const pair = captures.find(c => c.viewport !== capture.viewport);
-    for (const criterion of rubric.criteria) {
+    // First visual assessment receives page evidence and brief only, never detector results or pattern counts.
+    for (const criterion of [...rubric.criteria].sort((a,b)=>Number(b.lane==='visual')-Number(a.lane==='visual'))) {
       if (rubric.combined && criterion.role === 'points' && !criterion.anchors.length) { results.push(unassessed(criterion, capture, 'Scoring policy unresolved: exact Combined rubric anchors have not been supplied.')); continue; }
       const missing = missingEvidence(criterion, capture, pair, profile);
       if (missing || criterion.lane === 'unsupported') {
@@ -74,16 +77,19 @@ export async function evaluateProject(store: Store, projectId: string, options: 
     }
   }
   const setupNeeded = judgeAttempts.some(a => ['setup_needed', 'paid_calls_disabled'].includes(a.code)) || (project.source === 'public_url' && judge.provenance === 'fixture');
+  const suggestions=explain(id,rubric,results);
+  const assessment=registry?buildAssessment(registry,profile,captures,results,suggestions):undefined;
+  const scoringResults=assessment?reconciledScores(results,assessment):results;
   const run: Run = {
     id, projectId, parentRunId: parent?.id ?? null, createdAt: new Date().toISOString(),
-    status: captures.every(c => c.status === 'failed') ? 'failed' : setupNeeded ? 'setup_needed' : results.some(r => r.status === 'failed' || r.status === 'not_assessed') ? 'partial' : 'complete',
+    status: captures.every(c => c.status === 'failed') ? 'failed' : setupNeeded ? 'setup_needed' : (results.some(r => r.status === 'failed' || r.status === 'not_assessed') || assessment?.ledger.some(e=>e.coverage==='unknown'||e.coverage==='partial')) ? 'partial' : 'complete',
     mode: judge.provenance, buildLabel: project.source === 'controlled_demo' ? demoVersion : options.buildLabel ?? 'Unspecified build (see captured content hash)', source: project.source,
     rubric, profile,
-    versions: { rubric: `${rubric.version}:${objectHash(rubric)}`, profile: `${profile.version}:${objectHash(profile)}`, judge: judge.version, prompt: PROMPT_VERSION, capture: `${CAPTURE_VERSION}:${objectHash({ viewports: VIEWPORTS, browser: captures[0]?.browser, os: `${platform()}-${release()}`, expectedText: expectedText ?? null })}`, aggregation: AGGREGATION_VERSION },
-    captures, results, suggestions: explain(id, rubric, results),
-    axes: { desktop: aggregate(rubric, results, 'desktop'), mobile: aggregate(rubric, results, 'mobile') },
-    ...(rubric.combined ? { quality: { desktop: combinedQuality(rubric, results, 'desktop'), mobile: combinedQuality(rubric, results, 'mobile') } } : {}),
-    fixtureAxes: { desktop: aggregate(rubric, results, 'desktop', true), mobile: aggregate(rubric, results, 'mobile', true) },
+    versions: { rubric: `${rubric.version}:${objectHash(rubric)}`, profile: `${profile.version}:${objectHash(profile)}`, judge: judge.version, prompt: PROMPT_VERSION, capture: `${CAPTURE_VERSION}:${objectHash({ viewports: VIEWPORTS, browser: captures[0]?.browser, os: `${platform()}-${release()}`, expectedText: expectedText ?? null })}`, aggregation: AGGREGATION_VERSION, ...(registry?{checks:`${registry.version}:${objectHash(registry)}`,reconciliation:'post-visual-1.0.0'}:{}) },
+    captures, results, suggestions:assessment?groundedSuggestions(suggestions,assessment):suggestions, ...(assessment?{assessment}:{}),
+    axes: { desktop: aggregate(rubric, scoringResults, 'desktop'), mobile: aggregate(rubric, scoringResults, 'mobile') },
+    ...(rubric.combined ? { quality: { desktop: combinedQuality(rubric, scoringResults, 'desktop'), mobile: combinedQuality(rubric, scoringResults, 'mobile') } } : {}),
+    fixtureAxes: { desktop: aggregate(rubric, scoringResults, 'desktop', true), mobile: aggregate(rubric, scoringResults, 'mobile', true) },
     manifest: { os: `${platform()}-${release()}`, browser: captures[0]?.browser ?? 'unavailable', readiness: 'GET-only; successful HTML; networkidle; fonts/images ready; optional text marker; freeze scripts/animations; identical DOM before/after screenshot; bounded capture', expectedText: expectedText ?? null, deviceScale: 1, input: { desktop: 'pointer', mobile: 'touch-emulated' }, state: 'default-frozen; light; reduced-motion; en-US; UTC', capturedBuildHash: objectHash(captures.map(c => c.contentHash)), repositorySource: 'not_connected', referenceIds: [] },
     judgeAttempts,
   };

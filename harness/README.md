@@ -31,6 +31,20 @@ Nine deal-breakers cover body/large/non-text/placeholder contrast, targets/spaci
 
 Typography/readability is separate from message clarity; apparent affordances are separate from verified behavior. Adaptation needs matched desktop/mobile from the same run/document/state and does not repeat local overflow/type penalties. AI-isms belong in Originality, not another axis/authorship detector. Credibility means claims presentation, not company trustworthiness. Preserve essential labels/errors/instructions while removing filler.
 
+## Curated checks and evidence ledger
+
+`config/check-registry.json` declares 14 versioned supporting checks: criterion ownership, applicability, required evidence, verifier, issue family, exceptions and source revision. This extension leaves `config/rubric.json` unchanged. Each run saves the registry as a parsed snapshot plus hash in `versions.checks`; reevaluation retains it unless `useLatestChecks: true`. `BETTER_CHECK_REGISTRY_PATH` selects a different candidate registry. Registry rules are copied into the project; no external skills run as dependencies.
+
+`assessment` contains task steps, check observations, six-state coverage, structured findings, reconciliations and verified strengths. Optional `profile.taskSteps` accepts `{id,goal,intendedOutcome}`; the default is the declared core job. Check coverage uses `present`, `partial`, `verified_missing_needed`, `not_applicable` and `unknown`. Missing-and-needed requires verified applicability and runtime absence evidence; non-applicability needs a reason and verified context or an allowed exception. A passwordless flow can exempt password-specific requirements. Partial/unknown coverage cannot become a passing or failing verdict. Not visible in a still never proves unimplemented.
+
+Default, empty, loading, partial, error and success states are ledger entries, not instructions to manufacture states. A partial evaluation retains useful evidence; a failed run means both captures failed. Public static captures cannot establish task completion, response time, keyboard operation or motion. Unconnected checks stay unknown with required/missing evidence. The local benchmark supplies bounded runtime observations for its authored pages only. Visual task clarity and branding candidates await judgment; no invented oracle scores them.
+
+Findings keep severity apart from points/confidence and observations apart from impact hypotheses. Registry issue families plus subject/task/viewport identify overlaps; connected verifiers can supply `underlyingDefectId` to link different checks. Aligned/complementary findings share a defect identity; contradictory homes, observations or explicit fix conflicts remain for human review. No extra per-check deductions are applied. A verified failure contradicting a visual full-points anchor holds that criterion unknown for review while retaining the original judgment. Verified operation/accessibility failures cannot be erased by taste. Semantic duplicate identification still needs calibration or a trusted verifier; matching arbitrary wording is not claimed.
+
+The visual judge receives the brief and page evidence before measured-check results, without accumulated detector counts. Product specificity is judged against audience, desired feeling and core job. Selected-fix prompts include only selected grounded findings plus a short preservation list; unresolved tradeoffs block implementation prompts. Better scores do not establish conversion or satisfaction gains.
+
+Better’s fingerprint keeps all ten criteria. A native keyboard/pointer disclosure exposes a readable exact-value table, explicit unknowns and textual changes for compatible runs. Detailed ledger/findings remain disclosed on demand.
+
 ## API
 
 Local routes are not shared C1–C5 implementations. Types: `src/domain.ts`; routes/validation: `src/app.ts`.
@@ -39,10 +53,11 @@ Local routes are not shared C1–C5 implementations. Types: `src/domain.ts`; rou
 |---|---|
 | `GET /api/health` | Mode, paid-call gate, capture busy state |
 | `GET /api/rubric` | Current configurable proposed rubric |
+| `GET /api/check-registry` | Current curated supporting-check registry |
 | `GET /api/projects` | Saved projects |
 | `POST /api/projects` | `{name,url,profile:{version,audience,feeling,task,taste,avoid,brand}}`; taste/avoid/brand may be empty; or `{name,demo:true}` with authored brief |
 | `GET /api/projects/:id` | Project and chronological immutable runs |
-| `POST /api/projects/:id/runs` | `{}` retains snapshot; optional profile/useLatestRubric/buildLabel/expectedText; demo supports baseline/revised demoVersion |
+| `POST /api/projects/:id/runs` | `{}` retains snapshot; optional profile/useLatestRubric/useLatestChecks/buildLabel/expectedText; demo supports baseline/revised demoVersion |
 | `GET /api/runs/:id` | Run, saved handoffs/selections/corrections |
 | `GET /api/runs/:id/evidence/:evidenceId` | Integrity-checked attachment; encode evidence ID |
 | `GET /api/runs/:current/compare/:baseline` | Compatibility, per-viewport/criterion deltas and failures |
@@ -69,6 +84,9 @@ npm run lint
 npm run build
 npm run test:e2e
 npm run test:ui
+npm run test:benchmark
 ```
 
 Temporary stores/mocked model transports. Legacy built API E2E uses real Chromium for paired evidence, selected prompts, comparison, failed captures and restart persistence. New built UI test drives brief validation, real paired capture, unknown-safe output, selected handoff, reevaluation/history and desktop/360/400px layouts. Synthetic chart inputs test geometry only, never saved runs. Screenshots stay in ignored `test-results/`. No claim of live SubQ accuracy/full accessibility conformance.
+
+The six paired benchmark candidates cover essential clipping/disclosure, long names/URLs at 360px and 200% authored text size, intentional branding/unrelated styling, inert/operating controls, value-preserving error recovery and partial results. `test:benchmark` saves real Chromium assertions, DOM/style/runtime records and screenshots under ignored `test-results/benchmark/`. These are authored calibration candidates, not validated ground truth or provider accuracy evidence. Unit tests cover applicability, unknown evidence, exceptions, conflict handling and defect deduplication. Built UI checks also prove frozen registry versions, partial/failed separation, persisted history, exact zero values, keyboard/pointer disclosure parity and expanded-table fit at 360/400px.

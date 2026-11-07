@@ -1,0 +1,390 @@
+{
+  "version": "curated-checks-1.0.0",
+  "status": "calibration-candidate",
+  "sourceRevision": {
+    "source": "Better requested evidence extension",
+    "revision": "2026-11-07"
+  },
+  "checks": [
+    {
+      "id": "text-size",
+      "version": "1.0.0",
+      "primaryCriterion": "TYPOGRAPHY",
+      "description": "Sampled text meets the configured size threshold.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "styles"
+      ],
+      "verifier": "text-size",
+      "issueFamilyId": "READABILITY",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Keep essential text at the configured readable size without clipping."
+    },
+    {
+      "id": "page-overflow",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "Document fits the captured viewport; this is not a 320px conformance claim.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "dom"
+      ],
+      "verifier": "dom-overflow",
+      "issueFamilyId": "REFLOW",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Constrain overflowing containers and wrap content without hiding essential text."
+    },
+    {
+      "id": "text-disclosure",
+      "version": "1.0.0",
+      "primaryCriterion": "TYPOGRAPHY",
+      "description": "Essential text is readable or recoverable through accessible disclosure.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default",
+          "partial"
+        ]
+      },
+      "requiredEvidence": [
+        "dom",
+        "styles",
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "TEXT_ACCESS",
+      "allowedExceptions": [
+        {
+          "id": "accessible-disclosure",
+          "reason": "Essential text may use an operable, accessible disclosure rather than remain expanded.",
+          "requiredEvidence": [
+            "runtime"
+          ]
+        }
+      ],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "high",
+      "fix": "Expose essential text or provide an accessible disclosure with equivalent information."
+    },
+    {
+      "id": "long-content",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "Long names and URLs remain usable at narrow widths and enlarged text.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "dom",
+        "styles",
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "CONTENT_REFLOW",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Wrap long content and support enlarged text without losing meaning."
+    },
+    {
+      "id": "product-specificity",
+      "version": "1.0.0",
+      "primaryCriterion": "ORIGINALITY",
+      "description": "Judge specificity against audience, desired feeling and core job, never banned-pattern counts.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "screenshot",
+        "text"
+      ],
+      "verifier": "visual-judgment",
+      "issueFamilyId": "TEMPLATE",
+      "allowedExceptions": [
+        {
+          "id": "intentional-branding",
+          "reason": "Unusual fonts, colors or gradients may be intentional and fit the product brief.",
+          "requiredEvidence": [
+            "screenshot",
+            "text"
+          ]
+        }
+      ],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Tie styling to the declared audience, feeling and core job."
+    },
+    {
+      "id": "task-goal",
+      "version": "1.0.0",
+      "primaryCriterion": "HIER",
+      "description": "The task goal is clear.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default",
+          "empty",
+          "partial"
+        ]
+      },
+      "requiredEvidence": [
+        "screenshot",
+        "text"
+      ],
+      "verifier": "visual-judgment",
+      "issueFamilyId": "TASK_GOAL",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Repair the evidenced task defect while preserving working alternatives."
+    },
+    {
+      "id": "task-next",
+      "version": "1.0.0",
+      "primaryCriterion": "HIER",
+      "description": "The next action is visible; absence from a still does not prove absence from the product.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default",
+          "empty",
+          "partial",
+          "error"
+        ]
+      },
+      "requiredEvidence": [
+        "screenshot",
+        "text"
+      ],
+      "verifier": "visual-judgment",
+      "issueFamilyId": "TASK_NEXT",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Repair the evidenced task defect while preserving working alternatives."
+    },
+    {
+      "id": "task-meaning",
+      "version": "1.0.0",
+      "primaryCriterion": "FLOW",
+      "description": "The action meaning matches its intended observed outcome.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default",
+          "success"
+        ]
+      },
+      "requiredEvidence": [
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "TASK_MEANING",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Repair the evidenced task defect while preserving working alternatives."
+    },
+    {
+      "id": "task-progress",
+      "version": "1.0.0",
+      "primaryCriterion": "INTERACTION",
+      "description": "Task progress or completion is confirmed by an observed outcome.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "loading",
+          "partial",
+          "success"
+        ]
+      },
+      "requiredEvidence": [
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "TASK_PROGRESS",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Repair the evidenced task defect while preserving working alternatives."
+    },
+    {
+      "id": "control-operation",
+      "version": "1.0.0",
+      "primaryCriterion": "INTERACTION",
+      "description": "Apparent controls actually operate; screenshots establish appearance only.",
+      "applicability": {
+        "kind": "controls",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "CONTROL_OPERATION",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "high",
+      "fix": "Repair the evidenced task defect while preserving working alternatives."
+    },
+    {
+      "id": "error-recovery",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "Error recovery preserves entered values and permits correction.",
+      "applicability": {
+        "kind": "forms",
+        "states": [
+          "error",
+          "success"
+        ]
+      },
+      "requiredEvidence": [
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "ERROR_RECOVERY",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "high",
+      "fix": "Preserve entered values and provide a clear corrective action."
+    },
+    {
+      "id": "partial-results",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "One failed component does not disable unrelated usable results.",
+      "applicability": {
+        "kind": "results",
+        "states": [
+          "partial",
+          "error"
+        ]
+      },
+      "requiredEvidence": [
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "PARTIAL_RESULTS",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "high",
+      "fix": "Isolate the failed component and keep other results usable."
+    },
+    {
+      "id": "password-login",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "Password-specific requirements apply only where password authentication is actually needed.",
+      "applicability": {
+        "kind": "password-login",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "AUTH_RECOVERY",
+      "allowedExceptions": [
+        {
+          "id": "passwordless",
+          "reason": "Verified passwordless authentication does not require a password field/reset flow.",
+          "requiredEvidence": [
+            "runtime"
+          ]
+        }
+      ],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "high",
+      "fix": "Repair the evidenced task defect while preserving working alternatives."
+    },
+    {
+      "id": "motion-review",
+      "version": "1.0.0",
+      "primaryCriterion": "INTERACTION",
+      "description": "Temporal quality requires a recording; no motion judge is connected.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "loading",
+          "success"
+        ]
+      },
+      "requiredEvidence": [
+        "recording"
+      ],
+      "verifier": "temporal-review",
+      "issueFamilyId": "MOTION",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric + Better evidence extension",
+        "revision": "elle-combined-proposed-2026-11-07.2 / extension-1"
+      },
+      "severity": "medium",
+      "fix": "Repair the evidenced task defect while preserving working alternatives."
+    }
+  ]
+}
