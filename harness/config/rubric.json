@@ -1,0 +1,431 @@
+{
+  "version": "elle-draft-2026-11-07.1",
+  "status": "Provisional, uncalibrated; editable anchors and weights. Separate typography/readability from message clarity per product clarification.",
+  "axes": [
+    {
+      "id": "HIER",
+      "title": "Hierarchy and wayfinding"
+    },
+    {
+      "id": "LAY",
+      "title": "Layout and spatial rhythm"
+    },
+    {
+      "id": "TYPE",
+      "title": "Typography and content clarity"
+    },
+    {
+      "id": "ACC",
+      "title": "Color and accessibility"
+    },
+    {
+      "id": "CRAFT",
+      "title": "Visual craft and consistency"
+    },
+    {
+      "id": "INT",
+      "title": "Interaction and feedback"
+    },
+    {
+      "id": "ADAPT",
+      "title": "Cross-device adaptation"
+    },
+    {
+      "id": "FIT",
+      "title": "Purpose, brand and trust presentation"
+    }
+  ],
+  "criteria": [
+    {
+      "id": "HIER-01",
+      "axis": "HIER",
+      "title": "Primary-action hierarchy",
+      "channel": "quality",
+      "lane": "visual",
+      "instructions": "Judge whether the primary action is visually distinct and the reading order supports the task. Do not score small text, clipping, copy quality or personal style here.",
+      "requires": [
+        "screenshot",
+        "text"
+      ],
+      "anchors": [
+        "Primary action is lost among competing elements.",
+        "Primary and secondary elements frequently compete.",
+        "Clear primary action with minor competing emphasis.",
+        "Immediate focal point and intentional reading order."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "ACTION_HIERARCHY",
+          "label": "Clarify the primary action",
+          "problem": "The primary action competes with secondary elements.",
+          "change": "Give the primary action distinct emphasis and reduce competing emphasis nearby.",
+          "effect": "A clearer next step may reduce search effort.",
+          "priority": "high",
+          "dependencies": [],
+          "conflicts": [],
+          "example": "hierarchy"
+        }
+      ]
+    },
+    {
+      "id": "LAY-01",
+      "axis": "LAY",
+      "title": "Horizontal overflow",
+      "channel": "quality",
+      "lane": "deterministic",
+      "instructions": "Measure document width against viewport width. This check addresses horizontal overflow only, not all spatial quality.",
+      "requires": [
+        "dom"
+      ],
+      "anchors": [
+        "Page extends horizontally beyond the viewport.",
+        "Reserved for a future calibrated anchor.",
+        "Reserved for a future calibrated anchor.",
+        "No document-level horizontal overflow detected."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "HORIZONTAL_OVERFLOW",
+          "label": "Remove horizontal overflow",
+          "problem": "The document is wider than the viewport.",
+          "change": "Constrain oversized containers and let content wrap within the viewport.",
+          "effect": "Content may become readable without horizontal scrolling.",
+          "priority": "high",
+          "dependencies": [],
+          "conflicts": [],
+          "example": "spacing"
+        }
+      ],
+      "rule": "overflow",
+      "threshold": 1
+    },
+    {
+      "id": "TYPE-01",
+      "axis": "TYPE",
+      "title": "Typography and readability: text size",
+      "channel": "quality",
+      "lane": "deterministic",
+      "instructions": "Measure visible text font sizes against the editable local threshold. This is a bounded typography check, not message clarity or a general readability certification.",
+      "requires": [
+        "styles"
+      ],
+      "anchors": [
+        "Visible text falls below the configured minimum size.",
+        "Reserved for a future calibrated anchor.",
+        "Reserved for a future calibrated anchor.",
+        "Sampled visible text meets the configured minimum size."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "SMALL_TEXT",
+          "label": "Increase small text",
+          "problem": "Visible text falls below the configured text-size threshold.",
+          "change": "Increase the affected text to the configured minimum while preserving hierarchy and layout.",
+          "effect": "Larger text may improve readability.",
+          "priority": "medium",
+          "dependencies": [],
+          "conflicts": [],
+          "example": "type"
+        }
+      ],
+      "rule": "small-text",
+      "threshold": 14
+    },
+    {
+      "id": "TYPE-02",
+      "axis": "TYPE",
+      "title": "Message clarity and redundant filler",
+      "channel": "quality",
+      "lane": "visual",
+      "instructions": "Judge whether headings and action wording convey the task clearly. Flag redundant filler microcopy, not all microcopy. Preserve essential labels, errors, instructions and useful onboarding. Do not score font size, spacing, line height or contrast.",
+      "requires": [
+        "screenshot",
+        "text"
+      ],
+      "anchors": [
+        "Vague or redundant wording materially obscures the task or next action.",
+        "Several avoidable filler phrases compete with needed information.",
+        "Mostly specific wording with limited redundant explanation.",
+        "Specific, concise task language; essential labels, errors and instructions remain."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "FILLER_COPY",
+          "label": "Replace redundant filler",
+          "problem": "Redundant or vague wording competes with task-specific information.",
+          "change": "Replace redundant filler with specific task or action wording. Preserve essential labels, errors, instructions and useful onboarding.",
+          "effect": "Readers may find the next action with less effort.",
+          "priority": "medium",
+          "dependencies": [],
+          "conflicts": []
+        }
+      ]
+    },
+    {
+      "id": "ACC-01",
+      "axis": "ACC",
+      "title": "Image alternative-text presence",
+      "channel": "quality",
+      "lane": "deterministic",
+      "instructions": "Check only whether img elements have an alt attribute. An empty alt may mark decoration. Presence does not establish appropriate text or accessibility compliance.",
+      "requires": [
+        "dom"
+      ],
+      "anchors": [
+        "At least one sampled image lacks an alt attribute.",
+        "Reserved for a future calibrated anchor.",
+        "Reserved for a future calibrated anchor.",
+        "Every sampled image has an alt attribute; quality remains untested."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "MISSING_ALT",
+          "label": "Review image alternatives",
+          "problem": "A sampled image lacks an alt attribute.",
+          "change": "Add useful alternative text to informative images; use an empty alt only for decorative images.",
+          "effect": "Screen-reader context may improve after human review.",
+          "priority": "high",
+          "dependencies": [],
+          "conflicts": []
+        }
+      ],
+      "rule": "image-alt"
+    },
+    {
+      "id": "CRAFT-01",
+      "axis": "CRAFT",
+      "title": "Visual system consistency",
+      "channel": "quality",
+      "lane": "visual",
+      "instructions": "Judge coherent component treatment, imagery and finish. Do not penalize readability, overflow, interaction behavior or the mere presence of a style preference.",
+      "requires": [
+        "screenshot",
+        "styles"
+      ],
+      "anchors": [
+        "Conflicting visual treatments materially obscure relationships.",
+        "Several unexplained inconsistencies disrupt the visual system.",
+        "Coherent system with minor inconsistencies.",
+        "Intentional, consistent components and visual details."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "INCONSISTENT_CRAFT",
+          "label": "Unify component treatment",
+          "problem": "Comparable components use inconsistent visual treatments.",
+          "change": "Apply a coherent treatment to comparable components while preserving meaningful differences.",
+          "effect": "A consistent system may make the page easier to scan.",
+          "priority": "low",
+          "dependencies": [],
+          "conflicts": []
+        }
+      ]
+    },
+    {
+      "id": "INT-01",
+      "axis": "INT",
+      "title": "Apparent affordances",
+      "channel": "quality",
+      "lane": "visual",
+      "instructions": "Judge only whether controls look actionable in this default still image. Never infer that clicking works, feedback exists, validation is correct or keyboard access works.",
+      "requires": [
+        "screenshot",
+        "dom"
+      ],
+      "anchors": [
+        "Primary controls do not appear actionable.",
+        "Several controls have ambiguous visual affordances.",
+        "Controls look actionable with minor ambiguity.",
+        "Controls clearly communicate their apparent role in the captured state."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "UNCLEAR_AFFORDANCE",
+          "label": "Clarify control appearance",
+          "problem": "A visible control has an ambiguous apparent role.",
+          "change": "Give the control a clear visual affordance without claiming its behavior is verified.",
+          "effect": "People may recognize available actions more easily.",
+          "priority": "medium",
+          "dependencies": [],
+          "conflicts": []
+        }
+      ]
+    },
+    {
+      "id": "INT-02",
+      "axis": "INT",
+      "title": "Verified interaction behavior",
+      "channel": "quality",
+      "lane": "unsupported",
+      "instructions": "Requires scripted interaction assertions and observed outcomes. Screenshots and DOM availability cannot establish behavior.",
+      "requires": [
+        "runtime"
+      ],
+      "anchors": [
+        "Verified interaction fails the core task.",
+        "Verified interaction has significant defects.",
+        "Tested behavior works with minor defects.",
+        "Tested interaction and recovery work intentionally."
+      ],
+      "weight": 1,
+      "findings": []
+    },
+    {
+      "id": "ADAPT-01",
+      "axis": "ADAPT",
+      "title": "Cross-device prioritization",
+      "channel": "quality",
+      "lane": "visual",
+      "instructions": "Compare the supplied matched desktop/mobile captures for responsive reprioritization and navigation changes. Do not penalize clipping, small text or local spacing again: those belong to LAY/TYPE. Only identify distinct cross-device prioritization failures.",
+      "requires": [
+        "screenshot",
+        "pair"
+      ],
+      "anchors": [
+        "Matched captures show task-critical priority lost across devices.",
+        "Cross-device priority or navigation changes significantly hinder the task.",
+        "Sensible cross-device priority with minor tradeoffs.",
+        "Intentional reflow and reprioritization across the matched captures."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "CROSS_DEVICE_PRIORITY",
+          "label": "Reprioritize content across devices",
+          "problem": "The matched captures show an inconsistent priority across devices.",
+          "change": "Adapt content priority and navigation to the mobile task without adding another fix for local overflow or type size.",
+          "effect": "Cross-device continuity may improve.",
+          "priority": "medium",
+          "dependencies": [],
+          "conflicts": []
+        }
+      ]
+    },
+    {
+      "id": "FIT-01",
+      "axis": "FIT",
+      "title": "Purpose and credibility presentation",
+      "channel": "quality",
+      "lane": "visual",
+      "instructions": "Evaluate fit to the task/audience and how claims, prices, conditions and credibility cues are presented. Do not judge actual company trustworthiness or declare real-looking claims fabricated. Factual verification is out of scope.",
+      "requires": [
+        "screenshot",
+        "text"
+      ],
+      "anchors": [
+        "Presentation obscures the task or material conditions.",
+        "Claims or conditions are poorly contextualized.",
+        "Task and claims are presented clearly with minor gaps.",
+        "Task, audience, claims and applicable conditions are clearly presented."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "CLAIM_CONTEXT",
+          "label": "Clarify claim presentation",
+          "problem": "A claim or condition lacks clear context in the presentation.",
+          "change": "Clarify relevant conditions and identify the source for claims; do not invent proof, testimonials or metrics.",
+          "effect": "Readers may better understand what is being offered.",
+          "priority": "medium",
+          "dependencies": [],
+          "conflicts": []
+        }
+      ]
+    },
+    {
+      "id": "TASTE-01",
+      "axis": null,
+      "title": "Alignment with stated taste",
+      "channel": "taste",
+      "lane": "visual",
+      "instructions": "Evaluate alignment only with explicit supplied taste/brand preferences. Taste cannot override measured quality failures.",
+      "requires": [
+        "screenshot",
+        "preferences"
+      ],
+      "anchors": [
+        "Material conflict with explicit preferences.",
+        "Several conflicts with explicit preferences.",
+        "Mostly aligned with limited departures.",
+        "Strong alignment with stated preferences."
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "TASTE_MISMATCH",
+          "label": "Review taste alignment",
+          "problem": "The design conflicts with an explicit taste preference.",
+          "change": "Align the visual treatment with the supplied taste and brand brief while preserving functional quality.",
+          "effect": "The design may better reflect the stated preference.",
+          "priority": "low",
+          "dependencies": [],
+          "conflicts": []
+        }
+      ]
+    },
+    {
+      "id": "AIS-01",
+      "axis": null,
+      "title": "Template residue context",
+      "channel": "ai-isms",
+      "lane": "unsupported",
+      "instructions": "Extension point for preference-conditioned template residue. Message filler belongs to TYPE-02. Motion belongs to MOT-01. Never infer AI authorship from style; avoid duplicate penalties.",
+      "requires": [
+        "preferences"
+      ],
+      "anchors": [
+        "Repeated disallowed residue dominates.",
+        "Several avoidable generic patterns.",
+        "Limited unwanted residue.",
+        "No material unwanted residue in assessed evidence."
+      ],
+      "weight": 1,
+      "findings": []
+    },
+    {
+      "id": "MOT-01",
+      "axis": null,
+      "title": "Motion quality",
+      "channel": "motion",
+      "lane": "unsupported",
+      "instructions": "Requires video or temporal evidence and a verified temporal judge. Static SubQ inputs cannot establish animation timing, smoothness, interruption behavior or quality. No video judging in this baseline.",
+      "requires": [
+        "runtime"
+      ],
+      "anchors": [
+        "Verified obstructive motion.",
+        "Verified distracting motion.",
+        "Verified purposeful motion with minor defects.",
+        "Verified task-appropriate motion or intentional stillness."
+      ],
+      "weight": 1,
+      "findings": []
+    },
+    {
+      "id": "REF-01",
+      "axis": null,
+      "title": "Optional reference alignment",
+      "channel": "reference",
+      "lane": "unsupported",
+      "instructions": "No reference is connected. Add authorized, matched reference evidence before assessing. A reference is not a correctness oracle.",
+      "requires": [
+        "reference"
+      ],
+      "anchors": [
+        "Material mismatch.",
+        "Several relevant differences.",
+        "Mostly aligned.",
+        "Aligned with selected reference dimensions."
+      ],
+      "weight": 1,
+      "findings": []
+    }
+  ]
+}
