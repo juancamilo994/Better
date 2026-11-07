@@ -15,6 +15,8 @@ npm start
 
 Open `http://127.0.0.1:3000`. Loopback only, single operator. SQLite/evidence persist under ignored `data/`; `BETTER_DATA_DIR` changes location. Keep the entire directory across restarts. Paste a URL and supply audience, desired feeling and one core job. Select supported fixes, save/copy one prompt and reevaluate the same project. `npm run demo` exercises the controlled API without paid calls.
 
+Open policy questions, calibration work and known gaps: [docs/open-items.md](docs/open-items.md).
+
 ## Proposed scoring
 
 `config/rubric.json` transcribes the source read in full November 7, 2026 (modified 21:08:29 UTC). Configure it there or select `BETTER_RUBRIC_PATH`. Each run snapshots full rubric/profile and hashes. Reevaluation retains the snapshot unless `useLatestRubric` is true. Old eight-axis runs remain readable; `config/legacy-rubric.json` supports compatibility tests.
