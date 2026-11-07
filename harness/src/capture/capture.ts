@@ -57,6 +57,9 @@ export async function capturePage(project: Project, runId: string, directory: st
         }
       });
       const page = await context.newPage();
+      // Uncaught script errors during load feed the Layer 3 script-error gate.
+      let pageErrors = 0;
+      page.on('pageerror', () => { pageErrors++; });
       page.setDefaultTimeout(12_000);
       page.on('dialog', dialog => { void dialog.dismiss(); });
       context.on('page', popup => { if (popup !== page) void popup.close(); });
@@ -95,7 +98,10 @@ export async function capturePage(project: Project, runId: string, directory: st
             const rect = el.getBoundingClientRect(); const style = getComputedStyle(el);
             return { id: `element-${index}`, tag: el.tagName.toLowerCase(), text: (el.textContent ?? '').trim().slice(0, 160), fontSize: parseFloat(style.fontSize), lineHeight: style.lineHeight, color: style.color, background: style.backgroundColor, width: rect.width, height: rect.height, x: rect.x, y: rect.y, alt: el.getAttribute('alt') };
           });
-          return { html: document.documentElement.outerHTML, height: document.documentElement.scrollHeight, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth, elements, text: document.body.innerText, title: document.title, truncated: visible.length > 1200 };
+          const brokenImages = Array.from(document.images).filter(img => img.checkVisibility() && (!img.getAttribute('src')?.trim() && !img.srcset || (img.complete && img.naturalWidth === 0))).length;
+          const headingLevels = Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(h => h.checkVisibility()).map(h => Number(h.tagName[1]));
+          const controls = Array.from(document.querySelectorAll('button,[role=button],input[type=submit],input[type=button]')).filter(el => el.checkVisibility()).slice(0, 200).map(el => ((el as HTMLInputElement).value && el.tagName === 'INPUT' ? (el as HTMLInputElement).value : el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 80) || (el.getAttribute('aria-label') ?? '').trim());
+          return { brokenImages, headingLevels, controls, html: document.documentElement.outerHTML, height: document.documentElement.scrollHeight, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth, elements, text: document.body.innerText, title: document.title, truncated: visible.length > 1200 };
         });
         if (!snapshot.text.trim() || snapshot.scrollWidth > 12_000 || snapshot.html.length > 4_000_000) throw new Error('Empty page or capture size limit exceeded.');
         // Long pages keep their first 12,000px of full-page evidence; the clip is disclosed.
@@ -121,8 +127,8 @@ export async function capturePage(project: Project, runId: string, directory: st
         await save('styles', Buffer.from(JSON.stringify(snapshot.elements, null, 2)), 'styles.json');
         await save('text', Buffer.from(snapshot.text), 'txt');
         await save('measurements', Buffer.from(JSON.stringify(measurements, null, 2)), 'measurements.json');
-        const facts = { scrollWidth: snapshot.scrollWidth, clientWidth: snapshot.clientWidth, elements: snapshot.elements, text: snapshot.text, title: snapshot.title, truncated: snapshot.truncated };
-        captures.push({ viewport, ...size, status: 'ready', url: page.url(), capturedAt, state: 'default-frozen', artifacts, facts, browser: browser.version(), contentHash: hash(snapshot.html + hash(screenshot)), documentHash, blockedRequests, failedResources, networkIdle, fullPageClipped, measurements });
+        const facts = { scrollWidth: snapshot.scrollWidth, clientWidth: snapshot.clientWidth, elements: snapshot.elements, text: snapshot.text, title: snapshot.title, truncated: snapshot.truncated, brokenImages: snapshot.brokenImages, headingLevels: snapshot.headingLevels, controls: snapshot.controls };
+        captures.push({ viewport, ...size, status: 'ready', url: page.url(), capturedAt, state: 'default-frozen', artifacts, facts, browser: browser.version(), contentHash: hash(snapshot.html + hash(screenshot)), documentHash, blockedRequests, failedResources, networkIdle, fullPageClipped, measurements, pageErrors });
       } catch (error) {
         const known = error instanceof Error && ['Navigation did not', 'Capture requires', 'Expected page', 'Empty page', 'Page changed'].some(prefix => error.message.startsWith(prefix));
         captures.push({ viewport, ...size, status: 'failed', reason: known ? (error as Error).message : 'Capture failed or readiness timed out. No design verdict was produced.', url: project.url, capturedAt, state: 'default-frozen', artifacts: [], facts: blankFacts(), browser: browser.version(), contentHash: '', documentHash, blockedRequests });

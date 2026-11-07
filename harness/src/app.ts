@@ -10,10 +10,11 @@ import { evaluateProject } from './evaluation/pipeline.ts';
 import { compareRuns } from './evaluation/aggregation.ts';
 import { loadCheckRegistry } from './evaluation/evidence.ts';
 import { Store } from './store.ts';
+import { adjudicationSchema, detectorResultSchema, loadDetectorRegistry } from './evaluation/layer3.ts';
 
 const defaultProfile = { version: 'profile-1', task: 'Help visitors find the next useful action.', audience: 'First-time visitors', feeling: 'Welcoming and practical', taste: '', avoid: '', brand: '' };
 const createSchema = z.object({ name: z.string().min(1).max(120), url: z.string().max(2000).optional(), demo: z.boolean().optional(), profile: profileSchema.optional() }).strict();
-const evaluateSchema = z.object({ buildLabel: z.string().max(200).optional(), demoVersion: z.enum(['baseline', 'revised']).optional(), expectedText: z.string().max(500).optional(), profile: profileSchema.optional(), useLatestRubric: z.boolean().optional(), useLatestChecks: z.boolean().optional() }).strict();
+const evaluateSchema = z.object({ buildLabel: z.string().max(200).optional(), demoVersion: z.enum(['baseline', 'revised']).optional(), expectedText: z.string().max(500).optional(), profile: profileSchema.optional(), useLatestRubric: z.boolean().optional(), useLatestChecks: z.boolean().optional(), detector: detectorResultSchema.optional(), adjudications: z.array(adjudicationSchema).max(200).optional() }).strict();
 const idSchema = z.uuid();
 
 export function createApp(store: Store) {
@@ -31,7 +32,7 @@ export function createApp(store: Store) {
     if (req.method !== 'GET' && !req.is('application/json')) return res.status(415).json({ error: 'Use application/json.' });
     next();
   });
-  app.use(express.json({ limit: '32kb' }));
+  app.use(express.json({ limit: '512kb' }));
   let busy = false;
   for (const [route, file] of [['/', 'index.html'], ['/ui.js', 'ui.js'], ['/ui.css', 'ui.css']]) app.get(route, (_req, res) => {
     res.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
@@ -39,6 +40,7 @@ export function createApp(store: Store) {
   });
   app.get('/api/health', (_req, res) => res.json({ ok: true, mode: process.env.BETTER_JUDGE || 'fixture', paidCallsEnabled: process.env.BETTER_ALLOW_PAID_CALLS === 'true', busy }));
   app.get('/api/rubric', (_req, res) => res.json(loadRubric()));
+  app.get('/api/detector-rules', (_req, res) => res.json(loadDetectorRegistry(loadRubric())));
   app.get('/api/check-registry', (_req,res)=>res.json(loadCheckRegistry(loadRubric())));
   app.get('/api/projects', (_req, res) => res.json(store.listProjects()));
   app.post('/api/projects', async (req, res) => {

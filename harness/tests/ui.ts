@@ -57,10 +57,10 @@ try {
  await page.locator('#demo').click();
  const response=await resultPromise; assert.equal(response.status(),201);const run=await response.json() as Run;
  await page.waitForFunction(()=>document.getElementById('status')?.textContent?.startsWith('Saved'));
- assert.equal(run.status,'complete');assert.equal(run.assessment?.registry.checks.length,14);
- assert.equal(run.assessment?.stateCoverage.length,12);
+ assert.equal(run.status,'complete');assert.equal(run.assessment?.registry.checks.length,20);
+ assert.equal(run.assessment?.stateCoverage.length,14);
  assert.ok(run.assessment?.stateCoverage.filter(s=>s.state!=='default').every(s=>s.coverage==='unknown'));
- assert.ok(run.versions.checks?.startsWith('curated-checks-1.0.0:'));
+ assert.ok(run.versions.checks?.startsWith('curated-checks-1.1.0:'));
  assert.equal(run.rubric.axes.length,10); assert.equal(run.quality?.desktop.dealBreakers.length,9);
  assert.equal(run.quality?.desktop.rawTotal,null);assert.equal(run.quality?.desktop.cappedTotal,null);
  assert.equal(run.captures.every(c=>c.status==='ready'),true);

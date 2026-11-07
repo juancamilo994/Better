@@ -71,6 +71,17 @@ try{
     if(usable){await page.locator('#'+id+' button').click();assert.equal(await page.locator('#'+id+' [role=status]').textContent(),'Workshop opened');}
     await observe(candidate.check,'partial',id,usable,`One fixture component failed; another result action is ${usable?'usable':'disabled'}.`);
    }
+  }else if(candidate.id==='changing-text'){
+   for(const id of ['bad','good']){
+    const box=()=>page.locator('#'+id+' [data-after]').boundingBox(), button=()=>page.locator('#'+id+' [data-change]').boundingBox();
+    const before=[await box(),await button()];await page.locator('#'+id+' [data-change]').click();const after=[await box(),await button()];
+    const moved=Math.max(...before.map((b,i)=>Math.abs(b!.y-after[i]!.y)+Math.abs(b!.x-after[i]!.x)));
+    // Stability must not come from clipping: the active word is fully visible and its line does not overflow.
+    const clipped=await page.locator('#'+id+' .line').evaluate(line=>{const word=[...line.querySelectorAll('[data-word],.slot>span')].find(e=>getComputedStyle(e).visibility!=='hidden')!;const lr=line.getBoundingClientRect(),wr=word.getBoundingClientRect();return line.scrollWidth>line.clientWidth+1||getComputedStyle(line).overflow!=='visible'||wr.right>lr.right+1||wr.left<lr.left-1;});
+    assert.equal(clipped,false);assert.equal(await page.locator('#'+id+' .line').innerText().then(t=>t.includes('acceptance speech')),true);
+    if(id==='bad')assert.ok(moved>1,`expected layout shift, got ${moved}px`);else assert.equal(moved,0);
+    await observe(candidate.check,'default',id,id==='good'&&moved===0,`Changing the word moved the following words and button by ${Math.round(moved)}px; the active word is fully visible without clipping.`);
+   }
   }
   // Multiple subjects under the same check/state remain distinct findings.
   const assessments=[buildAssessment(registry,profile,[],[],[],records,observations)];
@@ -80,5 +91,5 @@ try{
   reports.push({candidate,profile,artifacts,assessments});await page.close();
  }
  await writeFile(join(output,'report.json'),JSON.stringify({version:manifest.version,status:manifest.status,liveInference:false,results:reports},null,2));
- console.log(`PASS: six authored calibration candidates, real Chromium assertions, passwordless applicability, unknown visual judgment and saved evidence: ${output}`);
+ console.log(`PASS: seven authored calibration candidates, real Chromium assertions, passwordless applicability, unknown visual judgment and saved evidence: ${output}`);
 }finally{await browser.close();}

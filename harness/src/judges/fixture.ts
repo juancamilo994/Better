@@ -31,3 +31,12 @@ export class FixtureJudge implements Judge {
     return { ...base, score, findingId: score < 3 ? c.findings[0]?.id ?? null : null };
   }
 }
+
+// Authored Layer 3 detector findings for the controlled demo only. SAMPLE DATA:
+// declares full rule coverage so the demo shows a complete ledger.
+export function fixtureDetectorResult(demoVersion: 'baseline' | 'revised', ruleIds: string[]) {
+  const findings = demoVersion === 'baseline'
+    ? [{ id: 'cream-beige-palette', snippet: 'SAMPLE: cream page background #f7f5ef' }, { id: 'icon-tile-above-heading', snippet: 'SAMPLE: decorative tile above each card heading' }, { id: 'icon-tile-above-heading', snippet: 'SAMPLE: repeated on the second card' }, { id: 'kicker-above-heading', snippet: 'SAMPLE: small uppercase label above a heading' }, { id: 'straggler', snippet: 'SAMPLE: one word alone on a paragraph last line' }]
+    : [{ id: 'cream-beige-palette', snippet: 'SAMPLE: cream page background #f7f5ef' }, { id: 'straggler', snippet: 'SAMPLE: one word alone on a paragraph last line' }];
+  return { tool: 'impeccable' as const, version: 'controlled-demo-detector-fixture-v1', url: 'https://better-demo.invalid/', attested: true, rulesRun: ruleIds, findings };
+}

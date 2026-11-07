@@ -10,7 +10,7 @@ const observation:CheckObservation={checkId:check.id,taskStep:'core',viewport:'d
 const runtime:EvidenceRecord={id:'runtime',kind:'runtime',taskStep:'core',viewport:'desktop',state:'default'};
 function finding(overrides:Partial<Finding>={}):Finding{return {id:'measured',checkId:check.id,primaryCriterion:'INTERACTION',issueFamilyId:'CONTROL_OPERATION',taskStep:'core',viewport:'desktop',state:'default',subjectId:'save',penaltyKey:'desktop:core:CONTROL_OPERATION:save',evidenceIds:['runtime'],verifier:'runtime-assertion',coverageStatus:'present',severity:'high',confidence:null,kind:'defect',basis:'operation',verified:true,provenance:'measured',observedImpact:'Save outcome failed in the fixture.',hypothesizedImpact:null,concreteFix:'Connect the save action and confirm the outcome.',exceptionStatus:'none',exceptionReason:null,...overrides};}
 test('curated registry declares versioned ownership, evidence, applicability, verifier, families, exceptions and revisions',()=>{
- assert.equal(registry.checks.length,14);assert.equal(registry.status,'calibration-candidate');
+ assert.equal(registry.checks.length,20);assert.equal(registry.status,'calibration-candidate');
  for(const c of registry.checks){assert.ok(c.version&&c.sourceRevision.revision&&c.verifier&&c.issueFamilyId);assert.ok(c.requiredEvidence.length&&c.applicability.states.length);assert.ok(loadRubric().axes.some(a=>a.id===c.primaryCriterion));}
  assert.equal(registry.checks.find(c=>c.id==='product-specificity')!.primaryCriterion,'ORIGINALITY');
 });
@@ -29,7 +29,7 @@ test('passwordless alternative establishes non-applicability only with evidence 
 });
 test('default state evidence does not manufacture empty/loading/partial/error/success or task completion',()=>{
  const assessment=buildAssessment(registry,{...profile,taskSteps:[{id:'choose',goal:'Choose a workshop',intendedOutcome:'Workshop details open'},{id:'reserve',goal:'Reserve',intendedOutcome:'Reservation confirmed'}]},[capture(),capture('mobile')],[],[]);
- assert.equal(assessment.stateCoverage.length,24);
+ assert.equal(assessment.stateCoverage.length,28);
  assert.equal(assessment.stateCoverage.find(s=>s.state==='default')!.coverage,'present');
  assert.ok(assessment.stateCoverage.filter(s=>s.state!=='default').every(s=>s.coverage==='unknown'&&s.requiredEvidence.includes('runtime')));
  for(const id of ['task-goal','task-next','task-meaning','task-progress'])assert.ok(assessment.ledger.some(e=>e.checkId===id&&e.verdict==='unknown'));

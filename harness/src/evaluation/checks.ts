@@ -48,6 +48,16 @@ export function deterministic(criterion: Criterion, capture: Capture): Result {
     defect = onScale < (criterion.threshold ?? 0.75);
     const offenders = counts.filter(c => !scale.has(c.value)).sort((a, b) => b.count - a.count).slice(0, 5).map(c => `${c.value}px×${c.count}`);
     reason = `${Math.round(onScale * 100)}% of ${total} margin, padding and gap values sit on the 4/8 px scale; proposed minimum ${Math.round((criterion.threshold ?? 0.75) * 100)}%. Most common off-scale: ${offenders.join(', ') || 'none'}.`;
+  } else if (criterion.rule === 'generic-labels') {
+    // Craft policy: verb plus object, never "Submit" or "OK". Only generic
+    // labels are detected; a pass does not verify verb-plus-object wording.
+    const controls = capture.facts.controls;
+    if (!controls) return { ...base, reason: 'No control-label evidence in this capture.' };
+    if (!controls.length) return { ...base, status: 'not_applicable', reason: 'No visible buttons in the captured state.' };
+    const generic = new Set(['submit', 'ok', 'okay', 'click here', 'click', 'go', 'send', 'yes', 'no']);
+    const found = [...new Set(controls.filter(label => generic.has(label.toLowerCase().replace(/[.!…]+$/, ''))))];
+    defect = found.length > 0;
+    reason = `${found.length ? `Generic action labels: ${found.map(l => JSON.stringify(l)).join(', ')}` : 'No generic action labels'} among ${controls.length} visible buttons. Verb-plus-object wording itself is not verified by this check.`;
   } else if (criterion.rule === 'image-alt') {
     const images = capture.facts.elements.filter(e => e.tag === 'img');
     if (!images.length) return { ...base, status: 'not_applicable', reason: 'No img elements in the visible captured evidence.' };

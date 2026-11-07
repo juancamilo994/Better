@@ -5,8 +5,9 @@ import { platform, release } from 'node:os';
 import { capturePage, VIEWPORTS } from '../capture/capture.ts';
 import { type DemoVersion } from '../capture/demo.ts';
 import { AGGREGATION_VERSION, CAPTURE_VERSION, PROMPT_VERSION, hash, loadRubric, objectHash } from '../config.ts';
-import { AppError, type Capture, type Profile, type Result, type Run } from '../domain.ts';
-import { FixtureJudge } from '../judges/fixture.ts';
+import { AppError, type Capture, type Profile, type Result, type Run, type Viewport } from '../domain.ts';
+import { FixtureJudge, fixtureDetectorResult } from '../judges/fixture.ts';
+import { adaptDetectorResult, loadDetectorRegistry, nativeDetector, scoreLayer3, type Adjudication, type DetectorResult } from './layer3.ts';
 import { JudgeError, validateDecision, type Judge, type JudgeInput } from '../judges/interface.ts';
 import { SubQJudge } from '../judges/subq.ts';
 import { Store } from '../store.ts';
@@ -20,6 +21,7 @@ import { explain } from './explanations.ts';
 export interface EvaluateOptions {
   buildLabel?: string; demoVersion?: DemoVersion; expectedText?: string;
   profile?: Profile; useLatestRubric?: boolean; useLatestChecks?: boolean;
+  detector?: DetectorResult; adjudications?: Adjudication[];
 }
 export function configuredJudge(): Judge {
   const mode = process.env.BETTER_JUDGE || 'fixture';
@@ -86,14 +88,28 @@ export async function evaluateProject(store: Store, projectId: string, options: 
   // verifier stay unknown by design, so they do not make every run partial.
   const pointsCriteria = rubric.criteria.filter(c => rubric.combined ? c.role === 'points' : c.channel === 'quality' && c.weight > 0);
   const pointsIncomplete = captures.some(c => c.status !== 'ready') || pointsCriteria.some(c => captures.some(capture => scoringResults.find(r => r.criterionId === c.id && r.viewport === capture.viewport)?.status !== 'assessed'));
-  const quality = (fixtures: boolean) => ({ desktop: combinedQuality(rubric, scoringResults, 'desktop', dealBreakerObservations(captures, 'desktop'), fixtures), mobile: combinedQuality(rubric, scoringResults, 'mobile', dealBreakerObservations(captures, 'mobile'), fixtures) });
+  // Layer 3 runs after Layers 1/2: native rules on every capture, plus an
+  // operator-supplied detector result, plus authored fixture findings on the demo.
+  const detectorRegistry = rubric.combined ? loadDetectorRegistry(rubric) : undefined;
+  const finalSuggestions = assessment ? groundedSuggestions(suggestions, assessment) : suggestions;
+  const strengths = assessment?.strengths.map(s => s.text) ?? [];
+  const summary = (viewport: Viewport, fixtures: boolean) => {
+    const q = combinedQuality(rubric, scoringResults, viewport, dealBreakerObservations(captures, viewport), fixtures);
+    if (!detectorRegistry) return q;
+    const capture = captures.find(c => c.viewport === viewport)!;
+    const runs = [nativeDetector(capture)];
+    if (options.detector && (!options.detector.viewport || options.detector.viewport === viewport)) runs.push(adaptDetectorResult(detectorRegistry, options.detector, project.url, viewport));
+    if (fixtures) runs.push(adaptDetectorResult(detectorRegistry, fixtureDetectorResult(demoVersion, detectorRegistry.rules.map(r => r.id)), project.url, viewport, 'fixture'));
+    return { ...q, layer3: scoreLayer3(rubric, detectorRegistry, q, runs, options.adjudications ?? [], finalSuggestions.filter(s => s.viewport === viewport), strengths) };
+  };
+  const quality = (fixtures: boolean) => ({ desktop: summary('desktop', fixtures), mobile: summary('mobile', fixtures) });
   const run: Run = {
     id, projectId, parentRunId: parent?.id ?? null, createdAt: new Date().toISOString(),
     status: captures.every(c => c.status === 'failed') ? 'failed' : setupNeeded ? 'setup_needed' : pointsIncomplete ? 'partial' : 'complete',
     mode: judge.provenance, buildLabel: project.source === 'controlled_demo' ? demoVersion : options.buildLabel ?? 'Unspecified build (see captured content hash)', source: project.source,
     rubric, profile,
-    versions: { rubric: `${rubric.version}:${objectHash(rubric)}`, profile: `${profile.version}:${objectHash(profile)}`, judge: judge.version, prompt: PROMPT_VERSION, capture: `${CAPTURE_VERSION}:${objectHash({ viewports: VIEWPORTS, browser: captures[0]?.browser, os: `${platform()}-${release()}`, expectedText: expectedText ?? null })}`, aggregation: AGGREGATION_VERSION, ...(registry?{checks:`${registry.version}:${objectHash(registry)}`,reconciliation:'post-visual-1.0.0'}:{}) },
-    captures, results, suggestions:assessment?groundedSuggestions(suggestions,assessment):suggestions, ...(assessment?{assessment}:{}),
+    versions: { rubric: `${rubric.version}:${objectHash(rubric)}`, profile: `${profile.version}:${objectHash(profile)}`, judge: judge.version, prompt: PROMPT_VERSION, capture: `${CAPTURE_VERSION}:${objectHash({ viewports: VIEWPORTS, browser: captures[0]?.browser, os: `${platform()}-${release()}`, expectedText: expectedText ?? null })}`, aggregation: AGGREGATION_VERSION, ...(registry?{checks:`${registry.version}:${objectHash(registry)}`,reconciliation:'post-visual-1.0.0'}:{}), ...(detectorRegistry ? { detector: `${detectorRegistry.version}:${objectHash(detectorRegistry)}` } : {}) },
+    captures, results, suggestions: finalSuggestions, ...(assessment?{assessment}:{}),
     axes: { desktop: aggregate(rubric, scoringResults, 'desktop'), mobile: aggregate(rubric, scoringResults, 'mobile') },
     // Fixture points are summarized separately and always labeled sample data.
     ...(rubric.combined ? { quality: quality(false), ...(judge.provenance === 'fixture' ? { fixtureQuality: quality(true) } : {}) } : {}),

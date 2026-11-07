@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { z } from 'zod';
 import { AppError, type Capture, type Profile, type Result, type Rubric, type Suggestion, type Viewport } from '../domain.ts';
 
-export const states = ['default', 'empty', 'loading', 'partial', 'error', 'success'] as const;
+export const states = ['default', 'empty', 'loading', 'partial', 'error', 'success', 'edge'] as const;
 export type TaskState = typeof states[number];
 export const evidenceKinds = ['screenshot', 'dom', 'styles', 'text', 'runtime', 'recording'] as const;
 export type EvidenceKind = typeof evidenceKinds[number];
@@ -15,9 +15,9 @@ export const registrySchema = z.object({
   id: z.string().min(1), version: z.string().min(1), primaryCriterion: z.string().min(1), description: z.string().min(1),
   applicability: z.object({ kind: z.enum(['all','controls','forms','results','password-login']), states: z.array(z.enum(states)).min(1) }),
   requiredEvidence: z.array(z.enum(evidenceKinds)).min(1),
-  verifier: z.enum(['text-size','dom-overflow','visual-judgment','runtime-assertion','temporal-review']), issueFamilyId: z.string().min(1),
+  verifier: z.enum(['text-size','dom-overflow','dom-labels','visual-judgment','runtime-assertion','temporal-review']), issueFamilyId: z.string().min(1),
   allowedExceptions: z.array(z.object({ id: z.string().min(1), reason: z.string().min(1), requiredEvidence: z.array(z.enum(evidenceKinds)).min(1) })),
-  sourceRevision: sourceSchema, severity: z.enum(['critical','high','medium','low']), fix: z.string().min(1),
+  sourceRevision: sourceSchema, policyBasis: z.enum(['rubric-craft-policy']).optional(), severity: z.enum(['critical','high','medium','low']), fix: z.string().min(1),
  })).min(1),
 }).superRefine((r, ctx) => {
  if (new Set(r.checks.map(c=>c.id)).size !== r.checks.length) ctx.addIssue({code:'custom',message:'Check IDs must be unique.'});
@@ -101,7 +101,7 @@ export function reconcileFindings(findings: Finding[]): Reconciliation[] {
    review:conflict?'Keep both observations for human review. Verified task/accessibility failures take precedence over taste; no additional deduction is inferred.':null};
  });
 }
-const resultCheck: Record<string,string>={'TYPE-01':'text-size','LAY-01':'page-overflow','ORIGINALITY-POINTS':'product-specificity'};
+const resultCheck: Record<string,string>={'TYPE-01':'text-size','LAY-01':'page-overflow','ORIGINALITY-POINTS':'product-specificity','USABILITY-01-LABELS':'action-labels'};
 export function buildAssessment(registry: CheckRegistry, profile: Profile, captures: Capture[], results: Result[], suggestions: Suggestion[], extraEvidence: EvidenceRecord[]=[], observations: CheckObservation[]=[]): Assessment {
  const steps=taskSteps(profile);
  const evidence:EvidenceRecord[]=[...extraEvidence,...captures.flatMap(c=>c.artifacts.filter(a=>['screenshot','dom','styles','text'].includes(a.kind)).flatMap(a=>steps.map(step=>({id:a.id,kind:a.kind as EvidenceKind,viewport:c.viewport,state:'default' as const,taskStep:step.id}))))];

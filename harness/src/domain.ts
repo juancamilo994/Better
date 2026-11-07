@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Assessment } from './evaluation/evidence.ts';
+import type { Layer3Summary } from './evaluation/layer3.ts';
 
 export type Viewport = 'desktop' | 'mobile';
 export type Channel = 'quality' | 'taste' | 'ai-isms' | 'motion' | 'reference';
@@ -20,7 +21,7 @@ export const criterionSchema = z.object({
   id: z.string().regex(/^[A-Z0-9-]+$/), axis: z.string().nullable(),
   title: z.string(), channel: z.enum(['quality', 'taste', 'ai-isms', 'motion', 'reference']),
   lane: z.enum(['deterministic', 'visual', 'unsupported']),
-  rule: z.enum(['overflow', 'small-text', 'image-alt', 'type-scale', 'spacing-scale']).optional(),
+  rule: z.enum(['overflow', 'small-text', 'image-alt', 'type-scale', 'spacing-scale', 'generic-labels']).optional(),
   threshold: z.number().optional(), weight: z.number().nonnegative(),
   instructions: z.string(), requires: z.array(z.enum(['screenshot', 'dom', 'styles', 'text', 'pair', 'runtime', 'measurement', 'reference', 'preferences'])),
   anchors: z.array(z.string()), scoreValues: z.array(z.number().finite()).optional(),
@@ -69,9 +70,9 @@ export interface ElementFact { id: string; tag: string; text: string; fontSize: 
 export interface Capture {
   viewport: Viewport; width: number; height: number; status: 'ready' | 'failed'; reason?: string;
   url: string; capturedAt: string; state: 'default-frozen'; artifacts: Artifact[];
-  facts: { scrollWidth: number; clientWidth: number; elements: ElementFact[]; text: string; title: string; truncated: boolean };
+  facts: { scrollWidth: number; clientWidth: number; elements: ElementFact[]; text: string; title: string; truncated: boolean; brokenImages?: number; headingLevels?: number[]; controls?: string[] };
   browser: string; contentHash: string; documentHash: string; blockedRequests: number;
-  failedResources?: number; networkIdle?: boolean; fullPageClipped?: boolean; measurements?: Measurements;
+  failedResources?: number; networkIdle?: boolean; fullPageClipped?: boolean; measurements?: Measurements; pageErrors?: number;
 }
 export interface Result {
   criterionId: string; viewport: Viewport; channel: Channel; axis: string | null;
@@ -106,4 +107,4 @@ export interface Correction { id: string; runId: string; criterionId: string; vi
 export class AppError extends Error { status: number; constructor(message: string, status = 400) { super(message); this.status = status; } }
 
 export interface DealBreakerObservation { id: string; applicable: boolean | null; verdict: 'pass' | 'fail' | 'unknown'; verified: boolean; evidenceIds: string[]; evidenceKind: 'runtime' | 'measurement' | 'matched_mobile_320' | 'static' | 'none' }
-export interface QualitySummary { policyVersion: string; policyStatus: 'proposed'; criteria: { id: string; title: string; max: number; points: number | null; evidenceIds: string[]; reason: string }[]; coverage: { assessedCriteria: number; totalCriteria: number; assessedWeight: number }; observedSubtotal: number | null; rawTotal: number | null; dealBreakers: DealBreakerObservation[]; capApplied: boolean; cap: number; cappedTotal: number | null; band: string | null; unresolved: string[] }
+export interface QualitySummary { policyVersion: string; policyStatus: 'proposed'; criteria: { id: string; title: string; max: number; points: number | null; evidenceIds: string[]; reason: string }[]; coverage: { assessedCriteria: number; totalCriteria: number; assessedWeight: number }; observedSubtotal: number | null; rawTotal: number | null; dealBreakers: DealBreakerObservation[]; capApplied: boolean; cap: number; cappedTotal: number | null; band: string | null; unresolved: string[]; layer3?: Layer3Summary }

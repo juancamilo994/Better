@@ -1,5 +1,5 @@
 {
-  "version": "curated-checks-1.0.0",
+  "version": "curated-checks-1.1.0",
   "status": "calibration-candidate",
   "sourceRevision": {
     "source": "Better requested evidence extension",
@@ -385,6 +385,169 @@
       },
       "severity": "medium",
       "fix": "Repair the evidenced task defect while preserving working alternatives."
+    },
+    {
+      "id": "five-states",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "Each data surface designs its applicable loading, empty, error, populated and edge (long text, huge counts) states. Rubric craft policy, not an accessibility standard.",
+      "applicability": {
+        "kind": "results",
+        "states": [
+          "loading",
+          "empty",
+          "error",
+          "default",
+          "edge"
+        ]
+      },
+      "requiredEvidence": [
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "DATA_STATES",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric, Open Design craft rules",
+        "revision": "elle-combined 2026-11-07 Layer 3 update"
+      },
+      "severity": "medium",
+      "fix": "Design the missing applicable states for each data surface; do not invent states the surface cannot reach.",
+      "policyBasis": "rubric-craft-policy"
+    },
+    {
+      "id": "busy-button",
+      "version": "1.0.0",
+      "primaryCriterion": "INTERACTION",
+      "description": "A working button keeps its width and label (\"Saving…\"), shows a spinner and stays focusable; busy is not disabled. Feeds criteria 4 and 10.",
+      "applicability": {
+        "kind": "controls",
+        "states": [
+          "loading"
+        ]
+      },
+      "requiredEvidence": [
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "BUSY_STATE",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric, Open Design craft rules",
+        "revision": "elle-combined 2026-11-07 Layer 3 update"
+      },
+      "severity": "medium",
+      "fix": "Keep the button width and label while working, show a spinner, and keep it focusable instead of disabling it.",
+      "policyBasis": "rubric-craft-policy"
+    },
+    {
+      "id": "action-labels",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "Action labels read as verb plus object (\"Copy prompt\"); never \"Submit\" or \"OK\". The deterministic verifier detects only generic labels; verb-plus-object quality needs judgment.",
+      "applicability": {
+        "kind": "controls",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "dom"
+      ],
+      "verifier": "dom-labels",
+      "issueFamilyId": "ACTION_LABELS",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric, Open Design craft rules",
+        "revision": "elle-combined 2026-11-07 Layer 3 update"
+      },
+      "severity": "low",
+      "fix": "Rename generic actions to a verb plus its object, such as \"Copy prompt\".",
+      "policyBasis": "rubric-craft-policy"
+    },
+    {
+      "id": "one-work-area",
+      "version": "1.0.0",
+      "primaryCriterion": "HIER",
+      "description": "One dominant work region plus at most one secondary zone, with one density per screen. Feeds criteria 1 and 2.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "screenshot"
+      ],
+      "verifier": "visual-judgment",
+      "issueFamilyId": "WORK_AREA",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric, Open Design craft rules",
+        "revision": "elle-combined 2026-11-07 Layer 3 update"
+      },
+      "severity": "medium",
+      "fix": "Make one region dominant and demote or move the rest.",
+      "policyBasis": "rubric-craft-policy"
+    },
+    {
+      "id": "layout-stability",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "Changing content (a word changing length, a count updating) does not move surrounding layout. Clipping the content is not a fix. The source names no criterion; Usability is provisional.",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "dom",
+        "runtime"
+      ],
+      "verifier": "runtime-assertion",
+      "issueFamilyId": "LAYOUT_SHIFT",
+      "allowedExceptions": [],
+      "sourceRevision": {
+        "source": "Elle Combined rubric, Open Design craft rules",
+        "revision": "elle-combined 2026-11-07 Layer 3 update"
+      },
+      "severity": "high",
+      "fix": "Give changing elements a fixed width and height and anchor the layout to the top, without clipping the content.",
+      "policyBasis": "rubric-craft-policy"
+    },
+    {
+      "id": "navigation-consistency",
+      "version": "1.0.0",
+      "primaryCriterion": "USABILITY",
+      "description": "When navigation appears it is consistent across screens; it may collapse during a focused task (working rule between the craft kit and Elle's Ex 9 note).",
+      "applicability": {
+        "kind": "all",
+        "states": [
+          "default"
+        ]
+      },
+      "requiredEvidence": [
+        "screenshot"
+      ],
+      "verifier": "visual-judgment",
+      "issueFamilyId": "NAVIGATION",
+      "allowedExceptions": [
+        {
+          "id": "collapsed-during-focused-task",
+          "reason": "Navigation may collapse during a focused task as long as a way back remains.",
+          "requiredEvidence": [
+            "runtime"
+          ]
+        }
+      ],
+      "sourceRevision": {
+        "source": "Elle Combined rubric, Open Design craft rules",
+        "revision": "elle-combined 2026-11-07 Layer 3 update"
+      },
+      "severity": "low",
+      "fix": "Keep one consistent navigation and let it collapse during focused tasks.",
+      "policyBasis": "rubric-craft-policy"
     }
   ]
 }

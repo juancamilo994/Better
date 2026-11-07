@@ -1,5 +1,5 @@
 {
-  "version": "elle-combined-proposed-2026-11-07.3",
+  "version": "elle-combined-proposed-2026-11-07.4",
   "status": "Proposed Combined rubric from Elle's source document; intermediate point calibration remains unresolved.",
   "axes": [
     {
@@ -470,7 +470,7 @@
       "title": "Typography: type scale",
       "channel": "quality",
       "lane": "deterministic",
-      "instructions": "Count distinct visible text sizes. The Combined rubric treats more than about five as a warning sign. Supporting evidence only; it adds no deduction.",
+      "instructions": "Count distinct visible text sizes. The Combined rubric treats more than about five as a warning sign. Supporting evidence only; it adds no deduction. Conflict, unresolved: criterion 9 warns above about five sizes; the craft kit allows 6 to 8 sizes and at most 3 above the fold. The configured threshold stays at criterion 9's five until Elle chooses.",
       "requires": [
         "styles"
       ],
@@ -562,6 +562,38 @@
           "conflicts": []
         }
       ],
+      "role": "supporting"
+    },
+    {
+      "id": "USABILITY-01-LABELS",
+      "axis": "USABILITY",
+      "title": "Usability: action labels",
+      "channel": "quality",
+      "lane": "deterministic",
+      "instructions": "Detect generic action labels such as Submit or OK. Craft policy from the rubric, not an accessibility standard. Supporting evidence only; it adds no deduction.",
+      "requires": [
+        "dom"
+      ],
+      "anchors": [
+        "Visible buttons use generic labels.",
+        "Reserved for a future calibrated anchor.",
+        "Reserved for a future calibrated anchor.",
+        "No generic labels among visible buttons."
+      ],
+      "weight": 0,
+      "findings": [
+        {
+          "id": "GENERIC_ACTION_LABEL",
+          "label": "Name actions by verb and object",
+          "problem": "A visible button uses a generic label such as Submit or OK.",
+          "change": "Rename the action to a verb plus its object, such as \"Copy prompt\".",
+          "effect": "Specific labels may make the next action clearer.",
+          "priority": "low",
+          "dependencies": [],
+          "conflicts": []
+        }
+      ],
+      "rule": "generic-labels",
       "role": "supporting"
     },
     {
@@ -739,7 +771,9 @@
       "Missing evidence stays unknown. No missing-evidence normalization or cross-viewport total.",
       "Simplified usability checks do not establish complete WCAG conformance. Contrast, adaptation and error-prevention calibration need more examples.",
       "The 75% on-scale spacing threshold and the distinct-type-size count are harness proposals pending Elle's confirmation; both are supporting checks with no deduction.",
-      "Flow, Interaction and Usability points are scored from static evidence so a total can exist; their behavioral checks remain unverified. Pending Elle's confirmation."
+      "Flow, Interaction and Usability points are scored from static evidence so a total can exist; their behavioral checks remain unverified. Pending Elle's confirmation.",
+      "Typography thresholds conflict across layers (type-size count 5 vs 6-8; body minimum 16 px vs Layer 3 12 px body and 11 px UI; line length 50-75 vs about 80). The harness keeps criterion 9 values and records the conflict; nothing is silently chosen.",
+      "Craft rules (five states, busy buttons, action labels, one work area, layout stability, consistent-but-collapsible navigation) are this rubric's policy, not universal accessibility standards."
     ],
     "feedbackTargetMs": 100,
     "feedbackDealBreakerMs": 400,
