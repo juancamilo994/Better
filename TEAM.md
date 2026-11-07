@@ -454,12 +454,12 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 | Q-P4 | OK with declarative patches only (no arbitrary JS)? Any ops missing from `DomOp`? | Paul | Open: depends on preview decision (Q-P7) |
 | Q-P5 | Eager preview rendering after scoring: acceptable time and cost for ~24 previews (8 axes × 3)? | Paul | Open: depends on preview decision (Q-P7) |
 | Q-P6 | How will INT (interaction states) be evidenced: interaction probes (hover/focus) or Illustrative only for V1? | Paul + Elle | ANSWERED: apparent affordances judged from stills; verified behavior/motion abstain without evidence |
-| Q-P7 | Live previews: deferred because tests showed it's harder than expected, or not yet explored? Hybrid vs. illustrative-only vs. tutorial-only? | Paul | Open (see §12.1) |
-| Q-P8 | Local API additions for the UI: `DELETE /api/projects/:id`, latest-run summary in `GET /api/projects`, `overall` per viewport on runs | Paul | Open (see §12.1) |
+| Q-P7 | Live previews: deferred because tests showed it's harder than expected, or not yet explored? Hybrid vs. illustrative-only vs. tutorial-only? | Paul | ANSWERED: deferred by explicit scope instruction, not a failed experiment; MVP ships client-side Illustrative previews |
+| Q-P8 | Local API additions for the UI: `DELETE /api/projects/:id`, latest-run summary in `GET /api/projects`, `overall` per viewport on runs | Paul | RESOLVED `ddacaaf`: archive + latest-run summary + per-viewport overall shipped |
 | Q-E1 | Final scale: keep ordinal 1–4? How do criterion scores roll up to an axis score? | Elle | SUPERSEDED by Combined: axis = one weighted points criterion; anchored 0/half/full point choices per criterion |
 | Q-E2 | Overall formula and display max? | Elle | RESOLVED: Combined = sum of weighted criterion points /100, bands + deal-breaker cap; intermediate point values still need Elle's calibration (unresolved in rubric) |
 | Q-E5 | Combined rubric has no `icon`/`shortName` per axis (needed for the compact chart). Add them to `/rubric`, or UI keeps an icon map keyed by axis id? | Elle + Juan | Open |
-| Q-P9 | Demo fixture: judge ratings reference legacy criterion IDs; controlled demo yields all-unknown points under Combined. Add authored point-scores for the demo project, or demo via live SubQ? | Paul | Open (see §12.2) |
+| Q-P9 | Demo fixture: judge ratings reference legacy criterion IDs; controlled demo yields all-unknown points under Combined. Add authored point-scores for the demo project, or demo via live SubQ? | Paul | RESOLVED `45ccd76`: authored SAMPLE points in `run.fixtureQuality`, rendered labeled in the web app |
 | Q-E3 | The rubric mentions a **"taste channel"**: is that the onboarding swipe data? Is it scored separately, shown separately, or ignored in V1? | Elle + Juan | Open |
 | Q-E4 | Should any axis be excluded from the overall score in V1 (e.g. ADAPT if mobile capture fails)? | Elle | Open |
 | Q-J1 | GitHub handles for Paul and Elle (for CODEOWNERS)? | Juan | RESOLVED: `@laulpogan`, `@elle-mcdougald` |
@@ -471,8 +471,8 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 
 | Owner | Now | Next | Blocked on |
 |---|---|---|---|
-| Juan | **Web app scaffolded** — draft PR #2 (`juan/web-scaffold`), and **live integration verified end-to-end** against the harness `/api` (projects → real captures → score/gaps → suggestions → handoff prompt) | Paper mockups (other chat) then implement Views 1–5 | Q-P7 previews, Q-P8 API additions, Q-P9 demo scores |
-| Paul | Combined rubric adopted + wired; native harness UI; 28+ tests pass | Q-P7 preview decision, Q-P8 (DELETE + latest-run), Q-P9 demo scores, paid-judge enablement | — |
+| Juan | **Web app merged to main via PR #2** — all 5 views live on real harness data: radar chart + ghost deltas, illustrative previews, Layer 3 detector review, pending eval states, sample-data labeling. Co-owning `/harness` while Paul is out | Elle's design direction → visual implementation; swipe deck; judge/calibration follow-ups | Elle's `/rubric` + design input |
+| Paul | **Out (handed off `d46af55`).** Harness merged to main via PR #1 (`0a628ed`): Combined rubric, Layer 3 detector ledger, SubQ judge fix, measured deal-breakers, Q-P8 (archive + latest-run + per-viewport overall). Juan co-owns `/harness` meanwhile | — | — |
 | Elle | Placeholder rubric drafted | `rubric/rubric.json` v0.1, answer Q-E1…Q-E4 | — |
 | yitzybitzyspider | Joining | Motion rubric draft + rubric testing, with Elle | Elle's rubric structure (Q-E1) |
 
