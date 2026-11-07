@@ -21,6 +21,7 @@
 | **Juan Camilo** | `@juancamilo994` | System scaffolding, product experience, UI | `/apps/web`, `/supabase`, `/contracts` (steward), `/design`, root docs | Web stack, UX and visual design (Paper), DB schema, prompt assembly, repo conventions | Rubric (Elle), evaluation results and previews (Paul) |
 | **Paul** | `@laulpogan` | Harness: captures and evaluates the website's UI | `/harness` | Harness language and runtime, LLM provider(s) and models, hosting, capture and preview strategy, recommendation generation | Rubric (Elle), evaluation requests and DB/storage access (Juan) |
 | **Elle** | `@elle-mcdougald` | Rubric: what we evaluate and how it's scored | `/rubric` | Axes, criteria, scale, anchors, weights, overall formula, evidence requirements, fix patterns | Feedback from Paul (what's measurable) and Juan (what's presentable) |
+| **yitzybitzyspider** | `@yitzybitzyspider` | Rubric testing & the Motion section (helping Elle) | — (contributes to `/rubric` via PRs to Elle) | Motion criteria and rubric test proposals (final call stays with Elle) | Rubric conventions and review (Elle); motion evidence capabilities (Paul) |
 
 **Ownership rule:** you can *read* everything, but you only *change* files in folders you own. Anything else goes through a PR approved by the owner. Shared contracts (§5) need approval from **every affected owner**.
 
@@ -79,7 +80,7 @@ Target architecture (post-MVP):
 | Web: Next.js (App Router) + TS + Tailwind + Framer Motion. Local for MVP (port 3001); Vercel post-MVP | **Locked** | Juan |
 | Harness: Node 24 + TS + Playwright + Express, local, loopback-only | **Decided** by Paul | Paul |
 | LLM provider(s) and models: SubQ `subq-snap-1.1` today; **paid models are approved**, provider choice is Paul's | **Delegated** | Paul |
-| **Overall score = sum of the axis scores**, per viewport, computed deterministically (no model tokens). Shown as `score / max` | **Locked** (2026-11-07) | Juan |
+| **Overall score = sum of criterion points** (weights total 100), per viewport, deterministic; Elle's Combined rubric adds score bands + a deal-breaker cap (verified failure caps at 49) | **Locked** (2026-11-07; superseded same day by the Combined rubric adopted by Paul) | Juan + Elle |
 | Generic fix text (pre-written per rubric finding) is acceptable. If a fix appears, the issue was detected on the design | **Locked** (2026-11-07) | — |
 | Fewer than 3 fixes per axis is acceptable | **Locked** (2026-11-07) | — |
 | Rubric lives **in the repo** under `/rubric` (not Google Docs); the harness loads it from there | **Locked** (2026-11-07) | Elle |
@@ -345,6 +346,17 @@ When done, verify each acceptance criterion above.
 
 **Definition of done:** `rubric.json` validates against the C1 schema, and Paul confirms every criterion is measurable with the declared evidence.
 
+### yitzybitzyspider — Rubric Motion & testing
+
+**You can rely on:**
+- Elle owning `/rubric` and the final calls on axes, scale and wording. Your work lands through PRs she approves (§1 ownership rule).
+- Paul for what motion evidence the harness can actually capture (recordings, temporal probes). Per Q-P6, motion currently abstains without evidence.
+
+**We need from you:**
+1. Draft the **Motion** part of the rubric: criteria, anchors, observable examples and evidence requirements. Placement (dedicated axis vs. inside INT) is Elle's call; define what evidence turns motion from "not assessed" into scored.
+2. Stand up rubric testing: measurability checks on criteria and calibration runs on reference sites, paired with Elle's calibration task.
+3. Keep everything C1-compatible; flag contract needs via §7.4 instead of inventing fields.
+
 ### Juan Camilo — Scaffolding, UX, UI
 
 **We will deliver:**
@@ -421,6 +433,7 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 | 2026-11-07 | Harness: Node 24 + TS + Playwright + Express, local loopback service, SQLite store, SubQ judge | Paul | Runnable evidence-bound baseline; see `harness/README.md` |
 | 2026-11-07 | **MVP runs locally**: web app calls harness `/api` synchronously; harness is source of truth; Supabase/Vercel/Realtime deferred | Juan | Paul's local harness works today; avoids integration work before the demo |
 | 2026-11-07 | **Overall score = sum of axis scores** (per viewport, deterministic, no tokens) | Juan | Simple, explainable, cheap; supersedes the weighted-normalized proposal |
+| 2026-11-07 | **Combined rubric adopted**: 10 weighted criteria → /100 total, score bands, 9 deal-breakers with 49 cap, one-issue-one-home catalog; transcribed by Paul from Elle's source doc, weights/cap are Elle's proposals pending calibration | Elle + Paul | Elle's newer source doc supersedes the 8-axis/1–4 placeholder; the sum-based overall survives as weighted points |
 | 2026-11-07 | Generic fixes OK; fewer than 3 fixes per axis OK | Juan | A fix only appears if the issue was detected on the design |
 | 2026-11-07 | Live preview approach is Paul's decision (hybrid proposed by Juan) | Juan | Paul owns the harness and its feasibility |
 | 2026-11-07 | Paid models approved; provider choice is Paul's | Juan | Real evaluations on public URLs need a live judge |
@@ -443,8 +456,10 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 | Q-P6 | How will INT (interaction states) be evidenced: interaction probes (hover/focus) or Illustrative only for V1? | Paul + Elle | ANSWERED: apparent affordances judged from stills; verified behavior/motion abstain without evidence |
 | Q-P7 | Live previews: deferred because tests showed it's harder than expected, or not yet explored? Hybrid vs. illustrative-only vs. tutorial-only? | Paul | Open (see §12.1) |
 | Q-P8 | Local API additions for the UI: `DELETE /api/projects/:id`, latest-run summary in `GET /api/projects`, `overall` per viewport on runs | Paul | Open (see §12.1) |
-| Q-E1 | Final scale: keep ordinal 1–4? How do criterion scores roll up to an axis score? | Elle | Open (Paul's provisional roll-up: lower weighted median) |
-| Q-E2 | Overall formula and display max (proposal: weighted sum ÷ weighted max × 100)? | Elle | RESOLVED by Juan: sum of axis scores, `max` = scale max × number of axes |
+| Q-E1 | Final scale: keep ordinal 1–4? How do criterion scores roll up to an axis score? | Elle | SUPERSEDED by Combined: axis = one weighted points criterion; anchored 0/half/full point choices per criterion |
+| Q-E2 | Overall formula and display max? | Elle | RESOLVED: Combined = sum of weighted criterion points /100, bands + deal-breaker cap; intermediate point values still need Elle's calibration (unresolved in rubric) |
+| Q-E5 | Combined rubric has no `icon`/`shortName` per axis (needed for the compact chart). Add them to `/rubric`, or UI keeps an icon map keyed by axis id? | Elle + Juan | Open |
+| Q-P9 | Demo fixture: judge ratings reference legacy criterion IDs; controlled demo yields all-unknown points under Combined. Add authored point-scores for the demo project, or demo via live SubQ? | Paul | Open (see §12.2) |
 | Q-E3 | The rubric mentions a **"taste channel"**: is that the onboarding swipe data? Is it scored separately, shown separately, or ignored in V1? | Elle + Juan | Open |
 | Q-E4 | Should any axis be excluded from the overall score in V1 (e.g. ADAPT if mobile capture fails)? | Elle | Open |
 | Q-J1 | GitHub handles for Paul and Elle (for CODEOWNERS)? | Juan | RESOLVED: `@laulpogan`, `@elle-mcdougald` |
@@ -457,8 +472,9 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 | Owner | Now | Next | Blocked on |
 |---|---|---|---|
 | Juan | Reviewed Paul's harness (PR #1); MVP decisions logged | Paper designs for Views 1–5, web app scaffold against harness `/api` | Paul's answers on Q-P7, Q-P8 |
-| Paul | Harness checkpoint on `feat/better-evaluation-loop` (draft PR #1) | Q-P7 preview decision, Q-P8 API additions, flexible rubric loading from `/rubric`, overall score | — |
+| Paul | Combined rubric adopted + wired; native harness UI; 28+ tests pass | Q-P7 preview decision, Q-P8 (DELETE + latest-run), Q-P9 demo scores, paid-judge enablement | — |
 | Elle | Placeholder rubric drafted | `rubric/rubric.json` v0.1, answer Q-E1…Q-E4 | — |
+| yitzybitzyspider | Joining | Motion rubric draft + rubric testing, with Elle | Elle's rubric structure (Q-E1) |
 
 Paul update, 2026-11-07: local harness and team handoff are in draft PR #1. 28 tests, lint, typecheck, build and built-server Chromium end-to-end verification passed. Next: agree C1–C5 mapping with Juan and Elle. Full rubric scoring needs live SubQ; a composite needs the approved aggregation rule. Supabase and web UI remain unwired.
 
@@ -491,8 +507,10 @@ Thanks: the scope discipline, evidence/security work and verification (28 tests 
 Append feedback addressed to another workstream. Format: `- [YYYY-MM-DD] from → to: message` (and mark `RESOLVED` when addressed).
 
 - [2026-11-07] Juan → Paul, Elle: please review PRD.md and TEAM.md §4–§6 and add your feedback here or in a PR before we start M1.
+- [2026-11-07] Juan → Elle, yitzybitzyspider: welcome @yitzybitzyspider — focusing on testing and the Motion part of the rubric. Elle, please onboard him on rubric conventions; his `/rubric` changes land via PRs to you.
 
 - [2026-11-07] Paul → Juan, Elle: Harness checkpoint is on `feat/better-evaluation-loop` under `/harness`; see `harness/README.md` for local API and setup. User narrowed this work to the eval harness and explicitly deferred actual-site previews, personality mode and video judging. SubQ is a structured choice judge; fixture decisions stay labeled and separate from real measurements. TYPE readability/message clarity and INT appearance/verified behavior are separate criteria; ADAPT requires matched captures and does not repeat viewport-local penalties; FIT assesses claim presentation, not company truthfulness.
 - [2026-11-07] Paul → Juan: Q-P1/P2: Node 24+, TypeScript, Playwright, Express; local demo, SubQ `subq-snap-1.1` adapter with paid calls disabled. Q-P3: local SQLite is the runnable development baseline; Supabase C5 and the C2 async lifecycle are not wired or claimed compatible. `/contracts` and provisioned access were absent when work began. Please coordinate the shared seam before connecting the UI; `/api` is a documented local API, not a silent C2 replacement. Q-P4/P5: no patches/previews in this authorized scope. Q-P6: apparent affordances may be judged from stills; verified behavior and motion abstain without the required evidence. Harness checkpoint build/lint passed; full integration/security verification is in progress.
 - [2026-11-07] Paul → Elle: `harness/config/rubric.json` is an editable provisional fixture, not your approved C1 file. Per-axis lower weighted median is provisional; no global score combines desktop/mobile, and missing criteria remain incomplete. Please supply approved criterion IDs, anchors and schema mapping through `/rubric` and `/contracts`; original run snapshots will remain immutable when these change.
 - [2026-11-07] Paul → Juan, Elle: Verification follow-up for draft PR #1 passed 28 tests, lint/typecheck/build and the built HTTP API with real Chromium. Run `npm run test:e2e` in `/harness` for actual controlled-demo API output at ignored `test-results/baseline-run.json`, plus paired screenshots and selected prompt. Missing-provider, failed-capture, immutable-history and compatible-comparison paths are checked. No live SubQ accuracy or independent review approval is claimed; Google review returned no verdict. See README for exact commands and remaining integration seams.
+- [2026-11-07] Juan → Paul (also a heads-up to Elle): reviewed `aa2251a`. Combined rubric is now the scoring model — great fit for the UI (bands, deal-breakers, coverage). Notes: (1) `quality.{viewport}` gives everything View 3 needs; the chart reads `criteria[].points/max`, headline `cappedTotal/100` + band. (2) Demo gap (Q-P9): the fixture judge rates legacy IDs only, so the controlled demo shows all-unknown points — please author demo point-scores or we'll demo on live SubQ. (3) Still open: Q-P7 previews (until then the web app renders Illustrative previews itself from evidence + element facts), Q-P8 (DELETE project + latest-run summary in `GET /api/projects`). (4) Noted: `profile.feeling` is required under Combined — onboarding will collect task/audience/feeling + swipe→taste/avoid. (5) `BETTER_RUBRIC_PATH` acknowledged; once Elle lands `/rubric/rubric.json`, we'll point the shared run at it.
