@@ -105,7 +105,7 @@ Purpose: capture the project's intent and design taste.
 
 Purpose: show how good the design is today, how it has progressed, and what each axis means.
 
-- **FR-3.1** An **evaluating state**: progress steps streamed from the harness (Capturing → Evaluating → Generating recommendations → Rendering previews), a skeleton chart and a screenshot of the page as soon as it's captured.
+- **FR-3.1** An **evaluating state**: progress steps streamed from the harness (Capturing → Evaluating → Generating recommendations → Rendering previews), a skeleton chart and a screenshot of the page as soon as it's captured. *MVP: calls are synchronous, so a spinner or indicative (non-streamed) steps are acceptable.*
 - **FR-3.2** An **overall score**, large and prominent, with the delta against the previous run (e.g. `68 ▲ +7`).
 - **FR-3.3** **Progression**: a compact history chart of the overall score across runs. URL-change baselines are marked.
 - **FR-3.4** An **interactive spider chart**, one axis per rubric axis, plotted on the rubric scale. The previous run shows as a ghost polygon for comparison.
@@ -120,7 +120,7 @@ Purpose: explore fixes per axis, preview them live and add them to the prompt.
 
 **Left panel (30%)**
 - **FR-4.1** Top half: the same spider chart, compact. **Axis titles are replaced by icons** (from the rubric). The selected axis is highlighted.
-- **FR-4.2** Clicking an axis icon loads that axis's **top 3 recommendations** in the bottom half, as ranked cards showing title, a one-line problem statement, expected impact and effort.
+- **FR-4.2** Clicking an axis icon loads that axis's **top recommendations (up to 3; fewer is fine)** in the bottom half, as ranked cards showing title, a one-line problem statement, expected impact and effort. Fix text may be generic (pre-written per rubric finding); a fix only appears if the issue was detected.
 - **FR-4.3** A persistent **prompt tray** showing selected fixes (`2 / 3`) and a CTA to View 5.
 
 **Right panel (70%)**
@@ -172,7 +172,7 @@ The **rubric is owned by Elle** and lives in `/rubric`. The current proposal is 
 - **Evidence-bound.** A score can only be given if its required evidence was captured. Otherwise it is reported as *not assessed* or *low confidence*, never guessed.
 - **Taste vs. quality.** Style preference is not quality. Onboarding taste data must not silently penalize quality axes.
 
-**Overall score (proposal, Elle to confirm):** `overall = Σ(weightₐ × axis_scoreₐ) / Σ(weightₐ × axis_maxₐ) × 100`, displayed as a 0–100 integer. The UI reads the scale, weights and display max from the rubric file and never hard-codes them.
+**Overall score (decided 2026-11-07):** `overall = Σ axis_scoreₐ`, displayed as `score / max`, where `max = scale max × number of axes` (e.g. `24 / 32` with 8 axes on a 1–4 scale). It is computed deterministically per viewport, with no model tokens. Desktop is the headline and mobile is shown alongside it. Unassessed axes are shown as gaps and reported (`assessedAxes / totalAxes`). The UI reads the scale and axes from the rubric file and never hard-codes them.
 
 **Score stability:** re-running an unchanged page should produce the same score. The harness should minimize LLM variance (low temperature, structured output, pinned model and rubric version, optionally multiple samples) and report a page fingerprint so the UI can flag "no change".
 
@@ -220,6 +220,8 @@ Serve a sanitized snapshot of the page (static HTML/CSS, scripts stripped) in a 
 ---
 
 ## 9. System architecture (V1)
+
+> **MVP (decided 2026-11-07): runs locally on one machine.** Paul's harness (`/harness`, Node + Playwright + Express, loopback `127.0.0.1:3000`) is the source of truth for projects, runs, comparisons and handoffs (SQLite + disk). The web app (Next.js, port 3001) calls the harness's local `/api` from its server routes. Calls are synchronous, one capture at a time. **Supabase, Vercel hosting and Realtime progress are deferred to post-MVP.** The diagram below is the post-MVP target. Live-preview approach: owned by Paul (see TEAM.md §4, Q-P7).
 
 ```
 ┌───────────────────────────┐        HTTPS (bearer secret)       ┌─────────────────────────────┐
