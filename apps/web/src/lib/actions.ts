@@ -36,14 +36,19 @@ export async function createProjectWithBriefAction(formData: FormData) {
     avoid: str(formData.get('avoid')),
     brand: str(formData.get('brand')),
   };
+  let projectId: string;
+  let runId: string;
   try {
     const project = await api.createProject({ name: name!, url: url!, profile });
     const run = await api.createRun(project.id, {});
-    redirect(`/projects/${project.id}?run=${run.id}`);
+    projectId = project.id;
+    runId = run.id;
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Could not create the project.';
     redirect(`/onboarding?name=${encodeURIComponent(name!)}&url=${encodeURIComponent(url!)}&error=${encodeURIComponent(msg)}`);
   }
+  // redirect() throws NEXT_REDIRECT — it must live outside the try/catch.
+  redirect(`/projects/${projectId!}?run=${runId!}`);
 }
 
 export async function startRunAction(projectId: string, formData: FormData) {
