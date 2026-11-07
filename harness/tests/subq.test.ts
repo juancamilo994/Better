@@ -22,6 +22,13 @@ test('official request contract: bounded choices, plain image bytes and whitelis
   assert.equal(Object.hasOwn(body, 'temperature'), false); // Not a documented Decisions parameter.
   assert.equal(Object.hasOwn(body, 'store'), false);
 });
+test('requests carry no run-specific IDs, so an unchanged page sends an identical request every run', () => {
+  const asRun = (runId: string) => ({ ...input(), images: [{ ...input().images[0], evidenceId: `${runId}:desktop:screenshot` }, { ...input().images[0], evidenceId: `${runId}:desktop:full_screenshot` }] });
+  const a = JSON.stringify(buildRequest(asRun('fd68ba98-17dd-4ed7-ae96-89e48af5921f'), 'subq-snap-1.1'));
+  const b = JSON.stringify(buildRequest(asRun('932c7885-3272-42c4-baf8-a590ec013fe9'), 'subq-snap-1.1'));
+  assert.equal(a, b);
+  assert.doesNotMatch(a, /fd68ba98/);
+});
 test('reject invalid, oversized and too many images before transport', () => {
   for (const images of [[], Array(5).fill(input().images[0]), [{ ...input().images[0], base64: `data:image/png;base64,${png}` }], [{ ...input().images[0], base64: Buffer.alloc(4 * 1024 * 1024 + 1).toString('base64') }]]) {
     assert.throws(() => buildRequest({ ...input(), images }, 'subq-snap-1.1'), code('invalid_images'));
@@ -36,8 +43,13 @@ test('parses ordinal choices, explicit abstention and supplied evidence IDs', ()
   assert.equal('evidence' in buildRequest(input(), 'subq-snap-1.1').questions, false);
   const twoImages = { ...input(), images: [...input().images, { ...input().images[0], evidenceId: 'run:desktop:full_screenshot' }] };
   assert.ok(buildRequest(twoImages, 'subq-snap-1.1').questions.evidence);
-  const none = { ...response(), answers: { ...response().answers, evidence: answer('none', ['none', 'run:desktop:screenshot', 'run:desktop:full_screenshot']) } };
+  const none = { ...response(), answers: { ...response().answers, evidence: answer('none', ['none', 'image_1', 'image_2']) } };
   assert.equal(parseResponse(none, twoImages, none.model).status, 'not_assessed');
+  // The judge picks a stable label; the result cites the real evidence ID behind it.
+  const second = { ...response(), answers: { ...response().answers, evidence: answer('image_2', ['none', 'image_1', 'image_2']) } };
+  assert.deepEqual(parseResponse(second, twoImages, second.model).evidenceIds, ['run:desktop:full_screenshot']);
+  const unknown = { ...response(), answers: { ...response().answers, evidence: answer('run:desktop:screenshot', ['none', 'run:desktop:screenshot', 'run:desktop:full_screenshot']) } };
+  assert.throws(() => parseResponse(unknown, twoImages, unknown.model), code('invalid_response'));
 });
 test('reject malformed responses, unknown IDs, fractional ratings and inconsistent findings', () => {
   const variants: unknown[] = [{}, { ...response(), model: 'wrong-model' }, { ...response(), usage: { input_tokens: 1, output_tokens: 3 } }];
