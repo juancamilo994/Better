@@ -16,6 +16,7 @@ const mock = {
     profile: { version: 'profile-1', task: '', audience: '', taste: '', avoid: '', brand: '', ...input.profile },
   }),
   getProject: async (): Promise<ProjectDetail> => fixtureProjectDetail,
+  deleteProject: async (): Promise<{ ok: boolean }> => ({ ok: true }),
   createRun: async () => fixtureRun('fixture-run-2', fixtureProject.id, 'second'),
   getRun: async (id: string): Promise<RunDetail> => fixtureRunDetail(id),
   compareRuns: async (currentId: string, baselineId: string) => ({

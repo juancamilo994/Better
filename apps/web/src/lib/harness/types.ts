@@ -235,6 +235,29 @@ export interface Run {
     referenceIds: string[];
   };
   judgeAttempts: { viewport: Viewport; criterionId: string; status: string; code: string }[];
+  /** Per-viewport rollup attached by the API (Q-P8). */
+  overall?: Overall | null;
+}
+
+/** Per-viewport rollup attached to runs (Q-P8). `sample` flags fixture data. */
+export interface Overall {
+  sample: boolean;
+  desktop: {
+    rawTotal: number | null;
+    cappedTotal: number | null;
+    band: string | null;
+    assessedCriteria: number;
+    capApplied: boolean;
+    layer3: { status: string; cappedTotal: number | null; provisional: boolean } | null;
+  } | null;
+  mobile: {
+    rawTotal: number | null;
+    cappedTotal: number | null;
+    band: string | null;
+    assessedCriteria: number;
+    capApplied: boolean;
+    layer3: { status: string; cappedTotal: number | null; provisional: boolean } | null;
+  } | null;
 }
 
 export interface Project {
@@ -244,6 +267,15 @@ export interface Project {
   source: 'public_url' | 'controlled_demo';
   createdAt: string;
   profile: Profile;
+  /** Latest-run summary included by GET /api/projects (Q-P8). */
+  latestRun?: {
+    id: string;
+    createdAt: string;
+    status: string;
+    mode: string;
+    buildLabel: string;
+    overall: Overall | null;
+  } | null;
 }
 
 export interface Handoff {
