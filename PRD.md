@@ -152,7 +152,7 @@ Purpose: hand the user an actionable prompt and close the loop.
 
 ## 6. Scoring model
 
-The **rubric is owned by Elle** and lives in `/rubric`. The current proposal is [`Placeholder rubric.md`](./Placeholder%20rubric.md), which defines **8 axes**:
+The **rubric is owned by Elle** and lives in `/rubric`. **Current model (adopted 2026-11-07, transcribed by Paul from Elle's source doc): the "Combined" rubric** — 10 weighted criteria whose weights total 100, scored with anchored point choices; plus supporting checks that never deduct. The earlier [`Placeholder rubric.md`](./Placeholder%20rubric.md) (8 axes, 1–4) remains as background; its boundaries carry over (single penalty home per issue, evidence-bound, taste ≠ quality, screenshots flag but don't certify):
 
 | Code | Axis | Scope (abridged) |
 |---|---|---|
@@ -172,7 +172,7 @@ The **rubric is owned by Elle** and lives in `/rubric`. The current proposal is 
 - **Evidence-bound.** A score can only be given if its required evidence was captured. Otherwise it is reported as *not assessed* or *low confidence*, never guessed.
 - **Taste vs. quality.** Style preference is not quality. Onboarding taste data must not silently penalize quality axes.
 
-**Overall score (decided 2026-11-07):** `overall = Σ axis_scoreₐ`, displayed as `score / max`, where `max = scale max × number of axes` (e.g. `24 / 32` with 8 axes on a 1–4 scale). It is computed deterministically per viewport, with no model tokens. Desktop is the headline and mobile is shown alongside it. Unassessed axes are shown as gaps and reported (`assessedAxes / totalAxes`). The UI reads the scale and axes from the rubric file and never hard-codes them.
+**Overall score (decided 2026-11-07):** `overall = Σ criterion points`, computed deterministically per viewport as `run.quality.{viewport}` — `rawTotal` when all points are assessed, else `null` with a coverage summary; `cappedTotal` applies the deal-breaker cap (verified failure → cap 49). Displayed as `n /100` plus the band label (90–100 "Distinctive and effortless", 75–89 "Strong, with fixable flaws", 60–74 "Works but generic or effortful", 40–59 "Real problems", 0–39 "Fails its audience"). Desktop is the headline, mobile alongside. Unassessed criteria are gaps, never zeros. The UI reads axes, weights, bands and deal-breakers from the rubric file and never hard-codes them.
 
 **Score stability:** re-running an unchanged page should produce the same score. The harness should minimize LLM variance (low temperature, structured output, pinned model and rubric version, optionally multiple samples) and report a page fingerprint so the UI can flag "no change".
 
