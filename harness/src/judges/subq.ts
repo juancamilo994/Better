@@ -13,6 +13,16 @@ const responseSchema = z.object({ model: z.string(), answers: z.record(z.string(
 // close calls, so an unchanged page scored differently on every run.
 export const imageLabel = (i: number) => `image_${i + 1}`;
 
+// Typing style is not meaning. "calm and welcoming." and "Calm and welcoming"
+// swung two criteria by 12 points, so brief fields go to the judge in one form.
+export const normalizeBrief = (value: string | undefined) => {
+  if (!value) return value ?? "";
+  const s = value.normalize('NFKC').replace(/\s+/g, ' ').trim().replace(/[\s.,;:!]+$/, '');
+  return s ? s[0].toUpperCase() + s.slice(1) : s;
+};
+// Clock readings change on every load and say nothing about design quality.
+export const maskVolatile = (value: string) => value.replace(/\b\d{1,2}:\d{2}(?::\d{2})?(?:\s?[ap]\.?m\.?)?/gi, '[time]');
+
 function questionPlan(input: JudgeInput) {
   const points = !!input.issues?.length;
   const own = input.issues?.filter(i => i.home === input.criterion.axis) ?? [];
@@ -38,13 +48,13 @@ export function buildRequest(input: JudgeInput, model: string) {
   const body = {
     model,
     state: {
-      task: input.profile.task, audience: input.profile.audience, feeling: input.profile.feeling,
-      preferences: { taste: input.profile.taste, avoid: input.profile.avoid, brand: input.profile.brand },
+      task: normalizeBrief(input.profile.task), audience: normalizeBrief(input.profile.audience), feeling: normalizeBrief(input.profile.feeling),
+      preferences: { taste: normalizeBrief(input.profile.taste), avoid: normalizeBrief(input.profile.avoid), brand: normalizeBrief(input.profile.brand) },
       viewport: input.capture.viewport, evidence,
       untrusted_page_evidence: {
-        text: input.capture.facts.text.slice(0, 12_000),
+        text: maskVolatile(input.capture.facts.text.slice(0, 12_000)),
         // Whitelist rendered facts. Raw HTML, scripts, cookies and input values never leave the server.
-        elements: input.capture.facts.elements.slice(0, 100).map(({ tag, text, fontSize, width, height, color, background }) => ({ tag, text, fontSize, width, height, color, background })),
+        elements: input.capture.facts.elements.slice(0, 100).map(({ tag, text, fontSize, width, height, color, background }) => ({ tag, text: maskVolatile(text), fontSize, width, height, color, background })),
       },
     },
     images,
