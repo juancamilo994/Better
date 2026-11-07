@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { api, isMock } from '@/lib/harness';
-import { beginOnboardingAction } from '@/lib/actions';
+import { beginOnboardingAction, archiveProjectAction } from '@/lib/actions';
 import { HarnessError } from '@/lib/harness/client';
 import { SubmitButton } from '@/components/SubmitButton';
 
@@ -30,12 +30,28 @@ export default async function ProjectsPage({
       <section aria-label="Projects">
         {projects.length === 0 && !error && <p>No projects yet. Create one to get started.</p>}
         <ul>
-          {projects.map(p => (
-            <li key={p.id}>
-              <Link href={`/projects/${p.id}`}>{p.name}</Link>
-              {' — '}{p.url}{p.source === 'controlled_demo' ? ' (demo)' : ''}
-            </li>
-          ))}
+          {projects.map(p => {
+            const latest = p.latestRun?.overall?.desktop;
+            const score = latest?.cappedTotal;
+            return (
+              <li key={p.id}>
+                <Link href={`/projects/${p.id}`}>{p.name}</Link>
+                {' — '}{p.url}{p.source === 'controlled_demo' ? ' (demo)' : ''}
+                {latest && (
+                  <span>
+                    {' · '}{score !== null ? `${score}/100` : `${latest.assessedCriteria}/10 assessed`}
+                    {latest.band ? ` · ${latest.band.split('.')[0]}` : ''}
+                    {p.latestRun?.overall?.sample ? ' · SAMPLE' : ''}
+                    {latest.capApplied ? ' · capped' : ''}
+                  </span>
+                )}
+                {' '}
+                <form action={archiveProjectAction.bind(null, p.id)} style={{ display: 'inline' }}>
+                  <SubmitButton pendingLabel="Archiving…">Archive</SubmitButton>
+                </form>
+              </li>
+            );
+          })}
         </ul>
       </section>
 

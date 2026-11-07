@@ -43,6 +43,8 @@ export const harness = {
   listProjects: () => request<Project[]>('/projects'),
   createProject: (input: CreateProjectInput) => post<Project>('/projects', input),
   getProject: (id: string) => request<ProjectDetail>(`/projects/${encodeURIComponent(id)}`),
+
+  deleteProject: (id: string) => request<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   createRun: (projectId: string, input: CreateRunInput = {}) => post<Run>(`/projects/${encodeURIComponent(projectId)}/runs`, input),
   getRun: (id: string) => request<RunDetail>(`/runs/${encodeURIComponent(id)}`),
   compareRuns: (currentId: string, baselineId: string) =>

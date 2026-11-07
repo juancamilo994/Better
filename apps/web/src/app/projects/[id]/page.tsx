@@ -121,7 +121,8 @@ export default async function ScorePage({
         <ul>
           {runs.map(r => {
             const d = scoreDelta(runs, r);
-            const score = r.quality?.desktop.cappedTotal ?? r.quality?.desktop.observedSubtotal
+            const score = r.overall?.desktop?.cappedTotal
+              ?? r.quality?.desktop.cappedTotal ?? r.quality?.desktop.observedSubtotal
               ?? r.fixtureQuality?.desktop.cappedTotal ?? r.fixtureQuality?.desktop.observedSubtotal;
             return (
               <li key={r.id}>

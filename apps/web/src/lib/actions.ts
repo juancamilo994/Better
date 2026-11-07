@@ -65,6 +65,12 @@ export async function startRunAction(projectId: string, formData: FormData) {
   redirect(`/projects/${projectId}?run=${run.id}`);
 }
 
+export async function archiveProjectAction(projectId: string) {
+  await api.deleteProject(projectId);
+  revalidatePath('/');
+  redirect('/');
+}
+
 export async function reevaluateAction(projectId: string) {
   const run = await api.createRun(projectId, {});
   revalidatePath(`/projects/${projectId}`);
