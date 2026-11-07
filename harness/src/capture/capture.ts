@@ -11,6 +11,32 @@ import { measure } from './measure.ts';
 export const VIEWPORTS = { desktop: { width: 1440, height: 900 }, mobile: { width: 390, height: 844 } } as const;
 const blankFacts = () => ({ scrollWidth: 0, clientWidth: 0, elements: [], text: '', title: '', truncated: false });
 
+// Same design, different clock: a fingerprint of layout, type and color with
+// digits masked and positions rounded, so live counters and timestamps do not
+// make an unchanged page look new. Raw contentHash still records exact bytes.
+// Same design, different clock: a fingerprint of layout, type and color with
+// digits masked and positions rounded, so live counters and timestamps do not
+// make an unchanged page look new. Raw contentHash still records exact bytes.
+// One vague message for 404s, blocked redirects and bot walls left users unable
+// to act. Each case now says what happened; every message keeps the known prefix.
+export function navigationFailure(status: number | null, blocked: string | null) {
+  const base = 'Navigation did not return a successful page';
+  if (blocked && /private|local|reserved|metadata/i.test(blocked)) return `${base}: it redirected to a private or internal address, which Better never loads. Use a public URL.`;
+  if (blocked) return `${base}: the request was blocked (${blocked.replace(/\.$/, '')}).`;
+  if (status === null) return `${base}: the site did not respond.`;
+  if (status === 404 || status === 410) return `${base}: the site returned HTTP ${status} (page not found). Check the URL.`;
+  if ([401, 403, 407].includes(status)) return `${base}: the site refused access (HTTP ${status}). Pages behind a login or bot protection can't be scored.`;
+  if (status === 429) return `${base}: the site rate-limited or challenged the request (HTTP 429), usually bot protection. Try again later.`;
+  if (status >= 500) return `${base}: the site returned a server error (HTTP ${status}). Try again later.`;
+  return `${base}: the site returned HTTP ${status}.`;
+}
+
+export function layoutFingerprint(snapshot: { title: string; elements: { tag: string; text: string; fontSize: number; color: string; background: string; width: number; height: number; x: number; y: number }[] }) {
+  const r = (n: number) => Math.round(n / 8) * 8;
+  const mask = (t: string) => t.replace(/\d/g, '#');
+  return hash(JSON.stringify({ title: mask(snapshot.title), elements: snapshot.elements.map(e => [e.tag, mask(e.text), e.fontSize, e.color, e.background, r(e.width), r(e.height), r(e.x), r(e.y)]) }));
+}
+
 export async function capturePage(project: Project, runId: string, directory: string, demoVersion: DemoVersion, expectedText?: string): Promise<Capture[]> {
   if (project.source === 'public_url') await publicTarget(project.url);
   await mkdir(directory, { recursive: true });
@@ -133,7 +159,7 @@ export async function capturePage(project: Project, runId: string, directory: st
         await save('text', Buffer.from(snapshot.text), 'txt');
         await save('measurements', Buffer.from(JSON.stringify(measurements, null, 2)), 'measurements.json');
         const facts = { scrollWidth: snapshot.scrollWidth, clientWidth: snapshot.clientWidth, elements: snapshot.elements, text: snapshot.text, title: snapshot.title, truncated: snapshot.truncated, brokenImages: snapshot.brokenImages, headingLevels: snapshot.headingLevels, controls: snapshot.controls };
-        captures.push({ viewport, ...size, status: 'ready', url: page.url(), capturedAt, state: 'default-frozen', artifacts, facts, browser: browser.version(), contentHash: hash(snapshot.html + hash(screenshot)), documentHash, blockedRequests, failedResources, networkIdle, fullPageClipped, measurements, pageErrors });
+        captures.push({ viewport, ...size, status: 'ready', url: page.url(), capturedAt, state: 'default-frozen', artifacts, facts, browser: browser.version(), contentHash: hash(snapshot.html + hash(screenshot)), layoutHash: layoutFingerprint(snapshot), documentHash, blockedRequests, failedResources, networkIdle, fullPageClipped, measurements, pageErrors });
       } catch (error) {
         const known = error instanceof Error && ['Navigation did not', 'Capture requires', 'Expected page', 'Empty page', 'Page changed'].some(prefix => error.message.startsWith(prefix));
         captures.push({ viewport, ...size, status: 'failed', reason: known ? (error as Error).message : 'Capture failed or readiness timed out. No design verdict was produced.', url: project.url, capturedAt, state: 'default-frozen', artifacts: [], facts: blankFacts(), browser: browser.version(), contentHash: '', documentHash, blockedRequests });
