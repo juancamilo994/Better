@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -9,8 +10,8 @@ import { evaluateProject } from './evaluation/pipeline.ts';
 import { compareRuns } from './evaluation/aggregation.ts';
 import { Store } from './store.ts';
 
-const defaultProfile = { version: 'profile-1', task: 'Help visitors find the next useful action.', audience: 'First-time visitors', taste: '', avoid: '', brand: '' };
-const createSchema = z.object({ name: z.string().min(1).max(120), url: z.string().max(2000).optional(), demo: z.boolean().optional(), profile: profileSchema.default(defaultProfile) }).strict();
+const defaultProfile = { version: 'profile-1', task: 'Help visitors find the next useful action.', audience: 'First-time visitors', feeling: 'Welcoming and practical', taste: '', avoid: '', brand: '' };
+const createSchema = z.object({ name: z.string().min(1).max(120), url: z.string().max(2000).optional(), demo: z.boolean().optional(), profile: profileSchema.optional() }).strict();
 const evaluateSchema = z.object({ buildLabel: z.string().max(200).optional(), demoVersion: z.enum(['baseline', 'revised']).optional(), expectedText: z.string().max(500).optional(), profile: profileSchema.optional(), useLatestRubric: z.boolean().optional() }).strict();
 const idSchema = z.uuid();
 
@@ -31,15 +32,19 @@ export function createApp(store: Store) {
   });
   app.use(express.json({ limit: '32kb' }));
   let busy = false;
-  app.get('/', (_req, res) => res.json({ product: 'Better evaluation harness', docs: 'README.md', health: '/api/health', ui: 'deferred' }));
+  for (const [route, file] of [['/', 'index.html'], ['/ui.js', 'ui.js'], ['/ui.css', 'ui.css']]) app.get(route, (_req, res) => {
+    res.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    res.sendFile(resolve('public', file));
+  });
   app.get('/api/health', (_req, res) => res.json({ ok: true, mode: process.env.BETTER_JUDGE || 'fixture', paidCallsEnabled: process.env.BETTER_ALLOW_PAID_CALLS === 'true', busy }));
   app.get('/api/rubric', (_req, res) => res.json(loadRubric()));
   app.get('/api/projects', (_req, res) => res.json(store.listProjects()));
   app.post('/api/projects', async (req, res) => {
     const input = createSchema.parse(req.body);
     if (!input.demo && !input.url) throw new AppError('A public URL is required.');
+    if (!input.demo && loadRubric().combined && (!input.profile?.audience.trim() || !input.profile?.task.trim() || !input.profile?.feeling?.trim())) throw new AppError('Provide who the site is for, the desired feeling and one core job.');
     const url = input.demo ? DEMO_URL : (await publicTarget(input.url!)).url.href;
-    const project = store.createProject({ id: randomUUID(), name: input.name, url, source: input.demo ? 'controlled_demo' : 'public_url', createdAt: new Date().toISOString(), profile: input.profile });
+    const project = store.createProject({ id: randomUUID(), name: input.name, url, source: input.demo ? 'controlled_demo' : 'public_url', createdAt: new Date().toISOString(), profile: input.profile ?? defaultProfile });
     res.status(201).json(project);
   });
   app.get('/api/projects/:id', (req, res) => { const id = idSchema.parse(req.params.id); res.json({ project: store.project(id), runs: store.runs(id) }); });

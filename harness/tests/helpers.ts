@@ -10,9 +10,9 @@ export function capture(viewport: 'desktop' | 'mobile' = 'desktop'): Capture {
 }
 export function input(): JudgeInput {
   const c = capture();
-  return { criterion: loadRubric().criteria.find(c => c.id === 'HIER-01')!, capture: c, profile, source: 'controlled_demo', demoVersion: 'baseline', images: [{ evidenceId: c.artifacts[0].id, mediaType: 'image/png', base64: png }] };
+  return { criterion: loadRubric('config/legacy-rubric.json').criteria.find(c => c.id === 'HIER-01')!, capture: c, profile, source: 'controlled_demo', demoVersion: 'baseline', images: [{ evidenceId: c.artifacts[0].id, mediaType: 'image/png', base64: png }] };
 }
 export function run(): Run {
-  const rubric = loadRubric();
+  const rubric = loadRubric('config/legacy-rubric.json');
   return { id: 'run', projectId: 'project', parentRunId: null, createdAt: '2026-11-07T00:00:00Z', status: 'partial', mode: 'fixture', buildLabel: 'baseline', source: 'controlled_demo', rubric, profile, versions: { rubric: '1', profile: '1', capture: '1', judge: '1' }, captures: [capture(), capture('mobile')], results: [], suggestions: [], axes: { desktop: aggregate(rubric, [], 'desktop'), mobile: aggregate(rubric, [], 'mobile') }, fixtureAxes: { desktop: [], mobile: [] }, manifest: { os: 'test', browser: 'test', readiness: 'test', expectedText: null, deviceScale: 1, input: { desktop: 'pointer', mobile: 'touch' }, state: 'default-frozen', capturedBuildHash: 'test', repositorySource: 'not_connected', referenceIds: [] }, judgeAttempts: [] };
 }

@@ -1,8 +1,10 @@
+import { combinedQuality } from './quality.ts';
 import { type AxisScore, type Result, type Rubric, type Run, type Viewport } from '../domain.ts';
 
 // Lower weighted median: retain ordinal anchors, avoid invented decimal precision.
 // Each issue has one rubric home. Viewports and fixture/real evidence never mix.
 export function aggregate(rubric: Rubric, results: Result[], viewport: Viewport, fixtures = false): AxisScore[] {
+  if (rubric.combined) { const q = combinedQuality(rubric, results, viewport, [], fixtures); return q.criteria.map(c => ({ axis: c.id, score: c.points, assessed: c.points === null ? 0 : 1, total: 1, complete: c.points !== null, fixture: fixtures })); }
   return rubric.axes.map(({ id: axis }) => {
     const criteria = rubric.criteria.filter(c => c.channel === 'quality' && c.axis === axis && c.weight > 0 && (!fixtures || c.lane === 'visual'));
     const available = criteria.map(c => ({ criterion: c, result: results.find(r => r.criterionId === c.id && r.viewport === viewport) }));
@@ -32,6 +34,6 @@ export function compareRuns(baseline: Run, current: Run) {
       return { criterionId: result.criterionId, viewport: result.viewport, provenance: result.provenance, delta, label: delta === null ? 'not_assessed' : result.provenance === 'fixture' ? 'illustrative_fixture_delta' : result.provenance === 'measured' ? 'measured_delta' : 'uncalibrated_judge_delta' };
     }) : [],
     // No cross-viewport overall score; mobile failures remain explicit.
-    failures: current.results.filter(r => r.provenance !== 'fixture' && r.status === 'assessed' && r.score === 1).map(r => ({ criterionId: r.criterionId, viewport: r.viewport, evidenceIds: r.evidenceIds })),
+    failures: current.results.filter(r => r.provenance !== 'fixture' && r.status === 'assessed' && r.score === (current.rubric.criteria.find(c => c.id === r.criterionId)?.role === 'points' ? 0 : 1)).map(r => ({ criterionId: r.criterionId, viewport: r.viewport, evidenceIds: r.evidenceIds })),
   };
 }

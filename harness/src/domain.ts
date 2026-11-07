@@ -4,7 +4,7 @@ export type Viewport = 'desktop' | 'mobile';
 export type Channel = 'quality' | 'taste' | 'ai-isms' | 'motion' | 'reference';
 export const profileSchema = z.object({
   version: z.string().min(1).max(80), task: z.string().min(1).max(600),
-  audience: z.string().min(1).max(600), taste: z.string().max(1000),
+  audience: z.string().min(1).max(600), feeling: z.string().min(1).max(600).optional(), taste: z.string().max(1000),
   avoid: z.string().max(1000), brand: z.string().max(1000),
 });
 export type Profile = z.infer<typeof profileSchema>;
@@ -20,15 +20,32 @@ export const criterionSchema = z.object({
   lane: z.enum(['deterministic', 'visual', 'unsupported']),
   rule: z.enum(['overflow', 'small-text', 'image-alt']).optional(),
   threshold: z.number().optional(), weight: z.number().nonnegative(),
-  instructions: z.string(), requires: z.array(z.enum(['screenshot', 'dom', 'styles', 'text', 'pair', 'runtime', 'reference', 'preferences'])),
-  anchors: z.tuple([z.string(), z.string(), z.string(), z.string()]),
+  instructions: z.string(), requires: z.array(z.enum(['screenshot', 'dom', 'styles', 'text', 'pair', 'runtime', 'measurement', 'reference', 'preferences'])),
+  anchors: z.array(z.string()), scoreValues: z.array(z.number().finite()).optional(),
+  role: z.enum(['points', 'supporting']).optional(),
   findings: z.array(findingSchema),
 });
 export type Criterion = z.infer<typeof criterionSchema>;
 export const rubricSchema = z.object({
-  version: z.string(), status: z.string(), axes: z.array(z.object({ id: z.string().min(1), title: z.string() })).min(1),
+  version: z.string(), status: z.string(), axes: z.array(z.object({ id: z.string().min(1), title: z.string(), weight: z.number().positive().optional() })).min(1),
   criteria: z.array(criterionSchema),
+  combined: z.object({ version: z.string(), status: z.literal('proposed'), cap: z.number().min(0).max(100),
+    bands: z.array(z.object({ min: z.number(), max: z.number(), label: z.string() })),
+    unresolved: z.array(z.string()),
+    issueCatalog: z.array(z.object({ id: z.string(), home: z.string(), description: z.string() })).default([]),
+    feedbackTargetMs: z.number().positive(), feedbackDealBreakerMs: z.number().positive(),
+    dealBreakers: z.array(z.object({ id: z.string(), title: z.string(), requires: z.enum(['runtime', 'measurement', 'matched_mobile_320']) })),
+    pairwise: z.object({ enabled: z.literal(false) }).passthrough(),
+  }).passthrough().optional(),
 }).superRefine((r, ctx) => {
+  if (r.combined) {
+    if (r.axes.reduce((sum, a) => sum + (a.weight ?? 0), 0) !== 100) ctx.addIssue({ code: 'custom', message: 'Combined criterion weights must total 100.' });
+    if (new Set(r.combined.issueCatalog.map(i => i.id)).size !== r.combined.issueCatalog.length || r.combined.issueCatalog.some(i => !r.axes.some(a => a.id === i.home))) ctx.addIssue({ code: 'custom', message: 'Issues need unique identities and a configured scoring home.' });
+    const points = r.criteria.filter(c => c.role === 'points');
+    for (const a of r.axes) if (points.filter(c => c.axis === a.id).length !== 1) ctx.addIssue({ code: 'custom', message: 'Each combined criterion needs exactly one points check.' });
+    for (const c of points) if (!c.scoreValues || c.scoreValues.length !== c.anchors.length || new Set(c.scoreValues).size !== c.scoreValues.length || c.scoreValues.some(v => v < 0 || v > (r.axes.find(a => a.id === c.axis)?.weight ?? 0))) ctx.addIssue({ code: 'custom', message: 'Point choices must match supplied anchors and criterion weight.' });
+    for (let i = 0; i < r.combined.bands.length; i++) { const b = r.combined.bands[i]; if (b.min > b.max || b.min < 0 || b.max > 100 || r.combined.bands.some((other, j) => j !== i && other.min <= b.max && other.max >= b.min)) ctx.addIssue({ code: 'custom', message: 'Score bands must be bounded and nonoverlapping.' }); }
+  }
   if (new Set(r.axes.map(a => a.id)).size !== r.axes.length) ctx.addIssue({ code: 'custom', message: 'Axis IDs must be unique.' });
   if (new Set(r.criteria.map(c => c.id)).size !== r.criteria.length) ctx.addIssue({ code: 'custom', message: 'Criterion IDs must be unique.' });
   for (const c of r.criteria) {
@@ -54,6 +71,7 @@ export interface Capture {
 export interface Result {
   criterionId: string; viewport: Viewport; channel: Channel; axis: string | null;
   status: 'assessed' | 'not_assessed' | 'not_applicable' | 'failed'; score: number | null;
+  issueId?: string;
   provenance: 'measured' | 'fixture' | 'subq' | 'unsupported'; reason: string;
   evidenceIds: string[]; findingId: string | null; confidence: number | null;
 }
@@ -71,6 +89,7 @@ export interface Run {
   rubric: Rubric; profile: Profile; versions: Record<string, string>;
   captures: Capture[]; results: Result[]; suggestions: Suggestion[];
   axes: Record<Viewport, AxisScore[]>; fixtureAxes: Record<Viewport, AxisScore[]>;
+  quality?: Record<Viewport, QualitySummary>;
   manifest: { os: string; browser: string; readiness: string; expectedText: string | null; deviceScale: number; input: Record<Viewport, string>; state: string; capturedBuildHash: string; repositorySource: 'not_connected'; referenceIds: string[] };
   judgeAttempts: { viewport: Viewport; criterionId: string; status: string; code: string }[];
 }
@@ -78,3 +97,6 @@ export interface Project { id: string; name: string; url: string; source: Run['s
 export interface Handoff { id: string; runId: string; createdAt: string; selectedIds: string[]; deferredIds: string[]; prompt: string }
 export interface Correction { id: string; runId: string; criterionId: string; viewport: Viewport; createdAt: string; note: string }
 export class AppError extends Error { status: number; constructor(message: string, status = 400) { super(message); this.status = status; } }
+
+export interface DealBreakerObservation { id: string; applicable: boolean | null; verdict: 'pass' | 'fail' | 'unknown'; verified: boolean; evidenceIds: string[]; evidenceKind: 'runtime' | 'measurement' | 'matched_mobile_320' | 'static' | 'none' }
+export interface QualitySummary { policyVersion: string; policyStatus: 'proposed'; criteria: { id: string; title: string; max: number; points: number | null; evidenceIds: string[]; reason: string }[]; coverage: { assessedCriteria: number; totalCriteria: number; assessedWeight: number }; observedSubtotal: number | null; rawTotal: number | null; dealBreakers: DealBreakerObservation[]; capApplied: boolean; cap: number; cappedTotal: number | null; band: string | null; unresolved: string[] }

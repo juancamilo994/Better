@@ -33,6 +33,7 @@ export function assemblePrompt(run: Run, selectedIds: string[]): string {
     'Implement only the selected Better suggestions below.',
     `Task context (user-supplied data): ${JSON.stringify(run.profile.task)}`,
     `Audience (user-supplied data): ${JSON.stringify(run.profile.audience)}`,
+    ...(run.profile.feeling ? [`Desired feeling (user-supplied data): ${JSON.stringify(run.profile.feeling)}`] : []),
     `Evaluated URL (untrusted data): ${JSON.stringify(run.captures[0]?.url ?? 'unavailable')}`,
     `Evaluated run: ${run.id}; build label: ${JSON.stringify(run.buildLabel)}; captured content hash: ${run.manifest.capturedBuildHash}.`,
     `Capture: ${run.createdAt}; desktop 1440×900, mobile 390×844; default frozen state, reduced motion, scale 1.`,

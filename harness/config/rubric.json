@@ -1,76 +1,407 @@
 {
-  "version": "elle-draft-2026-11-07.1",
-  "status": "Provisional, uncalibrated; editable anchors and weights. Separate typography/readability from message clarity per product clarification.",
+  "version": "elle-combined-proposed-2026-11-07.2",
+  "status": "Proposed Combined rubric from Elle's source document; intermediate point calibration remains unresolved.",
   "axes": [
     {
       "id": "HIER",
-      "title": "Hierarchy and wayfinding"
+      "title": "Hierarchy",
+      "weight": 12
     },
     {
-      "id": "LAY",
-      "title": "Layout and spatial rhythm"
+      "id": "DENSITY",
+      "title": "Information density",
+      "weight": 12
     },
     {
-      "id": "TYPE",
-      "title": "Typography and content clarity"
+      "id": "FLOW",
+      "title": "Flow & effort",
+      "weight": 10
     },
     {
-      "id": "ACC",
-      "title": "Color and accessibility"
+      "id": "INTERACTION",
+      "title": "Interaction & feedback",
+      "weight": 12
     },
     {
-      "id": "CRAFT",
-      "title": "Visual craft and consistency"
+      "id": "AUDIENCE",
+      "title": "Audience & tone fit",
+      "weight": 12
     },
     {
-      "id": "INT",
-      "title": "Interaction and feedback"
+      "id": "ORIGINALITY",
+      "title": "Originality",
+      "weight": 10
     },
     {
-      "id": "ADAPT",
-      "title": "Cross-device adaptation"
+      "id": "VISUAL",
+      "title": "Visual communication",
+      "weight": 10
     },
     {
-      "id": "FIT",
-      "title": "Purpose, brand and trust presentation"
+      "id": "SYSTEM",
+      "title": "System consistency",
+      "weight": 8
+    },
+    {
+      "id": "TYPOGRAPHY",
+      "title": "Typography",
+      "weight": 6
+    },
+    {
+      "id": "USABILITY",
+      "title": "Usability basics",
+      "weight": 8
     }
   ],
   "criteria": [
     {
-      "id": "HIER-01",
+      "id": "HIER-POINTS",
       "axis": "HIER",
-      "title": "Primary-action hierarchy",
+      "title": "Hierarchy",
       "channel": "quality",
       "lane": "visual",
-      "instructions": "Judge whether the primary action is visually distinct and the reading order supports the task. Do not score small text, clipping, copy quality or personal style here.",
+      "role": "points",
+      "instructions": "Identify one primary element and up to three secondary elements using the squint and five-second checks. Equal weight, buried core insight and competing primary elements are main failures. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
       "requires": [
         "screenshot",
         "text"
       ],
       "anchors": [
-        "Primary action is lost among competing elements.",
-        "Primary and secondary elements frequently compete.",
-        "Clear primary action with minor competing emphasis.",
-        "Immediate focal point and intentional reading order."
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        6.0,
+        12
       ],
       "weight": 1,
       "findings": [
         {
-          "id": "ACTION_HIERARCHY",
-          "label": "Clarify the primary action",
-          "problem": "The primary action competes with secondary elements.",
-          "change": "Give the primary action distinct emphasis and reduce competing emphasis nearby.",
-          "effect": "A clearer next step may reduce search effort.",
-          "priority": "high",
-          "dependencies": [],
-          "conflicts": [],
-          "example": "hierarchy"
+          "id": "HIER_IMPROVE",
+          "label": "Review hierarchy",
+          "problem": "Attention, emphasis and reading order for the stated core job.",
+          "change": "Address the evidenced hierarchy issue while preserving the core job and essential instructions.",
+          "effect": "May improve hierarchy.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "DENSITY-POINTS",
+      "axis": "DENSITY",
+      "title": "Information density",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "Count separate messages. More than one main message per section fails. Show only what this moment needs; disclose supporting detail on action. Flag redundant filler while preserving essential labels, errors and instructions. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        6.0,
+        12
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "DENSITY_IMPROVE",
+          "label": "Review information density",
+          "problem": "Useful information, grouping, whitespace and redundant filler. Preserve essential labels, errors and instructions.",
+          "change": "Address the evidenced information density issue while preserving the core job and essential instructions.",
+          "effect": "May improve information density.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "FLOW-POINTS",
+      "axis": "FLOW",
+      "title": "Flow & effort",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "Count verified steps and fields for the core action. Effort must match the task. Check an obvious next action and progressive disclosure of advanced options. Static captures cannot establish completed flow. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text",
+        "runtime"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        5.0,
+        10
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "FLOW_IMPROVE",
+          "label": "Review flow & effort",
+          "problem": "Observed task flow and effort; do not infer completion from screenshots.",
+          "change": "Address the evidenced flow & effort issue while preserving the core job and essential instructions.",
+          "effect": "May improve flow & effort.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "INTERACTION-POINTS",
+      "axis": "INTERACTION",
+      "title": "Interaction & feedback",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "List verified actions besides scrolling and reading, tied to content. Feedback target is under 100 ms, separate from the under 400 ms deal-breaker. Static images establish apparent affordances only; never timing, keyboard behavior or motion. Motion remains unassessed without video; no video judge in MVP. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text",
+        "runtime"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        6.0,
+        12
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "INTERACTION_IMPROVE",
+          "label": "Review interaction & feedback",
+          "problem": "Keep apparent affordances separate from verified behavior. Static inputs cannot establish feedback timing, keyboard behavior or motion.",
+          "change": "Address the evidenced interaction & feedback issue while preserving the core job and essential instructions.",
+          "effect": "May improve interaction & feedback.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "AUDIENCE-POINTS",
+      "axis": "AUDIENCE",
+      "title": "Audience & tone fit",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "Against Step 0 audience, feeling and core job, cover the logo and assess category, mood, color, type and texture fit. Evaluate presentation of credibility and claims, not the company actual trustworthiness. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        6.0,
+        12
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "AUDIENCE_IMPROVE",
+          "label": "Review audience & tone fit",
+          "problem": "Fit to the declared audience, desired feeling and core job. Evaluate claims presentation, not actual company trustworthiness.",
+          "change": "Address the evidenced audience & tone fit issue while preserving the core job and essential instructions.",
+          "effect": "May improve audience & tone fit.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "ORIGINALITY-POINTS",
+      "axis": "ORIGINALITY",
+      "title": "Originality",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "Assess memorable, distinctive but understandable expression. AI-isms and three-or-more red flags are warnings here, never a separate penalty or an authorship finding. Flag templated structure, unrelated stock styling and unclear novelty. Do not deduct an issue already owned by another criterion. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        5.0,
+        10
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "ORIGINALITY_IMPROVE",
+          "label": "Review originality",
+          "problem": "Distinctive, purposeful expression, including AI-isms. Do not infer authorship or add a separate AI-isms penalty.",
+          "change": "Address the evidenced originality issue while preserving the core job and essential instructions.",
+          "effect": "May improve originality.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "VISUAL-POINTS",
+      "axis": "VISUAL",
+      "title": "Visual communication",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "Hide most text: can visuals communicate subject and importance? Prefer meaningful product, work or data over decoration. Expressive charts must remain readable. Message clarity stays separate from typographic readability. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        5.0,
+        10
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "VISUAL_IMPROVE",
+          "label": "Review visual communication",
+          "problem": "Visual communication and meaning; message clarity is separate from text readability.",
+          "change": "Address the evidenced visual communication issue while preserving the core job and essential instructions.",
+          "effect": "May improve visual communication.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "SYSTEM-POINTS",
+      "axis": "SYSTEM",
+      "title": "System consistency",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "Compare three components for radius, line weight, button meaning, spacing and color logic. Check shared tokens, a 4/8 px spacing scale and between-group spacing at least twice within-group spacing. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        4.0,
+        8
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "SYSTEM_IMPROVE",
+          "label": "Review system consistency",
+          "problem": "Consistent component and visual language.",
+          "change": "Address the evidenced system consistency issue while preserving the core job and essential instructions.",
+          "effect": "May improve system consistency.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "TYPOGRAPHY-POINTS",
+      "axis": "TYPOGRAPHY",
+      "title": "Typography",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "Check a short type scale (more than about five sizes warns), voice and weight suited to Step 0, body text at least 16 px and verified 4.5:1 contrast. Readability is separate from message clarity. Static color strings do not establish composited contrast. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text",
+        "measurement"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        3.0,
+        6
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "TYPOGRAPHY_IMPROVE",
+          "label": "Review typography",
+          "problem": "Type readability and typographic expression, separate from message clarity.",
+          "change": "Address the evidenced typography issue while preserving the core job and essential instructions.",
+          "effect": "May improve typography.",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "USABILITY-POINTS",
+      "axis": "USABILITY",
+      "title": "Usability basics",
+      "channel": "quality",
+      "lane": "visual",
+      "role": "points",
+      "instructions": "Check familiar behavior, error prevention, visible status and position, useful navigation with a way back, easy targets and matched desktop/mobile adaptation. Keep single-viewport defects in their normal criterion without double penalties. Recommended targets 44\u201348 px differ from the 24 px deal-breaker minimum. No full WCAG conformance claim. Use only configured anchors. Missing required evidence is unknown. Never infer all checks pass from an attractive still. One penalty home per issue: hierarchy/emphasis \u2192 Hierarchy; redundant filler/message count \u2192 Information density; excess steps/fields \u2192 Flow; behavior/feedback \u2192 Interaction; category/mood \u2192 Audience; templated structure/unrelated stock styling/unclear novelty \u2192 Originality; imagery/data meaning/message clarity \u2192 Visual communication; token inconsistency \u2192 System; text size/contrast/readability \u2192 Typography; remaining usability/device adaptation \u2192 Usability. AI red flags duplicating these issues are descriptive only in Originality. Single-viewport defects never incur adaptation penalties.",
+      "requires": [
+        "screenshot",
+        "text",
+        "runtime",
+        "pair"
+      ],
+      "anchors": [
+        "Main failure described in this criterion is present.",
+        "Passes with one clear flaw; exact half is the current proposed interpretation of about half.",
+        "Passes every check, supported by the required evidence."
+      ],
+      "scoreValues": [
+        0,
+        4.0,
+        8
+      ],
+      "weight": 1,
+      "findings": [
+        {
+          "id": "USABILITY_IMPROVE",
+          "label": "Review usability basics",
+          "problem": "Evidence-bounded usability basics. Simplified checks cannot establish complete WCAG conformance.",
+          "change": "Address the evidenced usability basics issue while preserving the core job and essential instructions.",
+          "effect": "May improve usability basics.",
+          "priority": "medium"
         }
       ]
     },
     {
       "id": "LAY-01",
-      "axis": "LAY",
+      "axis": "USABILITY",
       "title": "Horizontal overflow",
       "channel": "quality",
       "lane": "deterministic",
@@ -84,7 +415,7 @@
         "Reserved for a future calibrated anchor.",
         "No document-level horizontal overflow detected."
       ],
-      "weight": 1,
+      "weight": 0,
       "findings": [
         {
           "id": "HORIZONTAL_OVERFLOW",
@@ -99,11 +430,12 @@
         }
       ],
       "rule": "overflow",
-      "threshold": 1
+      "threshold": 1,
+      "role": "supporting"
     },
     {
       "id": "TYPE-01",
-      "axis": "TYPE",
+      "axis": "TYPOGRAPHY",
       "title": "Typography and readability: text size",
       "channel": "quality",
       "lane": "deterministic",
@@ -117,7 +449,7 @@
         "Reserved for a future calibrated anchor.",
         "Sampled visible text meets the configured minimum size."
       ],
-      "weight": 1,
+      "weight": 0,
       "findings": [
         {
           "id": "SMALL_TEXT",
@@ -132,11 +464,12 @@
         }
       ],
       "rule": "small-text",
-      "threshold": 14
+      "threshold": 16,
+      "role": "supporting"
     },
     {
       "id": "TYPE-02",
-      "axis": "TYPE",
+      "axis": "VISUAL",
       "title": "Message clarity and redundant filler",
       "channel": "quality",
       "lane": "visual",
@@ -151,7 +484,7 @@
         "Mostly specific wording with limited redundant explanation.",
         "Specific, concise task language; essential labels, errors and instructions remain."
       ],
-      "weight": 1,
+      "weight": 0,
       "findings": [
         {
           "id": "FILLER_COPY",
@@ -163,11 +496,12 @@
           "dependencies": [],
           "conflicts": []
         }
-      ]
+      ],
+      "role": "supporting"
     },
     {
       "id": "ACC-01",
-      "axis": "ACC",
+      "axis": "USABILITY",
       "title": "Image alternative-text presence",
       "channel": "quality",
       "lane": "deterministic",
@@ -181,7 +515,7 @@
         "Reserved for a future calibrated anchor.",
         "Every sampled image has an alt attribute; quality remains untested."
       ],
-      "weight": 1,
+      "weight": 0,
       "findings": [
         {
           "id": "MISSING_ALT",
@@ -194,42 +528,12 @@
           "conflicts": []
         }
       ],
-      "rule": "image-alt"
-    },
-    {
-      "id": "CRAFT-01",
-      "axis": "CRAFT",
-      "title": "Visual system consistency",
-      "channel": "quality",
-      "lane": "visual",
-      "instructions": "Judge coherent component treatment, imagery and finish. Do not penalize readability, overflow, interaction behavior or the mere presence of a style preference.",
-      "requires": [
-        "screenshot",
-        "styles"
-      ],
-      "anchors": [
-        "Conflicting visual treatments materially obscure relationships.",
-        "Several unexplained inconsistencies disrupt the visual system.",
-        "Coherent system with minor inconsistencies.",
-        "Intentional, consistent components and visual details."
-      ],
-      "weight": 1,
-      "findings": [
-        {
-          "id": "INCONSISTENT_CRAFT",
-          "label": "Unify component treatment",
-          "problem": "Comparable components use inconsistent visual treatments.",
-          "change": "Apply a coherent treatment to comparable components while preserving meaningful differences.",
-          "effect": "A consistent system may make the page easier to scan.",
-          "priority": "low",
-          "dependencies": [],
-          "conflicts": []
-        }
-      ]
+      "rule": "image-alt",
+      "role": "supporting"
     },
     {
       "id": "INT-01",
-      "axis": "INT",
+      "axis": "INTERACTION",
       "title": "Apparent affordances",
       "channel": "quality",
       "lane": "visual",
@@ -244,7 +548,7 @@
         "Controls look actionable with minor ambiguity.",
         "Controls clearly communicate their apparent role in the captured state."
       ],
-      "weight": 1,
+      "weight": 0,
       "findings": [
         {
           "id": "UNCLEAR_AFFORDANCE",
@@ -256,11 +560,12 @@
           "dependencies": [],
           "conflicts": []
         }
-      ]
+      ],
+      "role": "supporting"
     },
     {
       "id": "INT-02",
-      "axis": "INT",
+      "axis": "INTERACTION",
       "title": "Verified interaction behavior",
       "channel": "quality",
       "lane": "unsupported",
@@ -274,12 +579,13 @@
         "Tested behavior works with minor defects.",
         "Tested interaction and recovery work intentionally."
       ],
-      "weight": 1,
-      "findings": []
+      "weight": 0,
+      "findings": [],
+      "role": "supporting"
     },
     {
       "id": "ADAPT-01",
-      "axis": "ADAPT",
+      "axis": "USABILITY",
       "title": "Cross-device prioritization",
       "channel": "quality",
       "lane": "visual",
@@ -294,7 +600,7 @@
         "Sensible cross-device priority with minor tradeoffs.",
         "Intentional reflow and reprioritization across the matched captures."
       ],
-      "weight": 1,
+      "weight": 0,
       "findings": [
         {
           "id": "CROSS_DEVICE_PRIORITY",
@@ -306,88 +612,8 @@
           "dependencies": [],
           "conflicts": []
         }
-      ]
-    },
-    {
-      "id": "FIT-01",
-      "axis": "FIT",
-      "title": "Purpose and credibility presentation",
-      "channel": "quality",
-      "lane": "visual",
-      "instructions": "Evaluate fit to the task/audience and how claims, prices, conditions and credibility cues are presented. Do not judge actual company trustworthiness or declare real-looking claims fabricated. Factual verification is out of scope.",
-      "requires": [
-        "screenshot",
-        "text"
       ],
-      "anchors": [
-        "Presentation obscures the task or material conditions.",
-        "Claims or conditions are poorly contextualized.",
-        "Task and claims are presented clearly with minor gaps.",
-        "Task, audience, claims and applicable conditions are clearly presented."
-      ],
-      "weight": 1,
-      "findings": [
-        {
-          "id": "CLAIM_CONTEXT",
-          "label": "Clarify claim presentation",
-          "problem": "A claim or condition lacks clear context in the presentation.",
-          "change": "Clarify relevant conditions and identify the source for claims; do not invent proof, testimonials or metrics.",
-          "effect": "Readers may better understand what is being offered.",
-          "priority": "medium",
-          "dependencies": [],
-          "conflicts": []
-        }
-      ]
-    },
-    {
-      "id": "TASTE-01",
-      "axis": null,
-      "title": "Alignment with stated taste",
-      "channel": "taste",
-      "lane": "visual",
-      "instructions": "Evaluate alignment only with explicit supplied taste/brand preferences. Taste cannot override measured quality failures.",
-      "requires": [
-        "screenshot",
-        "preferences"
-      ],
-      "anchors": [
-        "Material conflict with explicit preferences.",
-        "Several conflicts with explicit preferences.",
-        "Mostly aligned with limited departures.",
-        "Strong alignment with stated preferences."
-      ],
-      "weight": 1,
-      "findings": [
-        {
-          "id": "TASTE_MISMATCH",
-          "label": "Review taste alignment",
-          "problem": "The design conflicts with an explicit taste preference.",
-          "change": "Align the visual treatment with the supplied taste and brand brief while preserving functional quality.",
-          "effect": "The design may better reflect the stated preference.",
-          "priority": "low",
-          "dependencies": [],
-          "conflicts": []
-        }
-      ]
-    },
-    {
-      "id": "AIS-01",
-      "axis": null,
-      "title": "Template residue context",
-      "channel": "ai-isms",
-      "lane": "unsupported",
-      "instructions": "Extension point for preference-conditioned template residue. Message filler belongs to TYPE-02. Motion belongs to MOT-01. Never infer AI authorship from style; avoid duplicate penalties.",
-      "requires": [
-        "preferences"
-      ],
-      "anchors": [
-        "Repeated disallowed residue dominates.",
-        "Several avoidable generic patterns.",
-        "Limited unwanted residue.",
-        "No material unwanted residue in assessed evidence."
-      ],
-      "weight": 1,
-      "findings": []
+      "role": "supporting"
     },
     {
       "id": "MOT-01",
@@ -405,27 +631,196 @@
         "Verified purposeful motion with minor defects.",
         "Verified task-appropriate motion or intentional stillness."
       ],
-      "weight": 1,
-      "findings": []
-    },
-    {
-      "id": "REF-01",
-      "axis": null,
-      "title": "Optional reference alignment",
-      "channel": "reference",
-      "lane": "unsupported",
-      "instructions": "No reference is connected. Add authorized, matched reference evidence before assessing. A reference is not a correctness oracle.",
-      "requires": [
-        "reference"
-      ],
-      "anchors": [
-        "Material mismatch.",
-        "Several relevant differences.",
-        "Mostly aligned.",
-        "Aligned with selected reference dimensions."
-      ],
-      "weight": 1,
-      "findings": []
+      "weight": 0,
+      "findings": [],
+      "role": "supporting"
     }
-  ]
+  ],
+  "combined": {
+    "version": "elle-combined-proposed-2026-11-07.2",
+    "status": "proposed",
+    "cap": 49,
+    "bands": [
+      {
+        "min": 90,
+        "max": 100,
+        "label": "Distinctive and effortless. Ship it."
+      },
+      {
+        "min": 75,
+        "max": 89,
+        "label": "Strong, with fixable flaws."
+      },
+      {
+        "min": 60,
+        "max": 74,
+        "label": "Works, but generic or effortful."
+      },
+      {
+        "min": 40,
+        "max": 59,
+        "label": "Real problems users will feel."
+      },
+      {
+        "min": 0,
+        "max": 39,
+        "label": "Fails its audience. Rethink, don't polish."
+      }
+    ],
+    "unresolved": [
+      "Weights, cap and tie-breaker are proposed, pending confirmation and calibration.",
+      "Source says about half, about 2 points per usability failure, and points per AI red flag without exact amounts or rounding. Current proposed choices use zero, exact half and full only; intermediate point allocation remains unresolved. No automatic per-flag deductions.",
+      "Overlapping issues require one scoring home; supporting checks never add deductions. AI-isms belong under Originality without an authorship claim.",
+      "Missing evidence stays unknown. No missing-evidence normalization or cross-viewport total.",
+      "Simplified usability checks do not establish complete WCAG conformance. Contrast, adaptation and error-prevention calibration need more examples."
+    ],
+    "feedbackTargetMs": 100,
+    "feedbackDealBreakerMs": 400,
+    "dealBreakers": [
+      {
+        "id": "BODY_CONTRAST",
+        "title": "Body text contrast at least 4.5:1",
+        "requires": "measurement"
+      },
+      {
+        "id": "LARGE_TEXT_CONTRAST",
+        "title": "Large text contrast at least 3:1",
+        "requires": "measurement"
+      },
+      {
+        "id": "NON_TEXT_CONTRAST",
+        "title": "Icons, borders and outlines at least 3:1 against adjacent colors",
+        "requires": "measurement"
+      },
+      {
+        "id": "PLACEHOLDER_CONTRAST",
+        "title": "Placeholder contrast at least 4.5:1",
+        "requires": "measurement"
+      },
+      {
+        "id": "TARGET_SIZE",
+        "title": "Targets at least 24 by 24 px or qualifying spacing",
+        "requires": "measurement"
+      },
+      {
+        "id": "KEYBOARD_FOCUS",
+        "title": "Keyboard focus always visible",
+        "requires": "runtime"
+      },
+      {
+        "id": "COLOR_ONLY",
+        "title": "Color is never the only signal",
+        "requires": "runtime"
+      },
+      {
+        "id": "FEEDBACK_DELAY",
+        "title": "Visible response under proposed 400 ms threshold",
+        "requires": "runtime"
+      },
+      {
+        "id": "MOBILE_REFLOW",
+        "title": "No horizontal scrolling at 320 px",
+        "requires": "matched_mobile_320"
+      }
+    ],
+    "pairwise": {
+      "enabled": false,
+      "extensionOnly": true,
+      "withinPoints": 5,
+      "priorityCriteria": [
+        "HIER",
+        "DENSITY",
+        "INTERACTION",
+        "AUDIENCE"
+      ]
+    },
+    "source": "https://docs.google.com/document/d/1A50rMO06UQiaeDj67-xp4jiZ86p0gcjOvnlKP7e6nqQ/edit",
+    "sourceModifiedAt": "2026-11-07T21:08:29.800Z",
+    "thresholds": {
+      "bodyContrast": 4.5,
+      "largeTextContrast": 3,
+      "largeTextPx": 24,
+      "largeBoldTextPx": 19,
+      "nonTextContrast": 3,
+      "placeholderContrast": 4.5,
+      "targetMinimumPx": 24,
+      "targetRecommendationPx": [
+        44,
+        48
+      ],
+      "mobileReflowWidthPx": 320,
+      "bodyMinimumPx": 16,
+      "typeSizesWarning": 5,
+      "aiFlagsWarning": 3,
+      "spacingScalePx": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        32,
+        48,
+        64,
+        96
+      ],
+      "groupSpacingRatioMinimum": 2
+    },
+    "issueCatalog": [
+      {
+        "id": "HIERARCHY",
+        "home": "HIER",
+        "description": "Equal weight, buried insight or competing primary elements."
+      },
+      {
+        "id": "DENSITY",
+        "home": "DENSITY",
+        "description": "Multiple main messages or redundant filler microcopy."
+      },
+      {
+        "id": "EFFORT",
+        "home": "FLOW",
+        "description": "Excess steps, fields or advanced options for the core task."
+      },
+      {
+        "id": "BEHAVIOR",
+        "home": "INTERACTION",
+        "description": "Verified action/feedback defect, not just control appearance."
+      },
+      {
+        "id": "TONE",
+        "home": "AUDIENCE",
+        "description": "Category or emotional tone mismatches the declared audience and feeling."
+      },
+      {
+        "id": "TEMPLATE",
+        "home": "ORIGINALITY",
+        "description": "Templated structure or unrelated stock palette/gradients."
+      },
+      {
+        "id": "NOVELTY",
+        "home": "ORIGINALITY",
+        "description": "Novel control is distinctive but not understandable."
+      },
+      {
+        "id": "VISUAL_MEANING",
+        "home": "VISUAL",
+        "description": "Decorative imagery or paragraphs doing work that meaningful visuals should do."
+      },
+      {
+        "id": "TOKENS",
+        "home": "SYSTEM",
+        "description": "Inconsistent tokens, spacing or button meanings."
+      },
+      {
+        "id": "READABILITY",
+        "home": "TYPOGRAPHY",
+        "description": "Text size, contrast, type scale or typographic voice defect."
+      },
+      {
+        "id": "USABILITY",
+        "home": "USABILITY",
+        "description": "Other usability, error prevention, navigation or matched-device adaptation defect; excludes local defects already owned elsewhere."
+      }
+    ]
+  }
 }

@@ -8,7 +8,7 @@ import { assemblePrompt, explain } from '../src/evaluation/explanations.ts';
 import { FixtureJudge } from '../src/judges/fixture.ts';
 import { capture, input, profile, run } from './helpers.ts';
 
-const rubric = loadRubric();
+const rubric = loadRubric('config/legacy-rubric.json');
 const criterion = (id: string) => rubric.criteria.find(c => c.id === id)!;
 
 test('typography and message clarity are separately scored; interactions and trust boundaries are explicit', () => {

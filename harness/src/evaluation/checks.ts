@@ -7,6 +7,7 @@ export function unassessed(criterion: Criterion, capture: Capture, reason: strin
 export function missingEvidence(criterion: Criterion, capture: Capture, pair: Capture | undefined, profile: Profile): string | null {
   if (capture.status !== 'ready') return capture.reason || 'Capture failed.';
   for (const required of criterion.requires) {
+    if (required === 'measurement') return 'Not assessed: no verified composited contrast measurements are connected.';
     if (required === 'runtime') return 'Not assessed: no temporal or scripted interaction evidence. Static inputs cannot establish behavior or motion quality.';
     if (required === 'reference') return 'Not assessed: no authorized matched reference is connected.';
     if (required === 'preferences' && ![profile.taste, profile.avoid, profile.brand].some(v => v.trim())) return 'Not assessed: no explicit preferences supplied.';

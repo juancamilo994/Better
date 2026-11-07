@@ -1,10 +1,10 @@
 # Better evaluation harness
 
-Local, single-operator baseline for capturing a website, evaluating evidence, saving immutable runs, and preparing selected fixes. Product UI is owned by Juan and is outside this workstream. The Google source document and the user's scoring clarifications govern this implementation; conflicting preview proposals in the draft PRD are deferred.
+Local website capture, evidence, immutable evaluations and selected-fix prompts now use [Elle’s Combined rubric (0–100)](https://docs.google.com/document/d/1A50rMO06UQiaeDj67-xp4jiZ86p0gcjOvnlKP7e6nqQ/edit). Existing architecture is preserved. Native UI at `/` exercises the same API; it does not replace Juan’s product app or claim C1–C5 compatibility.
 
 ## Run
 
-Node 24+ with SQLite support is required. From this directory:
+Node 24+ with SQLite support required. From `/harness`:
 
 ```sh
 npm ci
@@ -13,91 +13,62 @@ npm run build
 npm start
 ```
 
-Server: `http://127.0.0.1:3000`. Keep it on loopback. This is not an authenticated hosted service. SQLite and captured evidence live in `data/` (ignored by Git). Set `BETTER_DATA_DIR` to another persistent local directory if needed. Keep that entire directory when restarting.
+Open `http://127.0.0.1:3000`. Loopback only, single operator. SQLite/evidence persist under ignored `data/`; `BETTER_DATA_DIR` changes location. Keep the entire directory across restarts. Paste a URL and supply audience, desired feeling and one core job. Select supported fixes, save/copy one prompt and reevaluate the same project. `npm run demo` exercises the controlled API without paid calls.
 
-`npm run demo` exercises the running API with a controlled real HTML page, captures desktop/mobile, selects one measured fix, saves a handoff and captures a revised page. It prints IDs and comparison results, and saves the selected prompt under `data/demo-prompt.md`. No paid calls are needed.
+## Proposed scoring
 
-## API checkpoint for Juan
+`config/rubric.json` transcribes the source read in full November 7, 2026 (modified 21:08:29 UTC). Configure it there or select `BETTER_RUBRIC_PATH`. Each run snapshots full rubric/profile and hashes. Reevaluation retains the snapshot unless `useLatestRubric` is true. Old eight-axis runs remain readable; `config/legacy-rubric.json` supports compatibility tests.
 
-These `/api` routes are the local harness interface, **not an implementation of TEAM C2–C5**. No `/contracts` schemas exist at this checkpoint. Do not treat this as an approved replacement for the proposed shared contract. Types live in `src/domain.ts`; validation and routing live in `src/app.ts`.
+Ten maximums: Hierarchy 12, Information density 12, Flow & effort 10, Interaction & feedback 12, Audience & tone fit 12, Originality 10, Visual communication 10, System consistency 8, Typography 6, Usability basics 8. Names/counts/weights come from configuration.
 
-| Call | Body / result |
+`quality.desktop` and `.mobile` separately expose criterion points, coverage, observed subtotal, raw total, nine deal-breaker findings, cap status, capped total, band and unresolved policy. Supporting subchecks add no deductions. Full raw total exists only with all ten criterion points. Missing evidence is unknown: no invented zero, pass, failure or normalization. No cross-device total. Applicable verified failure applies proposed cap of 49 without changing raw points. Unknown gates remain unresolved.
+
+Source bands: 90–100 distinctive/effortless; 75–89 strong with fixable flaws; 60–74 works but generic/effortful; 40–59 real problems; 0–39 fails its audience. Full labels live in configuration.
+
+**Unresolved policy:** weights/cap/tie-breaker are proposals. Anchors say zero/about half/full, while examples use intermediate points without allocation rules. Current proposed choices permit zero/exact-half/full only. Exact half/rounding, about-two-point usability deductions and per-AI-flag costs need agreement/calibration; no automatic extra deductions. Canonical issue IDs/homes go to SubQ; foreign-home findings abstain, missing ownership fails validation and repeated IDs/results cannot contribute twice. Semantic classification accuracy still needs human calibration.
+
+Nine deal-breakers cover body/large/non-text/placeholder contrast, targets/spacing, focus, color-only signals, feedback and 320px reflow. Runtime/measurement/320px verifiers are **not connected**: related criteria/gates remain unknown. Default 390px capture cannot establish 320px reflow. Proposed under 100 ms feedback target differs from under 400 ms deal-breaker. Simplified checks cannot establish full WCAG conformance.
+
+Typography/readability is separate from message clarity; apparent affordances are separate from verified behavior. Adaptation needs matched desktop/mobile from the same run/document/state and does not repeat local overflow/type penalties. AI-isms belong in Originality, not another axis/authorship detector. Credibility means claims presentation, not company trustworthiness. Preserve essential labels/errors/instructions while removing filler.
+
+## API
+
+Local routes are not shared C1–C5 implementations. Types: `src/domain.ts`; routes/validation: `src/app.ts`.
+
+| Call | Input / result |
 |---|---|
 | `GET /api/health` | Mode, paid-call gate, capture busy state |
-| `GET /api/rubric` | Current provisional rubric |
-| `POST /api/projects` | `{ "name": "Demo", "demo": true }`, or `{ "name": "Site", "url": "https://example.com" }`; returns project |
-| `GET /api/projects/:id` | Project plus immutable chronological runs |
-| `POST /api/projects/:id/runs` | `{}` retains previous profile/rubric; optional `buildLabel`, `expectedText`, `profile`, `useLatestRubric`; demo supports `demoVersion: "baseline" | "revised"` |
-| `GET /api/runs/:id` | Run, saved handoffs/selections, human corrections |
-| `GET /api/runs/:id/evidence/:evidenceId` | Integrity-checked attachment; encode evidence ID with `encodeURIComponent` |
-| `GET /api/runs/:current/compare/:baseline` | Compatibility reasons, per-viewport/criterion deltas and explicit failures |
-| `POST /api/runs/:id/handoffs` | `{ "selectedIds": ["..."] }`; one prompt plus selected/deferred snapshot |
-| `POST /api/runs/:id/corrections` | `{ "criterionId": "TYPE-02", "viewport": "mobile", "note": "..." }`; append-only annotation |
+| `GET /api/rubric` | Current configurable proposed rubric |
+| `GET /api/projects` | Saved projects |
+| `POST /api/projects` | `{name,url,profile:{version,audience,feeling,task,taste,avoid,brand}}`; taste/avoid/brand may be empty; or `{name,demo:true}` with authored brief |
+| `GET /api/projects/:id` | Project and chronological immutable runs |
+| `POST /api/projects/:id/runs` | `{}` retains snapshot; optional profile/useLatestRubric/buildLabel/expectedText; demo supports baseline/revised demoVersion |
+| `GET /api/runs/:id` | Run, saved handoffs/selections/corrections |
+| `GET /api/runs/:id/evidence/:evidenceId` | Integrity-checked attachment; encode evidence ID |
+| `GET /api/runs/:current/compare/:baseline` | Compatibility, per-viewport/criterion deltas and failures |
+| `POST /api/runs/:id/handoffs` | `{selectedIds:[...]}`; selected-only prompt/deferred snapshot |
+| `POST /api/runs/:id/corrections` | `{criterionId,viewport,note}`; append-only annotation |
 
-Writes require `Content-Type: application/json`. Captures are synchronous and bounded; one runs at a time, with 409 for overlap. This avoids a pretend background queue. A `partial` run is expected when motion, runtime behavior or other required evidence is unavailable. A failed capture never produces a passing result. `setup_needed` means the selected real provider needs credentials/paid-call approval, or a public site has no real judge configured. Public sites never receive fabricated fixture judgments.
+Writes require JSON. One bounded synchronous capture; overlap returns 409. Runs may be partial/failed/setup-needed without fabricated scores. `quality` drives the fingerprint; combined `axes` mirrors points. Historical ordinal snapshots retain original semantics. `fixtureAxes` is sample-only, excluded from real totals.
 
-`axes` contains measured/real-judge aggregates only. `fixtureAxes` contains sample-only aggregates. Both are viewport-specific. Null/incomplete axes must remain gaps in a chart. `results` preserves individual criterion statuses, coverage, provenance and evidence references. No cross-device overall score is supplied. Suggestions from fixtures carry `provenance: "fixture"`; label them SAMPLE DATA. Expected effects are hypotheses; only new evaluations produce deltas.
+## Providers and evidence
 
-For the paste-a-URL flow: capture and criterion results work through this API. The product input UI is not included here. A full visual rubric result still needs live SubQ execution; a composite still needs Elle's approved aggregation rule. Do not display the limited deterministic checks or demo fixtures as a complete website-quality score.
+Default `BETTER_JUDGE=fixture` uses authored decisions only on the controlled demo. Public sites never receive fixture scores. No authored ten-criterion quality scores are supplied. Real captures/deterministic checks still run. Public visual judgment requires an authorized live provider. Complete composite additionally needs missing runtime/measurement evidence; static SubQ alone cannot establish all ten criteria.
 
-## Rubric and scoring boundaries
+SubQ uses documented `POST /v1/systemone`, configurable `subq-snap-1.1`, plain base64 PNG and bounded choices/abstention. Live calls require `BETTER_JUDGE=subq`, `SUBQ_API_KEY`, `BETTER_ALLOW_PAID_CALLS=true`. Key alone never enables spending. No new paid calls during this update. Keep secrets server-side; never commit them. Model access/billing/accuracy remain unverified. Errors sanitized; no paid retries.
 
-`config/rubric.json` is a **provisional harness fixture based on the document**, not Elle's approved `/rubric/rubric.json` or C1 contract. Edit definitions, weights, anchors and thresholds there; each run stores the complete rubric and a content hash. Reevaluations retain that snapshot unless `useLatestRubric` is true. Profiles are editable through a run request and snapshotted; no old result is overwritten. Changing content with the same version label still makes runs incomparable.
+Fresh Chromium uses no host cookies/credentials. DNS-pinned public-only GET relay checks redirects/resources, backed by denying proxy. Private/reserved targets, writes, service workers and WebSockets blocked. Readiness requires successful HTML, idle network, ready fonts/images and optional marker. Scripts/animations/media freeze before extraction; document identity checked around capture. Budget: 160 requests, 32 MiB, 12,000 px height. Default state is not interactive/temporal proof.
 
-- TYPE-01 measures text-size readability; TYPE-02 judges message clarity and redundant filler. Essential labels, errors and instructions must be preserved.
-- INT-01 judges apparent affordances. INT-02 abstains until a real interaction verifier exists.
-- ADAPT-01 requires desktop/mobile from the same run, served document and state. Overflow/type defects stay in LAY/TYPE, not ADAPT.
-- FIT-01 judges presentation of claims and credibility, not actual trustworthiness or factual truth.
-- Motion has no connected verifier and stays unassessed. Static SubQ images cannot establish animation quality; no video judging is implemented.
-- AI-isms is a separate extension lane, not an authorship detector. Personality mode, actual-site previews and reference evaluation are deferred.
+Each viewport saves viewport/full-page PNG, rendered DOM, sampled styles/geometry and text with hashes/dimensions. DOM downloads are text attachments, never executed or called original source. Model inputs omit scripts/cookies/input values. Motion stays unassessed without video; no video judging. Personality, actual-site generated previews and pairwise tournaments deferred; pairwise rules are disabled metadata. Not wired: Juan’s app, C1–C5, Supabase, deployment, runtime/contrast/320px verification and human calibration.
 
-The baseline's exact checks cover document overflow, sampled visible font sizes and image-alt presence. They do **not** establish full typography, contrast, accessibility or interaction compliance. Axis scores summarize configured assessed criteria only. Provisional lower weighted median preserves ordinal anchors. Missing required criteria keep an axis incomplete; mobile failures remain visible.
-
-## Providers and credentials
-
-Default `BETTER_JUDGE=fixture` uses authored decisions only on the controlled demo. Real capture and deterministic measurements still run. Fixture scores include flat values and a craft regression to exercise honest comparison.
-
-SubQ adapter: `src/judges/subq.ts`. [Official Decisions API](https://docs.subq.ai/endpoints/decisions-api/) and [model catalog](https://docs.subq.ai/using-the-api/models/) checked November 7, 2026. It uses `POST /v1/systemone`, model `subq-snap-1.1`, PNG images as plain base64 and bounded choice outputs. Choice permits anchored ordinals plus abstention; no generated prose is assumed. The score API's zero-based weighted values are not treated as ordinal ratings.
-
-Live calls require **both** `SUBQ_API_KEY` and `BETTER_ALLOW_PAID_CALLS=true`, with `BETTER_JUDGE=subq`. Keep secrets server-side in the operator's environment/secret manager; `.env.example` contains no secrets. Supplying a key alone never enables spending. No paid SubQ call or billing change was authorized or used during this build. Model access, billing, automatic charging and real rubric accuracy remain unverified. Decision retention follows [SubQ policy](https://docs.subq.ai/using-the-api/data-retention/); no undocumented `store:false` is sent.
-
-The adapter validates answer types, ranges, option IDs, evidence IDs and contradictions. Errors record sanitized categories, not provider response bodies. It makes one attempt per criterion; no automatic paid retries.
-
-## Capture and evidence limits
-
-Fresh Chromium contexts use no host cookies or credentials. HTTP resources pass a GET-only relay that checks all resolved addresses and pins the checked IP to the connection. Redirects pass the same guard. Private/reserved/metadata addresses, nonstandard ports, writes, service workers and WebSockets are blocked. A denying browser proxy backs up interception. The controlled demo uses request fulfillment, not a loopback-network exception.
-
-Readiness requires successful HTML, idle network, loaded fonts/images and optional expected text. Required resource failures invalidate capture. Scripts, CSS animation and media are frozen before screenshot/DOM/style/text capture; DOM is checked again afterward. Metadata records policy, browser, OS, modality, dimensions, time, state, content hash and artifact checksums. Captures are bounded to 160 requests, 32 MiB relayed bytes and 12,000px height. This is a conservative default-state capture, not evidence of interactive or temporal behavior. Canvas/video state and unusual network protocols warrant isolated infrastructure before public hosting.
-
-Each viewport saves five artifacts: a viewport PNG, a separate full-page PNG, rendered HTML, sampled styles/geometry and text. PNG dimensions are recorded. The judge receives the viewport PNG so horizontal overflow cannot silently widen its mobile input. Chromium's compositor clock stays running while page scripts and animations are frozen; pausing virtual time caused a second-screenshot timeout during verification.
-
-Saved HTML is rendered DOM, **not original repository source**. Downloads use attachment disposition, plain text and a restrictive content policy. Model requests contain selected rendered facts/text and screenshots, not raw scripts, cookies, private repositories or input values. Treat all captured content as untrusted. Avoid submitting URLs containing secrets or private data.
-
-## Integration seams and verification
-
-Built/local caller: HTTP routes → capture → deterministic checks / judge → validation → explanations → separate aggregates → SQLite. Handoff and correction APIs are exercised through the same server. No website changes or external messages are sent.
-
-**Not wired:** Juan's Next.js client, shared C1–C5 schemas, Supabase rows/storage/realtime, deployment, live SubQ account execution, motion/runtime verifiers and human calibration. This local store is a development baseline, not a claim that Supabase integration works. Shared schema approval and access are needed before implementing that seam. Prompt assembly here is a tested harness utility; Juan remains owner of the product's final assembly UI.
+## Verification
 
 ```sh
 npm test
 npm run lint
 npm run build
 npm run test:e2e
+npm run test:ui
 ```
 
-Tests use temporary state directories and fake model transports; the end-to-end test launches the built server and real Chromium. Test artifacts stay under ignored `test-results/`. No credentials or captured customer content belongs in fixtures or commits.
-
-Verified November 7, 2026: 28 tests passed, plus lint, TypeScript checking, build and the built-server Chromium end-to-end test. That test verifies paired evidence checksums/dimensions, selected-only prompts, measured improvements, illustrative flat/regressed fixture scores, unassessed gaps, incompatible-profile rejection, failed captures, restart persistence and the missing-provider setup state. Its `baseline-run.json` is actual controlled-demo API output for integration work. Model responses in unit tests are authored mocks; they do not verify live SubQ execution or rubric accuracy.
-
-Exact commands used for the final checks (equivalent to the package scripts):
-
-```sh
-node --experimental-strip-types --test tests/*.test.ts
-node node_modules/eslint/bin/eslint.js .
-node node_modules/typescript/bin/tsc --noEmit
-node scripts/build.mjs
-node --experimental-strip-types tests/e2e.ts
-```
-
-Production dependency audit found no vulnerabilities; the development dependency audit reported 10 moderate findings through `minimatch`. Independent Google review returned no verdict, so this remains a draft pending review.
+Temporary stores/mocked model transports. Legacy built API E2E uses real Chromium for paired evidence, selected prompts, comparison, failed captures and restart persistence. New built UI test drives brief validation, real paired capture, unknown-safe output, selected handoff, reevaluation/history and desktop/360/400px layouts. Synthetic chart inputs test geometry only, never saved runs. Screenshots stay in ignored `test-results/`. No claim of live SubQ accuracy/full accessibility conformance.

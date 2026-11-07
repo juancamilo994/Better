@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:e2e": "npm run build && node --experimental-strip-types tests/e2e.ts",
+    "test:ui": "npm run build && node --experimental-strip-types tests/ui.ts",
     "demo": "node scripts/demo.mjs"
   },
   "dependencies": {

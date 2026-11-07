@@ -13,7 +13,7 @@ await mkdir(artifacts, { recursive: true });
 let server: ChildProcess;
 let base = '';
 async function start(mode = 'fixture') {
-  server = spawn(process.execPath, ['dist/server.js'], { env: { ...process.env, PORT: '0', BETTER_DATA_DIR: data, BETTER_JUDGE: mode, BETTER_ALLOW_PAID_CALLS: 'false', SUBQ_API_KEY: '' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  server = spawn(process.execPath, ['dist/server.js'], { env: { ...process.env, PORT: '0', BETTER_RUBRIC_PATH: 'config/legacy-rubric.json', BETTER_DATA_DIR: data, BETTER_JUDGE: mode, BETTER_ALLOW_PAID_CALLS: 'false', SUBQ_API_KEY: '' }, stdio: ['ignore', 'pipe', 'pipe'] });
   base = await new Promise<string>((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('Server startup timed out.')), 10_000);
     server.once('exit', code => { clearTimeout(timeout); reject(new Error(`Server exited ${code}`)); });
