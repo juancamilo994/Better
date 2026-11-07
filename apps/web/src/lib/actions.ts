@@ -7,14 +7,43 @@ import type { Profile } from './harness/types';
 
 const str = (v: FormDataEntryValue | null) => (typeof v === 'string' ? v.trim() : '');
 
-export async function createProjectAction(formData: FormData) {
+// View 1 collects name+URL only; the Combined rubric requires the brief
+// (task/audience/feeling) at project creation, so the project is created
+// at the END of onboarding together with the profile and first run.
+export async function beginOnboardingAction(formData: FormData) {
   const name = str(formData.get('name'));
   const url = str(formData.get('url'));
   const demo = formData.get('demo') === 'on';
-  if (!name) throw new Error('Project name is required.');
-  if (!demo && !url) throw new Error('A public URL is required.');
-  const project = await api.createProject(demo ? { name, demo: true } : { name, url });
-  redirect(`/projects/${project.id}/onboarding`);
+  if (!name) redirect('/?error=Project+name+is+required.');
+  if (demo) {
+    const project = await api.createProject({ name, demo: true });
+    redirect(`/projects/${project.id}/onboarding`);
+  }
+  if (!url) redirect('/?error=A+public+URL+is+required.');
+  redirect(`/onboarding?name=${encodeURIComponent(name!)}&url=${encodeURIComponent(url!)}`);
+}
+
+export async function createProjectWithBriefAction(formData: FormData) {
+  const name = str(formData.get('name'));
+  const url = str(formData.get('url'));
+  if (!name || !url) redirect('/?error=Missing+project+details.');
+  const profile: Profile = {
+    version: 'profile-1',
+    task: str(formData.get('task')),
+    audience: str(formData.get('audience')),
+    feeling: str(formData.get('feeling')),
+    taste: str(formData.get('taste')),
+    avoid: str(formData.get('avoid')),
+    brand: str(formData.get('brand')),
+  };
+  try {
+    const project = await api.createProject({ name: name!, url: url!, profile });
+    const run = await api.createRun(project.id, {});
+    redirect(`/projects/${project.id}?run=${run.id}`);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Could not create the project.';
+    redirect(`/onboarding?name=${encodeURIComponent(name!)}&url=${encodeURIComponent(url!)}&error=${encodeURIComponent(msg)}`);
+  }
 }
 
 export async function startRunAction(projectId: string, formData: FormData) {

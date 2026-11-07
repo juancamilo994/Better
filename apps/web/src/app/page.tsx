@@ -1,13 +1,18 @@
 import Link from 'next/link';
 import { api, isMock } from '@/lib/harness';
-import { createProjectAction } from '@/lib/actions';
+import { beginOnboardingAction } from '@/lib/actions';
 import { HarnessError } from '@/lib/harness/client';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProjectsPage() {
+export default async function ProjectsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error: formError } = await searchParams;
   let projects: Awaited<ReturnType<typeof api.listProjects>> = [];
-  let error: string | null = null;
+  let error: string | null = formError ?? null;
   try {
     projects = await api.listProjects();
   } catch (e) {
@@ -35,7 +40,7 @@ export default async function ProjectsPage() {
 
       <section aria-label="Create project">
         <h2>New project</h2>
-        <form action={createProjectAction}>
+        <form action={beginOnboardingAction}>
           <label>Name <input name="name" required maxLength={120} /></label>
           <label>URL <input name="url" type="url" placeholder="https://…" /></label>
           <label><input name="demo" type="checkbox" /> Demo project (controlled page, no URL needed)</label>
