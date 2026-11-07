@@ -40,6 +40,7 @@ export default async function ProjectsPage({
                 {latest && (
                   <span>
                     {' · '}{score !== null ? `${score}/100` : `${latest.assessedCriteria}/10 assessed`}
+                    {latest.capApplied && latest.rawTotal !== null && latest.rawTotal !== score ? ` (raw ${latest.rawTotal})` : ''}
                     {latest.band ? ` · ${latest.band.split('.')[0]}` : ''}
                     {p.latestRun?.overall?.sample ? ' · SAMPLE' : ''}
                     {latest.capApplied ? ' · capped' : ''}

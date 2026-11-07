@@ -66,8 +66,23 @@ export default async function ScorePage({
         {displayQuality && displayQuality.coverage.assessedCriteria < displayQuality.coverage.totalCriteria && (
           <p>{displayQuality.coverage.assessedCriteria}/{displayQuality.coverage.totalCriteria} criteria assessed — gaps are unknown, not zero.</p>
         )}
-        {displayQuality?.capApplied && <p>Deal-breaker cap applied (max {displayQuality.cap}).</p>}
-        {displayMobile && <p>Mobile: {displayMobile.cappedTotal ?? displayMobile.observedSubtotal ?? '—'} / 100{displayMobile.band ? ` — ${displayMobile.band}` : ''}</p>}
+        {displayQuality?.capApplied && (
+          <p>
+            Deal-breaker cap applied (max {displayQuality.cap})
+            {displayQuality.rawTotal !== null && displayQuality.rawTotal !== displayQuality.cappedTotal
+              ? ` — raw score before cap: ${displayQuality.rawTotal}/100`
+              : ''}.
+          </p>
+        )}
+        {displayMobile && (
+          <p>
+            Mobile: {displayMobile.cappedTotal ?? displayMobile.observedSubtotal ?? '—'} / 100
+            {displayMobile.capApplied && displayMobile.rawTotal !== null && displayMobile.rawTotal !== displayMobile.cappedTotal
+              ? ` (raw ${displayMobile.rawTotal})`
+              : ''}
+            {displayMobile.band ? ` — ${displayMobile.band}` : ''}
+          </p>
+        )}
       </section>
 
       <RadarChart run={run} qualitySource={sample} sample={!!sample} ghost={ghostQuality(runs, run)} />
@@ -124,10 +139,12 @@ export default async function ScorePage({
             const score = r.overall?.desktop?.cappedTotal
               ?? r.quality?.desktop.cappedTotal ?? r.quality?.desktop.observedSubtotal
               ?? r.fixtureQuality?.desktop.cappedTotal ?? r.fixtureQuality?.desktop.observedSubtotal;
+            const raw = r.overall?.desktop?.rawTotal ?? r.quality?.desktop.rawTotal ?? r.fixtureQuality?.desktop.rawTotal;
             return (
               <li key={r.id}>
                 <Link href={`/projects/${id}?run=${r.id}`}>
                   {new Date(r.createdAt).toLocaleString()} — {r.status} — desktop {score ?? '—'}/100
+                  {raw !== null && raw !== undefined && score !== null && raw !== score ? ` (raw ${raw})` : ''}
                 </Link>
                 {d.value !== null && <strong> ({d.value > 0 ? '+' : ''}{d.value})</strong>}
                 {!d.comparable && r.id !== run.id && <small> (not comparable)</small>}
