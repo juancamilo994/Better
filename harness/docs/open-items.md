@@ -14,6 +14,7 @@ What the harness leaves unresolved as of 2026-11-07 (`ec3fd82`, PR #1). Each ite
 8. **Layout stability.** The source names no criterion for it. It is provisionally Usability.
 9. **Harness proposals.** The 75% on-scale spacing threshold and the distinct-type-size count are Paul's proposals. The spacing check fails on 5 of 6 real sites tested; it likely needs loosening.
 10. **Weights, cap of 49, tie-breaker.** All are still marked proposed in the source.
+11. **Deal-breaker sensitivity.** Gates fail on a single measured node (contrast) or 1 px of reflow overflow. Observed 2026-11-07: 3/3 real sites capped at 49 via BODY_CONTRAST + MOBILE_REFLOW — Teleprompter (raw 88; contrast 1/45 nodes; reflow +30 px), Bitzy (raw 93; contrast 49/181; reflow +36 px), Cerebral Valley (raw 89; contrast 11/341; reflow +142 px). Severity varies wildly under the same verdict — one node counts the same as 27% of nodes, 1 px the same as 142 px. Needs a severity threshold or graduated cap decision.
 
 ## Calibration: Elle and a second reviewer
 
