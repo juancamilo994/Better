@@ -1,0 +1,13 @@
+{
+ "version":"benchmark-candidates-1.1.0",
+ "status":"authored-calibration-candidates-not-validated-ground-truth",
+ "cases":[
+  {"id":"text-disclosure","check":"text-disclosure","contrast":"Clipped essential text versus accessible disclosure"},
+  {"id":"long-content","check":"long-content","contrast":"Long names and URLs at 360px with 200% text"},
+  {"id":"branding","check":"product-specificity","contrast":"Intentional branding versus unrelated generic styling; visual judgment unknown"},
+  {"id":"control-operation","check":"control-operation","contrast":"Identical apparent controls, one inert and one runtime-operable; passwordless exception"},
+  {"id":"error-recovery","check":"error-recovery","contrast":"Error resets versus preserves entered values"},
+  {"id":"partial-results","check":"partial-results","contrast":"One component fails, others blocked versus usable"},
+  {"id":"changing-text","check":"layout-stability","contrast":"Changing word length moves the centered layout versus a top-anchored, longest-word slot with no clipping"}
+ ]
+}

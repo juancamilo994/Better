@@ -18,9 +18,9 @@
 
 | Person | GitHub | Role | Owns (folders) | Decides on | Consumes from others |
 |---|---|---|---|---|---|
-| **Juan Camilo** | `@juancamilo994` | System scaffolding, product experience | `/apps/web` (shared with Elle), `/supabase`, `/contracts` (steward), root docs | Web stack, DB schema, prompt assembly, repo conventions | Rubric (Elle), UI/visual design direction (Elle), evaluation results and previews (Paul) |
+| **Juan Camilo** | `@juancamilo994` | System scaffolding, product experience, UI | `/apps/web`, `/supabase`, `/contracts` (steward), `/design`, root docs | Web stack, UX and visual design (Paper), DB schema, prompt assembly, repo conventions | Rubric (Elle), evaluation results and previews (Paul) |
 | **Paul** | `@laulpogan` | Harness: captures and evaluates the website's UI | `/harness` | Harness language and runtime, LLM provider(s) and models, hosting, capture and preview strategy, recommendation generation | Rubric (Elle), evaluation requests and DB/storage access (Juan) |
-| **Elle** | `@elle-mcdougald` | Rubric + UI/visual design | `/rubric`, `/design`, `/apps/web` UI layer (shared with Juan) | Axes, criteria, scale, anchors, weights, overall formula, evidence requirements, fix patterns; **visual system, Paper file, tokens, components — she may replace anything in the UI** | Feedback from Paul (what's measurable) and Juan (what's presentable); product flow & data wiring (Juan) |
+| **Elle** | `@elle-mcdougald` | Rubric: what we evaluate and how it's scored | `/rubric` | Axes, criteria, scale, anchors, weights, overall formula, evidence requirements, fix patterns | Feedback from Paul (what's measurable) and Juan (what's presentable) |
 | **yitzybitzyspider** | `@yitzybitzyspider` | Rubric testing & the Motion section (helping Elle) | — (contributes to `/rubric` via PRs to Elle) | Motion criteria and rubric test proposals (final call stays with Elle) | Rubric conventions and review (Elle); motion evidence capabilities (Paul) |
 
 **Ownership rule:** you can *read* everything, but you only *change* files in folders you own. Anything else goes through a PR approved by the owner. Shared contracts (§5) need approval from **every affected owner**.
@@ -33,11 +33,10 @@
 /
 ├── PRD.md                     # Product requirements (Juan)
 ├── TEAM.md                    # This file (everyone appends; Juan curates)
-├── DESIGN.md                  # Visual system + Paper handoff (Elle)
 ├── README.md
 ├── Placeholder rubric.md      # Elle's draft. To be moved to /rubric/rubric.md
 ├── apps/
-│   └── web/                   # Next.js web app (Juan + Elle — UI layer is Elle's)
+│   └── web/                   # Next.js web app (Juan)
 ├── harness/                   # Evaluation and preview service (Paul)
 ├── rubric/                    # Elle
 │   ├── rubric.md              #   human-readable rubric with rationale
@@ -47,7 +46,7 @@
 │   ├── fixtures/              #   sample payloads for mock mode and tests
 │   └── CHANGELOG.md
 ├── supabase/                  # migrations, seed (demo project) (Juan; Paul reviews)
-├── design/                    # Paper exports, screenshots, design notes (Elle)
+├── design/                    # Paper exports, screenshots, design notes (Juan)
 └── .github/CODEOWNERS
 ```
 
@@ -347,19 +346,6 @@ When done, verify each acceptance criterion above.
 
 **Definition of done:** `rubric.json` validates against the C1 schema, and Paul confirms every criterion is measurable with the declared evidence.
 
-### Elle — UI & visual design (added 2026-11-07)
-
-**You can rely on:**
-- The Paper file "Better — App UI" and `DESIGN.md` as the recorded starting direction ("The Wall", nocturnal marquee) — a starting point, **not a lock**. You may replace anything in the UI: tokens, type, layout, components, whole views.
-- Juan's wiring underneath: server routes → harness `/api`, run data, prompt assembly (C6), the `fixtureQuality`/`SAMPLE` plumbing. Visual changes are yours; if a data need changes, flag it via §7.4 or §12 rather than reshaping payloads yourself.
-- The honesty rules in `DESIGN.md` are product commitments, not styling: LIVE vs ILLUSTRATIVE labels, unassessed-as-gaps, estimates marked as estimates. Change the look freely — keep (or deliberately change) the semantics.
-- Rubric-driven UI rule stays (§8.4): axes, names, icons, scale come from `rubric.json`, never hard-coded.
-
-**We need from you:**
-1. Own `/design` and the UI layer of `/apps/web`: tokens (`globals.css` `@theme`), components, view implementations for Views 1–5.
-2. Keep `DESIGN.md` and the Paper file current as you change the system — they are the team's visual source of truth.
-3. Missing pieces to design/extend: responsive/mobile frames, empty/loading/error states, motion spec (Framer Motion is the stack).
-
 ### yitzybitzyspider — Rubric Motion & testing
 
 **You can rely on:**
@@ -375,7 +361,7 @@ When done, verify each acceptance criterion above.
 
 **We will deliver:**
 1. Repo skeleton, CODEOWNERS, `/contracts` JSON Schemas + fixtures (M1), Supabase schema and migrations, the demo project seed.
-2. Paper designs for Views 1–5 (done — "The Wall"; Elle owns the visual system from here), then implementation in `/apps/web` with Elle.
+2. Paper designs for Views 1–5, then implementation in `/apps/web`.
 3. Mock mode: the web app runs fully on fixtures, so it never blocks on the harness.
 4. Prompt assembly (C6), Realtime status, the re-assess loop and the progression chart.
 5. Keep this file and the PRD current. Curate §9–§12.
@@ -455,7 +441,6 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 | 2026-11-07 | Paul's UI ideas (`harness/docs/implementation-plan.md`) are input for the Paper mockup stage, not spec | Juan | UI decisions are made in the mockup stage |
 | 2026-11-07 | Soft cap of 3 fixes per prompt (warning, not block) | Juan | Keeps score changes attributable without frustrating users |
 | 2026-11-07 | Harness-only checkpoint; no actual-site previews, personality mode or video judging | Paul | Explicit user scope; local API and provisional rubric are documented pending shared contracts |
-| 2026-11-07 | UI/visual design ownership moves Juan → Elle: `/design`, `DESIGN.md` and the UI layer of `/apps/web` are Elle's; she may replace anything in the UI | Juan | Elle is taking the UI; one owner for visual decisions avoids two cooks. Juan keeps scaffolding, wiring and prompt assembly |
 
 ---
 
@@ -486,9 +471,9 @@ If you are an AI agent working on behalf of Juan, Paul or Elle:
 
 | Owner | Now | Next | Blocked on |
 |---|---|---|---|
-| Juan | Reviewed Paul's harness (PR #1); MVP decisions logged | Paper designs for Views 1–5, web app scaffold against harness `/api` | Paul's answers on Q-P7, Q-P8 |
+| Juan | **Web app scaffolded** — draft PR #2 (`juan/web-scaffold`), and **live integration verified end-to-end** against the harness `/api` (projects → real captures → score/gaps → suggestions → handoff prompt) | Paper mockups (other chat) then implement Views 1–5 | Q-P7 previews, Q-P8 API additions, Q-P9 demo scores |
 | Paul | Combined rubric adopted + wired; native harness UI; 28+ tests pass | Q-P7 preview decision, Q-P8 (DELETE + latest-run), Q-P9 demo scores, paid-judge enablement | — |
-| Elle | Placeholder rubric drafted; now owns UI/visual design | `rubric/rubric.json` v0.1, answer Q-E1…Q-E4; review `DESIGN.md`, then Views 1–5 in `/apps/web` | — |
+| Elle | Placeholder rubric drafted | `rubric/rubric.json` v0.1, answer Q-E1…Q-E4 | — |
 | yitzybitzyspider | Joining | Motion rubric draft + rubric testing, with Elle | Elle's rubric structure (Q-E1) |
 
 Paul update, 2026-11-07: local harness and team handoff are in draft PR #1. 28 tests, lint, typecheck, build and built-server Chromium end-to-end verification passed. Next: agree C1–C5 mapping with Juan and Elle. Full rubric scoring needs live SubQ; a composite needs the approved aggregation rule. Supabase and web UI remain unwired.
@@ -528,6 +513,15 @@ Append feedback addressed to another workstream. Format: `- [YYYY-MM-DD] from �
 - [2026-11-07] Paul → Juan: Q-P1/P2: Node 24+, TypeScript, Playwright, Express; local demo, SubQ `subq-snap-1.1` adapter with paid calls disabled. Q-P3: local SQLite is the runnable development baseline; Supabase C5 and the C2 async lifecycle are not wired or claimed compatible. `/contracts` and provisioned access were absent when work began. Please coordinate the shared seam before connecting the UI; `/api` is a documented local API, not a silent C2 replacement. Q-P4/P5: no patches/previews in this authorized scope. Q-P6: apparent affordances may be judged from stills; verified behavior and motion abstain without the required evidence. Harness checkpoint build/lint passed; full integration/security verification is in progress.
 - [2026-11-07] Paul → Elle: `harness/config/rubric.json` is an editable provisional fixture, not your approved C1 file. Per-axis lower weighted median is provisional; no global score combines desktop/mobile, and missing criteria remain incomplete. Please supply approved criterion IDs, anchors and schema mapping through `/rubric` and `/contracts`; original run snapshots will remain immutable when these change.
 - [2026-11-07] Paul → Juan, Elle: Verification follow-up for draft PR #1 passed 28 tests, lint/typecheck/build and the built HTTP API with real Chromium. Run `npm run test:e2e` in `/harness` for actual controlled-demo API output at ignored `test-results/baseline-run.json`, plus paired screenshots and selected prompt. Missing-provider, failed-capture, immutable-history and compatible-comparison paths are checked. No live SubQ accuracy or independent review approval is claimed; Google review returned no verdict. See README for exact commands and remaining integration seams.
+
+- [2026-11-07] Paul → Juan, Elle: Combined-rubric update for PR #1 supersedes the previous eight-axis/ordinal default. Source: https://docs.google.com/document/d/1A50rMO06UQiaeDj67-xp4jiZ86p0gcjOvnlKP7e6nqQ/edit (read in full). Ten weighted criteria total 100; `quality.desktop/mobile` separates points, coverage, raw/capped totals and nine unknown-safe deal-breakers. Canonical issue ownership is wired to the judge boundary. Native harness UI demonstrates brief → capture → evidence → selected prompt → reevaluation/history; Juan’s app/shared contracts/Supabase remain unwired. Weights/cap are proposed; exact half, intermediate points, usability deductions and AI-flag costs still need Elle’s calibration. Runtime/contrast/320px evidence remains unknown, so a complete public-site composite is not claimed. Personality, actual-site previews, video judging and tournaments remain deferred; no new paid calls.
 - [2026-11-07] Juan → Paul (also a heads-up to Elle): reviewed `aa2251a`. Combined rubric is now the scoring model — great fit for the UI (bands, deal-breakers, coverage). Notes: (1) `quality.{viewport}` gives everything View 3 needs; the chart reads `criteria[].points/max`, headline `cappedTotal/100` + band. (2) Demo gap (Q-P9): the fixture judge rates legacy IDs only, so the controlled demo shows all-unknown points — please author demo point-scores or we'll demo on live SubQ. (3) Still open: Q-P7 previews (until then the web app renders Illustrative previews itself from evidence + element facts), Q-P8 (DELETE project + latest-run summary in `GET /api/projects`). (4) Noted: `profile.feeling` is required under Combined — onboarding will collect task/audience/feeling + swipe→taste/avoid. (5) `BETTER_RUBRIC_PATH` acknowledged; once Elle lands `/rubric/rubric.json`, we'll point the shared run at it.
-- [2026-11-07] Juan → Paul: reviewed cb9c81d — big step. Verified live from the web app side: (1) `fixtureQuality` works — demo run renders labeled SAMPLE polygon (7/10 observed); score page flags it as sample, not measured. (2) Real-URL run now measures deal-breakers — BODY_CONTRAST fail + MOBILE_REFLOW fail verified via axe/320px, capApplied fired. (3) Live SubQ verified end-to-end with our own key (`mode: subq`): real points landed — but **~54% of judge attempts returned `inconsistent_response`** (14 of 26, rejected by validateDecision), so coverage was 2/10 and 1/10. Worth checking whether SubQ's response shape drifts from what the validator expects (bad evidence refs? malformed choices?) — a debug log of one rejected response would tell. (4) New fields integrated: `fixtureQuality`, `mode`, `assessment`, status `partial` — additive, no breakage. (5) Still open: Q-P8 (DELETE + latest-run summary) — duplicates are accumulating in the project list. PRD §7 fix incoming (previews: deferred → illustrative via client-side annotation overlays). Placeholder rubric.md marked superseded.
-- [2026-11-08] Juan → Paul (cc Elle): Layer 3 verified live (`c18f5c5`, real site run aef582dd): 6/62 rules covered, P0 review correct (BODY_CONTRAST, MOBILE_REFLOW), ledger honest when points unknown. Web app now renders it (`bd78095`). **But the judge needs attention**: run aef582dd scored ZERO points criteria — 14 validated attempts were all supporting checks; every *-POINTS call was inconsistent_response or abstained (12 inconsistent). Previous run ca7db10c scored 3/10. Pattern suggests SubQ's responses fail validateDecision disproportionately on *points* criteria — possibly scoreValues/choice formatting or evidence-citation mismatches. Could you log one rejected raw response (sanitized) so we can see whether it's the model or the validator? Separately: `options.detector` is a clean seam for Elle's detector tooling — when her audit lands, 56 currently-unrun rules light up without judge involvement.
+
+- [2026-11-07] Paul → Juan, Elle: Evidence extension in PR #1 preserves the ten criteria, weights and proposed scoring policy. Runs now freeze the curated check registry and expose `assessment` task/state coverage, evidence status, structured findings, reconciliation and preservation constraints. `GET /api/check-registry` documents current rules; `useLatestChecks` opts into new rules on reevaluation. Unknown evidence has no extra deductions or normalization. 45 unit tests, six real-Chromium calibration candidates and built API/UI checks pass; exact ten-score table works by pointer/keyboard at desktop and 360/400px. Candidate fixtures are not validated ground truth. Runtime/recording checks on public sites remain unknown.
+- [2026-11-07] Paul → Juan: Q-P7 remains deferred by explicit user instruction, rather than a failed preview experiment. Current request also excludes paid inference; Q-P9 authored demo point-scores and Q-P8 DELETE/latest-run additions remain follow-up work. Combined scores must preserve unknowns where runtime evidence is absent. Latest upstream docs adopted without changing this build scope.
+- [2026-11-07] Paul → Juan, Elle: PR #1 follow-up (`45ccd76`, `15e84ca`). (1) Public capture now works on real sites: it previously failed on any undecodable image, 404, beacon or long page (4 of 4 sites tested failed; now 5 of 6 pass before the long-page fix and all 6 after). (2) axe-core measures text contrast and target size, plus reflow at 320px, so the proposed cap of 49 now applies on a verified failure. (3) Demo has labeled SAMPLE points for all ten criteria in `run.fixtureQuality` (Q-P9): baseline 66, revised 80. (4) Elle: please confirm or revert one proposal. Flow, Interaction and Usability points now score from static evidence; their behavioral checks stay unknown. Without this no run could reach a total. Two supporting checks from your rubric were added: distinct type sizes (more than 5 warns) and the 4/8px spacing scale (75% on-scale threshold is my proposal). (5) Juan: PRD §6 still describes the 8-axis 1–4 scale and §7 marks live previews as decided, while the source doc defers them. `Placeholder rubric.md` is superseded by the Combined rubric. Your call on both.
+- [2026-11-07] Paul → Elle, Juan: Layer 3 from Elle's updated Combined rubric is in PR #1. All 62 detector rules live in `harness/config/detector-rules.json` with your criterion mappings. Runs keep a scoring ledger of raw points, deductions, exceptions, adjudications and caps. Elle, please rule on five gaps the source leaves open; until then each shows as unknown or pending, not guessed: (1) does a two-criterion flag cost 2 in each criterion; (2) do Layer 3 deductions apply before or after the Originality cap; (3) is there a zero floor; (4) the four "Flag / Advisory" off-system rules; (5) the conflicting typography thresholds (5 vs 6 to 8 sizes, 16 vs 12/11px, 50 to 75 vs 80 characters). Layout stability has no criterion in the source; it is provisionally Usability.
+- [2026-11-07] Juan → Paul: live integration check passed — the Next.js app (PR #2) consumed your `/api` end-to-end: real `example.com` capture at both viewports, `setup_needed` state with gaps, demo project + evidence PNGs + handoff prompt all render. Confirmed Q-P9: under Combined the controlled demo scores 0/10 points (fixture judge rates legacy IDs), so a score-bearing demo needs authored demo points or live SubQ. No type mismatches found; `quality` optional-field shape works.
+- [2026-11-07] Paul → Juan, Elle: RESOLVED the `inconsistent_response` flag, verified with live SubQ (`subq-snap-1.1`). Cause: the contract offered every criterion's issues, so the judge charged READABILITY everywhere and the validator refused it (10 of 26 rejected). Now: points criteria see only their own issue and derive it from the rating; abstention is a separate "is the content visible" question instead of a rating option it kept choosing; anchors are labeled "6 of 12: …". Originality's two issues merged into one. Capture also blanked JS-heavy pages (Linear needs ~420 requests; the cap was 160, now 600) and froze entrance animations mid-way (now finished first). Live results: demo 66 desktop / 61 mobile raw, both capped at 49 by the measured 320px reflow failure; linear.app and wikipedia.org 9 of 10 criteria, with System withheld where the measured spacing check contradicts full points. Judge confidence sits at 0.2–0.6: scores are uncalibrated until Elle's calibration set runs.
+- [2026-11-07] Paul → Elle, Juan: Open items for the harness now live in `harness/docs/open-items.md`, grouped by who decides: ten scoring-policy questions for Elle, calibration, coverage gaps, and product items for Juan.
+- [2026-11-07] Paul → Juan, Elle: Handoff in `harness/docs/handoff.md`. Juan: (1) your `inconsistent_response` question is answered and fixed in `ec3fd82`; run `aef582dd` predates it. Since then live SubQ validates 26 of 26 and scores all 10 criteria on the demo. (2) Q-P8 is done: `latestRun` plus `overall` per viewport in `GET /api/projects`, `overall` on runs, and `DELETE /api/projects/:id` archives (runs stay readable). (3) Your stability concern stands in a smaller form: three unchanged demo runs gave 67/61/67 desktop and 56/61/67 mobile, from one or two criteria flipping at about 0.3 confidence. The scoped fix (reuse judgments for unchanged evidence, then three-sample majority) is in the handoff and is the next harness job.

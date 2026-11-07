@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Changing text stability candidate</title>
+<style>
+body{font:18px/1.5 Georgia,serif;margin:16px;color:#1d2a2a;background:#fafafa}
+section{border:1px solid #9aa;padding:16px;margin-bottom:24px}
+/* Before: the line is centered in a fixed-height stage and the word sizes to its content,
+   so a longer word pushes the words after it sideways and can re-wrap the centered block. */
+#bad .stage{height:220px;display:flex;flex-direction:column;justify-content:center;text-align:center}
+/* After: anchored to the top; every option shares one grid cell so the slot is as wide as the
+   longest word. Nothing is clipped: inactive options are hidden, not cut off. */
+#good .stage{min-height:220px;display:flex;flex-direction:column;justify-content:flex-start}
+#good .slot{display:inline-grid;vertical-align:bottom}
+#good .slot>span{grid-area:1/1;white-space:nowrap}
+#good .slot>span:not(.active){visibility:hidden}
+.word{font-weight:700;color:#214b42}
+button{font:inherit;margin-top:16px;padding:12px 16px;min-height:44px}
+</style></head><body>
+<section id="bad" aria-labelledby="bad-title"><h2 id="bad-title">Before</h2>
+<div class="stage"><p class="line">Read your <span class="word" data-word>notes</span> <span data-after>aloud</span> at a steady pace.</p><p class="after">Next line of the script</p></div>
+<button type="button" data-change>Change task word</button></section>
+<section id="good" aria-labelledby="good-title"><h2 id="good-title">After</h2>
+<div class="stage"><p class="line">Read your <span class="slot"><span class="word active" data-word>notes</span><span class="word" aria-hidden="true">acceptance speech</span></span> <span data-after>aloud</span> at a steady pace.</p><p class="after">Next line of the script</p></div>
+<button type="button" data-change>Change task word</button></section>
+<script>
+document.querySelector('#bad [data-change]').addEventListener('click',()=>{document.querySelector('#bad [data-word]').textContent='acceptance speech';});
+document.querySelector('#good [data-change]').addEventListener('click',()=>{const [a,b]=document.querySelectorAll('#good .slot>span');a.classList.remove('active');a.setAttribute('aria-hidden','true');b.classList.add('active');b.removeAttribute('aria-hidden');});
+</script></body></html>
