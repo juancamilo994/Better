@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildRequest, normalizeBrief, maskVolatile } from '../src/judges/subq.ts';
-import { layoutFingerprint } from '../src/capture/capture.ts';
+import { layoutFingerprint, navigationFailure } from '../src/capture/capture.ts';
 import { input } from './helpers.ts';
 
 test('brief typing style does not change the judge request (was a 12-point swing)', () => {
@@ -40,4 +40,21 @@ test('a page with a live clock keeps its layout fingerprint; a real layout chang
   ] });
   assert.equal(layoutFingerprint(page('12:41:07')), layoutFingerprint(page('12:41:59')));
   assert.notEqual(layoutFingerprint(page('12:41:07')), layoutFingerprint(page('12:41:07', 320)));
+});
+
+test('failure messages say what went wrong and keep the known prefix', () => {
+  const cases: [number | null, string | null, RegExp][] = [
+    [404, null, /HTTP 404 \(page not found\)/],
+    [403, null, /refused access \(HTTP 403\).*bot protection/],
+    [429, null, /HTTP 429/],
+    [503, null, /server error \(HTTP 503\)/],
+    [null, null, /did not respond/],
+    [null, 'Private, local, reserved and metadata destinations are blocked.', /private or internal address/],
+    [null, 'Capture budget exceeded.', /request was blocked \(Capture budget exceeded\)/],
+  ];
+  for (const [status, blocked, pattern] of cases) {
+    const message = navigationFailure(status, blocked);
+    assert.match(message, pattern);
+    assert.ok(message.startsWith('Navigation did not'), 'known prefix keeps the message visible to users');
+  }
 });

@@ -14,9 +14,6 @@ const blankFacts = () => ({ scrollWidth: 0, clientWidth: 0, elements: [], text: 
 // Same design, different clock: a fingerprint of layout, type and color with
 // digits masked and positions rounded, so live counters and timestamps do not
 // make an unchanged page look new. Raw contentHash still records exact bytes.
-// Same design, different clock: a fingerprint of layout, type and color with
-// digits masked and positions rounded, so live counters and timestamps do not
-// make an unchanged page look new. Raw contentHash still records exact bytes.
 // One vague message for 404s, blocked redirects and bot walls left users unable
 // to act. Each case now says what happened; every message keeps the known prefix.
 export function navigationFailure(status: number | null, blocked: string | null) {
@@ -60,6 +57,7 @@ export async function capturePage(project: Project, runId: string, directory: st
       let totalBytes = 0;
       let requests = 0;
       let documentHash = '';
+      let mainDocumentBlocked: string | null = null;
       await context.routeWebSocket('**/*', route => { blockedRequests++; route.close(); });
       await context.route('**/*', async route => {
         try {
@@ -77,7 +75,8 @@ export async function capturePage(project: Project, runId: string, directory: st
           if (totalBytes > 32 * 1024 * 1024) throw new Error('Capture budget exceeded.');
           if (response.status >= 400) failedResources++;
           await route.fulfill(response);
-        } catch {
+        } catch (error) {
+          if (route.request().isNavigationRequest() && !route.request().frame().parentFrame()) mainDocumentBlocked = error instanceof Error ? error.message : 'blocked';
           blockedRequests++;
           await route.abort('blockedbyclient').catch(() => {});
         }
@@ -91,10 +90,10 @@ export async function capturePage(project: Project, runId: string, directory: st
       context.on('page', popup => { if (popup !== page) void popup.close(); });
       const capturedAt = new Date().toISOString();
       try {
-        const response = await page.goto(project.url, { waitUntil: 'load', timeout: 25_000 });
+        const response = await page.goto(project.url, { waitUntil: 'load', timeout: 25_000 }).catch(error => { if (mainDocumentBlocked) return null; throw error; });
         // Sites that poll never reach network idle; wait a bounded time, then proceed.
         const networkIdle = await page.waitForLoadState('networkidle', { timeout: 8_000 }).then(() => true, () => false);
-        if (!response?.ok()) throw new Error('Navigation did not return a successful page.');
+        if (!response?.ok()) throw new Error(navigationFailure(response?.status() ?? null, mainDocumentBlocked));
         if (!response.headers()['content-type']?.includes('text/html')) throw new Error('Capture requires an HTML page.');
         await page.evaluate(async () => {
           document.querySelectorAll('img').forEach(img => { img.loading = 'eager'; });
