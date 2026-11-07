@@ -15,7 +15,7 @@ npm start
 
 Open `http://127.0.0.1:3000`. Loopback only, single operator. SQLite/evidence persist under ignored `data/`; `BETTER_DATA_DIR` changes location. Keep the entire directory across restarts. Paste a URL and supply audience, desired feeling and one core job. Select supported fixes, save/copy one prompt and reevaluate the same project. `npm run demo` exercises the controlled API without paid calls.
 
-Open policy questions, calibration work and known gaps: [docs/open-items.md](docs/open-items.md).
+Start here: [docs/handoff.md](docs/handoff.md) (state, next job, how to run). Open policy questions, calibration work and known gaps: [docs/open-items.md](docs/open-items.md).
 
 ## Proposed scoring
 
@@ -64,7 +64,8 @@ Local routes are not shared C1–C5 implementations. Types: `src/domain.ts`; rou
 | `GET /api/health` | Mode, paid-call gate, capture busy state |
 | `GET /api/rubric` | Current configurable proposed rubric |
 | `GET /api/check-registry` | Current curated supporting-check registry |
-| `GET /api/projects` | Saved projects |
+| `GET /api/projects` | Saved, unarchived projects with `latestRun` summary and per-viewport `overall` |
+| `DELETE /api/projects/:id` | Archive a project; its runs stay readable by ID |
 | `POST /api/projects` | `{name,url,profile:{version,audience,feeling,task,taste,avoid,brand}}`; taste/avoid/brand may be empty; or `{name,demo:true}` with authored brief |
 | `GET /api/projects/:id` | Project and chronological immutable runs |
 | `POST /api/projects/:id/runs` | `{}` retains snapshot; optional profile/useLatestRubric/useLatestChecks/buildLabel/expectedText; demo supports baseline/revised demoVersion |
