@@ -1,0 +1,99 @@
+{
+  "brief": {
+    "task": "Book a beginner pottery class",
+    "audience": "City adults who have never tried ceramics",
+    "feeling": "Calm and welcoming",
+    "taste": "",
+    "avoid": "",
+    "brand": ""
+  },
+  "suites": {
+    "smoke": ["ui-loop", "honest-unreachable", "honest-private", "improve-demo"],
+    "core": ["ui-loop", "honest-unreachable", "honest-private", "improve-demo", "pair-typography", "pair-contrast", "pair-clutter", "mobile-only", "stability"],
+    "full": ["ui-loop", "honest-unreachable", "honest-private", "improve-demo", "pair-typography", "pair-contrast", "pair-clutter", "mobile-only", "stability", "real-world"]
+  },
+  "cases": [
+    {
+      "id": "ui-loop",
+      "group": "1. The loop works",
+      "title": "Click through the whole product in the web app: create, onboard, score, recommend, prompt, reevaluate",
+      "kind": "ui-loop"
+    },
+    {
+      "id": "stability",
+      "group": "2. Stability",
+      "title": "Same unchanged page, scored several times, stays within 2 points",
+      "kind": "stability",
+      "page": "typography-clean.html",
+      "minRepeats": 3,
+      "maxSpread": 2
+    },
+    {
+      "id": "pair-typography",
+      "group": "3. Tells good from bad",
+      "title": "Tiny, chaotic type scores lower than the clean twin",
+      "kind": "pair",
+      "bad": "typography-bad.html",
+      "good": "typography-clean.html",
+      "lowerOn": ["TYPOGRAPHY"]
+    },
+    {
+      "id": "pair-contrast",
+      "group": "3. Tells good from bad",
+      "title": "Washed-out low-contrast page fails the contrast deal-breaker; clean twin passes",
+      "kind": "pair",
+      "bad": "contrast-bad.html",
+      "good": "contrast-clean.html",
+      "dealBreakerFails": ["BODY_CONTRAST"]
+    },
+    {
+      "id": "pair-clutter",
+      "group": "3. Tells good from bad",
+      "title": "Cluttered everything-at-once page scores lower on hierarchy and density",
+      "kind": "pair",
+      "bad": "clutter-bad.html",
+      "good": "clutter-clean.html",
+      "lowerOn": ["HIER", "DENSITY"]
+    },
+    {
+      "id": "improve-demo",
+      "group": "4. The loop improves a site",
+      "title": "Built-in demo: baseline vs fixed version, mobile overflow and small type get better",
+      "kind": "improve-demo"
+    },
+    {
+      "id": "mobile-only",
+      "group": "6. Mobile only",
+      "title": "Page that only breaks on phones scores lower on mobile than desktop",
+      "kind": "mobile-only",
+      "page": "mobile-break.html"
+    },
+    {
+      "id": "honest-unreachable",
+      "group": "7. Honest failures",
+      "title": "Unreachable URL fails clearly, with no invented scores",
+      "kind": "honest",
+      "url": "https://better-eval-does-not-exist.invalid/"
+    },
+    {
+      "id": "honest-private",
+      "group": "7. Honest failures",
+      "title": "Private network address is refused",
+      "kind": "honest",
+      "url": "http://10.0.0.1/",
+      "expectRejected": true
+    },
+    {
+      "id": "real-world",
+      "group": "8. Real-world sanity",
+      "title": "Public sites, tracked over time (informational, not pass or fail)",
+      "kind": "real-world",
+      "sites": [
+        { "name": "bitzyspider", "url": "https://bitzyspider.com/", "brief": { "task": "Learn who Yitzy is and get in touch", "audience": "Employers and collaborators", "feeling": "Interesting and creative" } },
+        { "name": "stripe", "url": "https://stripe.com/", "brief": { "task": "Start accepting payments", "audience": "Founders and developers", "feeling": "Trustworthy and modern" } },
+        { "name": "arngren", "url": "https://www.arngren.net/", "brief": { "task": "Find and buy a gadget", "audience": "Norwegian hobby shoppers", "feeling": "Fun and easy" } }
+      ],
+      "expectOrder": ["stripe", "arngren"]
+    }
+  ]
+}
