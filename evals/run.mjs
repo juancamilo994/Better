@@ -22,6 +22,7 @@ const { values: opt } = parseArgs({
     'harness-dir': { type: 'string', default: resolve(here, '../harness') },
     'web-dir': { type: 'string', default: resolve(here, '../apps/web') },
     'pages-base': { type: 'string', default: 'https://raw.githack.com/juancamilo994/Better/yitzy/eval-runner/evals/pages/' },
+    'no-log': { type: 'boolean', default: false },
     'harness-port': { type: 'string', default: '3100' },
     'web-port': { type: 'string', default: '3101' },
     'keep-open': { type: 'boolean', default: false },
@@ -259,11 +260,11 @@ const kinds = {
     ctxCase.runs = { bad: bad.runs, clean: good.runs };
     const checks = [];
     for (const vp of ['desktop', 'mobile']) {
-      for (const id of c.lowerOn ?? []) {
+      for (const id of c.focus ?? []) {
         const b = avgPoints(bad.runs, vp, id), g = avgPoints(good.runs, vp, id);
         checks.push({ name: `${vp}: ${id} scores lower on the bad page`, ...cmp(b, g, (x, y) => x < y, `bad ${fmt(b)} vs clean ${fmt(g)}`) });
       }
-      for (const id of c.dealBreakerFails ?? []) {
+      for (const id of (c.dealBreaker ? [c.dealBreaker] : [])) {
         const bv = bad.runs.map(r => r[vp]?.dealBreakers?.[id]); const gv = good.runs.map(r => r[vp]?.dealBreakers?.[id]);
         checks.push({ name: `${vp}: ${id} deal-breaker fails on the bad page`, pass: bv.every(v => v === 'fail'), detail: `bad: ${bv.join(', ')}` });
         checks.push({ name: `${vp}: ${id} deal-breaker does not fail on the clean page`, pass: gv.every(v => v !== 'fail'), detail: `clean: ${gv.join(', ')}` });
@@ -343,7 +344,7 @@ const report = [];
 for (const c of cases) {
   const ctxCase = { shots: [], runs: null };
   const started = Date.now();
-  log(`> ${c.id}: ${c.title}`);
+  log(`> ${c.id}: ${c.question}`);
   let checks;
   try { checks = await kinds[c.kind](c, ctxCase); }
   catch (e) { checks = [{ name: 'Case ran to completion', pass: false, detail: String(e.message).slice(0, 500) }]; ctxCase.shots.push(await shot(`${c.id}-error`)); }
@@ -369,12 +370,27 @@ h1{font-size:26px;margin:0 0 4px}.sum{color:var(--muted);margin-bottom:20px}.cas
 .group{color:var(--muted);font-size:13px}ul{padding-left:18px}li{margin:3px 0}.d{color:var(--muted)}.shots{display:flex;gap:8px;overflow-x:auto;padding-top:8px}.shots img{height:120px;border:1px solid var(--line);border-radius:6px}
 details{margin-top:8px}pre{white-space:pre-wrap;font-size:12px;max-height:300px;overflow:auto;background:var(--bg);padding:8px;border-radius:6px}</style></head><body><main>
 <h1>Better eval report</h1><div class="sum">Suite <b>${esc(opt.suite)}</b>, judge <b>${esc(opt.judge)}</b>, repeat ${repeat}, ${meta.seconds}s. <span class="pass">${counts.pass} passed</span>, <span class="fail">${counts.fail} failed</span>, <span class="info">${counts.info} informational</span>. ${esc(meta.startedAt)}</div>
-${report.map(r => `<section class="case"><div><span class="tag ${r.status}">${r.status.toUpperCase()}</span><b>${esc(r.title)}</b></div><div class="group">${esc(r.group)} · ${esc(r.id)} · ${r.seconds}s</div>
+${report.map(r => `<section class="case"><div><span class="tag ${r.status}">${r.status.toUpperCase()}</span><b>${esc(r.question)}</b></div><div class="group">${esc(r.group)} · ${esc(r.id)} · ${r.seconds}s</div>
 <ul>${r.checks.map(k => `<li><span class="${k.pass === null ? 'info' : k.pass ? 'pass' : 'fail'}">${k.pass === null ? 'INFO' : k.pass ? 'PASS' : 'FAIL'}</span> ${esc(k.name)} <span class="d">${esc(k.detail)}</span></li>`).join('')}</ul>
 <div class="shots">${r.shots.map(s => `<a href="${esc(s)}"><img src="${esc(s)}" alt="${esc(s)}"></a>`).join('')}</div>
 ${r.runs ? `<details><summary>Raw run summaries</summary><pre>${esc(JSON.stringify(r.runs, null, 2))}</pre></details>` : ''}</section>`).join('')}
 </main></body></html>`;
 await writeFile(join(outDir, 'report.html'), html);
+
+// Append this run to the shared, versioned test log (evals/TEST-LOG.md).
+if (!opt['no-log']) {
+  const { appendFile } = await import('node:fs/promises');
+  const icon = s => ({ pass: 'PASS', fail: 'FAIL', info: 'INFO' }[s]);
+  const lines = [`\n### ${meta.startedAt.slice(0, 16).replace('T', ' ')} UTC: runner, suite \`${opt.suite}\`, judge \`${opt.judge}\`, repeat ${repeat}`, '',
+    `${counts.pass} passed, ${counts.fail} failed, ${counts.info} informational, ${meta.seconds}s. Local report: \`${outDir.split('/evals/')[1] ?? outDir}/report.html\` (not committed).`, '',
+    '| Test | Verdict | Expected | Actual |', '|---|---|---|---|'];
+  for (const r of report) {
+    const scored = r.checks.filter(k => k.pass !== null);
+    lines.push(`| ${r.id} | ${icon(r.status)} | ${(spec.cases.find(c => c.id === r.id)?.expected ?? '').replace(/\|/g, '/')} | ${r.checks.map(k => `${k.pass === null ? 'SKIP' : k.pass ? 'ok' : 'MISS'}: ${k.name}${k.detail ? ` (${k.detail})` : ''}`).join('; ').replace(/\|/g, '/')} |`);
+  }
+  await appendFile(join(here, 'TEST-LOG.md'), lines.join('\n') + '\n');
+  log('Appended results to evals/TEST-LOG.md');
+}
 log(`Done: ${counts.pass} pass, ${counts.fail} fail, ${counts.info} info. Report: ${join(outDir, 'report.html')}`);
 
 if (opt['keep-open']) { log('Browser left open; press Ctrl+C to finish.'); await new Promise(() => {}); }
