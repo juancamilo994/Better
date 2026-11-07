@@ -210,6 +210,10 @@ export interface Run {
   axes: Record<Viewport, AxisScore[]>;
   fixtureAxes: Record<Viewport, AxisScore[]>;
   quality?: Record<Viewport, QualitySummary>;
+  /** Labeled SAMPLE points for the controlled demo — illustrative, not measured. */
+  fixtureQuality?: Record<Viewport, QualitySummary>;
+  /** Versioned evidence-check assessment (check registry); additive, shape may grow. */
+  assessment?: Record<string, unknown>;
   manifest: {
     os: string;
     browser: string;

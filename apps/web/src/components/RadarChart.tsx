@@ -1,5 +1,5 @@
 import { buildRadar, seriesPath, vertexPoint, type RadarChart as RadarData } from '@/lib/radar';
-import type { Run } from '@/lib/harness/types';
+import type { QualitySummary, Run, Viewport } from '@/lib/harness/types';
 
 // Functional shell: correct geometry and honest gaps; Paper decides the look.
 const SIZE = 340;
@@ -10,8 +10,16 @@ const LABEL_R = R + 30;
 
 const SERIES_COLOR = { desktop: '#2563eb', mobile: '#0d9488' } as const;
 
-export function RadarChart({ run }: { run: Run }) {
-  const chart: RadarData = buildRadar(run);
+export function RadarChart({
+  run,
+  qualitySource,
+  sample = false,
+}: {
+  run: Run;
+  qualitySource?: Record<Viewport, QualitySummary>;
+  sample?: boolean;
+}) {
+  const chart: RadarData = buildRadar(run, undefined, qualitySource);
   const n = chart.axes.length;
   if (n === 0) return null;
 
@@ -66,6 +74,7 @@ export function RadarChart({ run }: { run: Run }) {
             {s.partial && ' (gaps)'}
           </span>
         ))}
+        {sample && <span> · Sample data — illustrative, not measured</span>}
       </figcaption>
     </figure>
   );

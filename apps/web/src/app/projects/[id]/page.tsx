@@ -31,7 +31,13 @@ export default async function ScorePage({
   const previous = runs.filter(r => r.id !== run.id && new Date(r.createdAt) < new Date(run.createdAt)).at(-1);
   const quality = run.quality?.desktop;
   const mobileQuality = run.quality?.mobile;
-  const band = quality?.band;
+  // Demo runs carry labeled sample points in fixtureQuality — show them for
+  // the chart/criterion list, flagged as sample. Measured deal-breakers and
+  // coverage still come from real quality.
+  const sample = run.fixtureQuality;
+  const displayQuality = sample?.desktop ?? quality;
+  const displayMobile = sample?.mobile ?? mobileQuality;
+  const band = displayQuality?.band;
   const shot = run.captures.find(c => c.viewport === 'desktop' && c.status === 'ready')
     ?.artifacts.find(a => a.kind === 'screenshot');
   const unchanged = previous && previous.manifest.capturedBuildHash === run.manifest.capturedBuildHash;
@@ -49,24 +55,25 @@ export default async function ScorePage({
       {unchanged && <p>The captured page is unchanged since the previous run; score differences are evaluator variance, not real change.</p>}
 
       <section aria-label="Overall score">
-        <h2>Overall (desktop)</h2>
+        <h2>Overall (desktop){sample && ' — sample'}</h2>
         <p>
-          {quality?.cappedTotal ?? quality?.observedSubtotal ?? '—'} / 100
+          {displayQuality?.cappedTotal ?? displayQuality?.observedSubtotal ?? '—'} / 100
           {band ? ` — ${band}` : ''}
         </p>
-        {quality && quality.coverage.assessedCriteria < quality.coverage.totalCriteria && (
-          <p>{quality.coverage.assessedCriteria}/{quality.coverage.totalCriteria} criteria assessed — gaps are unknown, not zero.</p>
+        {sample && <p><small>Sample scores — illustrative, not measured.</small></p>}
+        {displayQuality && displayQuality.coverage.assessedCriteria < displayQuality.coverage.totalCriteria && (
+          <p>{displayQuality.coverage.assessedCriteria}/{displayQuality.coverage.totalCriteria} criteria assessed — gaps are unknown, not zero.</p>
         )}
-        {quality?.capApplied && <p>Deal-breaker cap applied (max {quality.cap}).</p>}
-        {mobileQuality && <p>Mobile: {mobileQuality.cappedTotal ?? mobileQuality.observedSubtotal ?? '—'} / 100{mobileQuality.band ? ` — ${mobileQuality.band}` : ''}</p>}
+        {displayQuality?.capApplied && <p>Deal-breaker cap applied (max {displayQuality.cap}).</p>}
+        {displayMobile && <p>Mobile: {displayMobile.cappedTotal ?? displayMobile.observedSubtotal ?? '—'} / 100{displayMobile.band ? ` — ${displayMobile.band}` : ''}</p>}
       </section>
 
-      <RadarChart run={run} />
+      <RadarChart run={run} qualitySource={sample} sample={!!sample} />
 
       <section aria-label="Score by criterion">
         <h2>By criterion</h2>
         <ul>
-          {quality?.criteria.map(c => (
+          {displayQuality?.criteria.map(c => (
             <li key={c.id}>{c.title}: {c.points ?? 'not assessed'} / {c.max}</li>
           ))}
         </ul>

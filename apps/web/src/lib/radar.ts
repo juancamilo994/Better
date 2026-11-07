@@ -1,4 +1,4 @@
-import type { Run, Viewport } from './harness/types';
+import type { QualitySummary, Run, Viewport } from './harness/types';
 
 // Spider/radar geometry for the run's rubric axes. Axis order and weights
 // come from the rubric snapshot, never hard-coded. Unassessed axes stay
@@ -39,7 +39,12 @@ export interface RadarChart {
   series: RadarSeries[];
 }
 
-export function buildRadar(run: Run, viewports: Viewport[] = ['desktop', 'mobile']): RadarChart {
+export function buildRadar(
+  run: Run,
+  viewports: Viewport[] = ['desktop', 'mobile'],
+  qualitySource?: Record<Viewport, QualitySummary>,
+): RadarChart {
+  const source = qualitySource ?? run.quality;
   const axes: RadarAxis[] = run.rubric.axes.map((a, i) => ({
     id: a.id,
     title: a.title,
@@ -50,7 +55,7 @@ export function buildRadar(run: Run, viewports: Viewport[] = ['desktop', 'mobile
   }));
 
   const series = viewports.map(viewport => {
-    const quality = run.quality?.[viewport];
+    const quality = source?.[viewport];
     const vertices: RadarVertex[] = axes.map(axis => {
       // Quality criteria are keyed by AXIS id (e.g. 'HIER'), not criterion id —
       // the harness collapses each axis's points criterion into one entry.
