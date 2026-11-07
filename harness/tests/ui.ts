@@ -104,11 +104,13 @@ try {
    calls++;
    const body=JSON.parse(String(init?.body));
    assert.equal(Object.hasOwn(body,'detectorCounts'),false);assert.equal(Object.hasOwn(body,'results'),false);assert.equal(Object.hasOwn(body,'findings'),false);
-   const finding=Object.keys(body.questions.finding.criteria).find(id=>id!=='none')!;
-   const penalty=['HIER_IMPROVE','ORIGINALITY_IMPROVE'].includes(finding);
+   // Points criteria are asked only rating and visibility; identify them by their configured instructions.
+   const instructions=String(body.questions.rating.instructions);
+   const penalty=instructions.includes('Identify one primary element'), hidden=instructions.includes('Assess memorable');
+   const finding=body.questions.finding?Object.keys(body.questions.finding.criteria).find(id=>id!=='none')!:'none';
    const answers=Object.fromEntries(Object.entries(body.questions).map(([name,value])=>{
     const options=Object.keys((value as {criteria:Record<string,string>}).criteria);
-    const choice=name==='rating'?(penalty?'0':options.filter(o=>o!=='not_assessed').at(-1)!):name==='finding'?(penalty?finding:'none'):name==='issue'?(penalty?'HIERARCHY':'none'):options.find(o=>o!=='none')!;
+    const choice=name==='visible'?(hidden?'no':'yes'):name==='rating'?(penalty?'0':options.at(-1)!):name==='finding'?(penalty?finding:'none'):name==='issue'?(penalty?'HIERARCHY':'none'):options.find(o=>o!=='none')!;
     return [name,{type:'choice',choice,confidence:.8,probabilities:Object.fromEntries(options.map(o=>[o,o===choice?1:0]))}];
    }));
    return new Response(JSON.stringify({model:'test',usage:{input_tokens:1,output_tokens:0},answers}));

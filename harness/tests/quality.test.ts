@@ -54,9 +54,9 @@ test('proposed feedback target and deal-breaker threshold stay distinct and requ
 });
 test('new scoring uses configured point choices including zero rather than canonical 1–4',()=>{
  const c=configured().criteria[0];const input={criterion:c,capture:capture(),profile,source:'controlled_demo' as const,demoVersion:'baseline' as const,images:[{evidenceId:'test:desktop:screenshot',mediaType:'image/png' as const,base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='}]};
- const body=buildRequest(input,'test');assert.deepEqual(Object.keys(body.questions.rating.criteria),['0','6','12','not_assessed']);
+ const body=buildRequest(input,'test');assert.deepEqual(Object.keys(body.questions.rating.criteria),['0','6','12']);
  const answer=(choice:string,options:string[])=>({type:'choice',choice,confidence:.8,probabilities:Object.fromEntries(options.map(o=>[o,o===choice?1:0]))});
- const raw={model:'test',usage:{input_tokens:1,output_tokens:0},answers:{rating:answer('0',['0','6','12','not_assessed']),finding:answer('none',['none',c.findings[0].id]),evidence:answer('test:desktop:screenshot',['none','test:desktop:screenshot'])}};
+ const raw={model:'test',usage:{input_tokens:1,output_tokens:0},answers:{visible:answer('yes',['yes','no']),rating:answer('0',['0','6','12']),finding:answer('none',['none',c.findings[0].id])}};
  const parsed=parseResponse(raw,input,'test');assert.equal(parsed.score,0);assert.equal(validateDecision(parsed,input,{version:'test',provenance:'subq',evaluate:async()=>parsed}).score,0);
 });
 
@@ -72,10 +72,11 @@ test('source bands, nine gates and required evidence stay explicit',()=>{
 
 test('real SubQ parsing wires canonical issue ownership and rejects overlapping penalty homes',()=>{
  const c=rubric.criteria.find(c=>c.id==='ORIGINALITY-POINTS')!;
- const input={criterion:c,capture:capture(),profile,issues:rubric.combined!.issueCatalog,source:'controlled_demo' as const,demoVersion:'baseline' as const,images:[{evidenceId:'test:desktop:screenshot',mediaType:'image/png' as const,base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='}]};
+ const issues=[...rubric.combined!.issueCatalog.filter(x=>x.home!=='ORIGINALITY'),{id:'TEMPLATE',home:'ORIGINALITY',description:'t'},{id:'NOVELTY',home:'ORIGINALITY',description:'n'}];
+ const input={criterion:c,capture:capture(),profile,issues,source:'controlled_demo' as const,demoVersion:'baseline' as const,images:[{evidenceId:'test:desktop:screenshot',mediaType:'image/png' as const,base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='}]};
  const request=buildRequest(input,'test');assert.deepEqual(Object.keys(request.questions.issue!.criteria),['none','TEMPLATE','NOVELTY']);assert.equal('finding' in request.questions,false);
  const answer=(choice:string,options:string[])=>({type:'choice',choice,confidence:.8,probabilities:Object.fromEntries(options.map(o=>[o,o===choice?1:0]))});
- const response=(issue:string)=>({model:'test',usage:{input_tokens:1,output_tokens:0},answers:{rating:answer('0',['0','5','10','not_assessed']),evidence:answer('test:desktop:screenshot',['none','test:desktop:screenshot']),issue:answer(issue,['none','TEMPLATE','NOVELTY'])}});
+ const response=(issue:string)=>({model:'test',usage:{input_tokens:1,output_tokens:0},answers:{visible:answer('yes',['yes','no']),rating:answer('0',['0','5','10']),issue:answer(issue,['none','TEMPLATE','NOVELTY'])}});
  const own=parseResponse(response('TEMPLATE'),input,'test');assert.equal(own.issueId,'TEMPLATE');assert.equal(own.status,'assessed');
  assert.throws(()=>parseResponse(response('HIERARCHY'),input,'test'),/invalid_response/); // a foreign-home issue is not even offered
  const unnamed=parseResponse(response('none'),input,'test');assert.equal(unnamed.status,'not_assessed');assert.match(unnamed.reason,/without an identified defect/);
@@ -89,7 +90,7 @@ test('single-issue points criteria derive their defect from the rating instead o
  const input={criterion:c,capture:capture(),profile,issues:rubric.combined!.issueCatalog,source:'controlled_demo' as const,demoVersion:'baseline' as const,images:[{evidenceId:'test:desktop:screenshot',mediaType:'image/png' as const,base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='}]};
  const request=buildRequest(input,'test');assert.equal('issue' in request.questions,false);assert.equal('finding' in request.questions,false);
  const answer=(choice:string,options:string[])=>({type:'choice',choice,confidence:.8,probabilities:Object.fromEntries(options.map(o=>[o,o===choice?1:0]))});
- const response=(rating:string)=>({model:'test',usage:{input_tokens:1,output_tokens:0},answers:{rating:answer(rating,['0','6','12','not_assessed']),evidence:answer('test:desktop:screenshot',['none','test:desktop:screenshot'])}});
+ const response=(rating:string)=>({model:'test',usage:{input_tokens:1,output_tokens:0},answers:{visible:answer('yes',['yes','no']),rating:answer(rating,['0','6','12'])}});
  const half=parseResponse(response('6'),input,'test');assert.equal(half.issueId,'HIERARCHY');assert.equal(half.findingId,'HIER_IMPROVE');assert.equal(half.score,6);
  const full=parseResponse(response('12'),input,'test');assert.equal(full.issueId,undefined);assert.equal(full.findingId,null);
 });

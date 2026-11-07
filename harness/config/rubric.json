@@ -1,5 +1,5 @@
 {
-  "version": "elle-combined-proposed-2026-11-07.4",
+  "version": "elle-combined-proposed-2026-11-07.5",
   "status": "Proposed Combined rubric from Elle's source document; intermediate point calibration remains unresolved.",
   "axes": [
     {
@@ -893,16 +893,6 @@
         "description": "Category or emotional tone mismatches the declared audience and feeling."
       },
       {
-        "id": "TEMPLATE",
-        "home": "ORIGINALITY",
-        "description": "Templated structure or unrelated stock palette/gradients."
-      },
-      {
-        "id": "NOVELTY",
-        "home": "ORIGINALITY",
-        "description": "Novel control is distinctive but not understandable."
-      },
-      {
         "id": "VISUAL_MEANING",
         "home": "VISUAL",
         "description": "Decorative imagery or paragraphs doing work that meaningful visuals should do."
@@ -921,6 +911,11 @@
         "id": "USABILITY",
         "home": "USABILITY",
         "description": "Other usability, error prevention, navigation or matched-device adaptation defect; excludes local defects already owned elsewhere."
+      },
+      {
+        "id": "ORIGINALITY",
+        "home": "ORIGINALITY",
+        "description": "Templated structure or unrelated stock palette/gradients, or a novel control that is distinctive but not understandable."
       }
     ]
   }

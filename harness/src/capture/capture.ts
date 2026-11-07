@@ -37,7 +37,7 @@ export async function capturePage(project: Project, runId: string, directory: st
       await context.routeWebSocket('**/*', route => { blockedRequests++; route.close(); });
       await context.route('**/*', async route => {
         try {
-          if (route.request().method() !== 'GET' || ++requests > 160) throw new Error('Request blocked.');
+          if (route.request().method() !== 'GET' || ++requests > 600) throw new Error('Request blocked.');
           if (project.source === 'controlled_demo') {
             if (route.request().url() !== DEMO_URL) throw new Error('Demo has no external resources.');
             const body = demoPage(demoVersion);
@@ -77,6 +77,11 @@ export async function capturePage(project: Project, runId: string, directory: st
           await Promise.allSettled(Array.from(document.images).map(img => img.decode()));
         });
         if (expectedText && !(await page.locator('body').innerText()).includes(expectedText)) throw new Error('Expected page marker is missing.');
+        // Entrance animations often start invisible. Let script-driven reveals
+        // start, then jump finite animations to their end state before freezing,
+        // so the capture shows content at rest rather than a mid-animation blank.
+        await page.waitForTimeout(1_500);
+        await page.evaluate(() => { for (const animation of document.getAnimations()) { try { if (Number.isFinite(animation.effect?.getComputedTiming().endTime ?? Infinity)) animation.finish(); } catch { /* infinite or detached: paused below */ } } });
         await page.addStyleTag({ content: '* , *::before, *::after { animation-play-state: paused !important; transition: none !important; caret-color: transparent !important; }' });
         await page.evaluate(() => {
           document.querySelectorAll('video,audio').forEach(el => (el as HTMLMediaElement).pause());

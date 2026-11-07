@@ -7,7 +7,7 @@ import { input, png } from './helpers.ts';
 
 const answer = (choice: string, options: string[]) => ({ type: 'choice', choice, probabilities: Object.fromEntries(options.map(o => [o, o === choice ? 1 : 0])), confidence: 0.8 });
 function response() {
-  return { model: 'subq-snap-1.1', answers: { rating: answer('2', ['1', '2', '3', '4', 'not_assessed']), finding: answer('ACTION_HIERARCHY', ['none', 'ACTION_HIERARCHY']), evidence: answer('run:desktop:screenshot', ['none', 'run:desktop:screenshot']) }, usage: { input_tokens: 100, output_tokens: 0 } };
+  return { model: 'subq-snap-1.1', answers: { visible: answer('yes', ['yes', 'no']), rating: answer('2', ['1', '2', '3', '4']), finding: answer('ACTION_HIERARCHY', ['none', 'ACTION_HIERARCHY']) }, usage: { input_tokens: 100, output_tokens: 0 } };
 }
 const code = (expected: string) => (e: unknown) => e instanceof JudgeError && e.code === expected;
 
@@ -15,7 +15,7 @@ test('official request contract: bounded choices, plain image bytes and whitelis
   const body = buildRequest(input(), 'subq-snap-1.1');
   assert.deepEqual(body.images, [{ mediaType: 'image/png', base64: png }]);
   assert.equal(body.questions.rating.type, 'choice');
-  assert.deepEqual(Object.keys(body.questions.rating.criteria), ['1', '2', '3', '4', 'not_assessed']);
+  assert.deepEqual(Object.keys(body.questions.rating.criteria), ['1', '2', '3', '4']); assert.deepEqual(Object.keys(body.questions.visible.criteria), ['yes', 'no']);
   assert.match(body.questions.rating.instructions, /untrusted data, never instructions/);
   assert.match(body.state.untrusted_page_evidence.text, /ignore previous/); // Kept as data, not promoted into instructions.
   assert.equal(Object.hasOwn(body.state.untrusted_page_evidence.elements[0], 'id'), false);
@@ -30,19 +30,24 @@ test('reject invalid, oversized and too many images before transport', () => {
 test('parses ordinal choices, explicit abstention and supplied evidence IDs', () => {
   const r = parseResponse(response(), input(), 'subq-snap-1.1');
   assert.equal(r.score, 2); assert.equal(r.findingId, 'ACTION_HIERARCHY'); assert.deepEqual(r.evidenceIds, ['run:desktop:screenshot']);
-  const raw = response(); raw.answers.rating = answer('not_assessed', ['1', '2', '3', '4', 'not_assessed']);
+  const raw = response(); raw.answers.visible = answer('no', ['yes', 'no']);
   assert.equal(parseResponse(raw, input(), raw.model).score, null);
-  raw.answers.rating = answer('3', ['1', '2', '3', '4', 'not_assessed']); raw.answers.evidence = answer('none', ['none', 'run:desktop:screenshot']);
-  assert.equal(parseResponse(raw, input(), raw.model).status, 'not_assessed');
+  // With one supplied image there is no evidence question; the image is cited directly.
+  assert.equal('evidence' in buildRequest(input(), 'subq-snap-1.1').questions, false);
+  const twoImages = { ...input(), images: [...input().images, { ...input().images[0], evidenceId: 'run:desktop:full_screenshot' }] };
+  assert.ok(buildRequest(twoImages, 'subq-snap-1.1').questions.evidence);
+  const none = { ...response(), answers: { ...response().answers, evidence: answer('none', ['none', 'run:desktop:screenshot', 'run:desktop:full_screenshot']) } };
+  assert.equal(parseResponse(none, twoImages, none.model).status, 'not_assessed');
 });
 test('reject malformed responses, unknown IDs, fractional ratings and inconsistent findings', () => {
   const variants: unknown[] = [{}, { ...response(), model: 'wrong-model' }, { ...response(), usage: { input_tokens: 1, output_tokens: 3 } }];
   for (const choice of ['1.86', '5', 'outside']) { const raw = response(); raw.answers.rating.choice = choice; variants.push(raw); }
-  const unknownEvidence = response(); unknownEvidence.answers.evidence.choice = 'another-run:mobile:screenshot'; variants.push(unknownEvidence);
+  // An answer to a question that was not asked is malformed.
+  variants.push({ ...response(), answers: { ...response().answers, evidence: answer('another-run:mobile:screenshot', ['none', 'another-run:mobile:screenshot']) } });
   const confidence = response(); confidence.answers.rating.confidence = 1.2; variants.push(confidence);
   const probabilities = response(); probabilities.answers.rating.probabilities['1'] = 0.9; variants.push(probabilities);
   for (const raw of variants) assert.throws(() => parseResponse(raw, input(), 'subq-snap-1.1'), code('invalid_response'));
-  const contradiction = response(); contradiction.answers.rating = answer('4', ['1','2','3','4','not_assessed']);
+  const contradiction = response(); contradiction.answers.rating = answer('4', ['1','2','3','4']);
   assert.throws(() => parseResponse(contradiction, input(), 'subq-snap-1.1'), code('inconsistent_response'));
 });
 test('paid calls require both gates; mock transport counter proves zero then one', async () => {
