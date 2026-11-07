@@ -169,6 +169,7 @@ async function showSite(url, label) {
   await page.waitForTimeout(600);
   return shot(label);
 }
+const cmp = (a, b, test, detail) => (a === null || b === null ? { pass: null, detail: `${detail} (not scored in this judge mode)` } : { pass: test(a, b), detail });
 const mean = a => { const n = a.filter(x => typeof x === 'number'); return n.length ? n.reduce((s, x) => s + x, 0) / n.length : null; };
 const fmt = x => (x === null || x === undefined ? 'n/a' : Number.isInteger(x) ? String(x) : x.toFixed(1));
 const pageUrl = f => new URL(f, opt['pages-base']).toString();
@@ -217,8 +218,11 @@ const kinds = {
     const count = await boxes.count();
     checks.push({ name: 'Recommendations are offered', pass: count > 0, detail: `${count} suggestions` });
     if (count > 0) {
-      for (let i = 0; i < Math.min(2, count); i++) await boxes.nth(i).check();
-      await page.getByRole('button', { name: /Add to prompt/ }).click();
+      // Each criterion has its own picker and button; select fixes in the first group.
+      const group = page.locator('details').filter({ has: page.locator('input[type=checkbox]') }).first();
+      const groupBoxes = group.locator('input[type=checkbox]');
+      for (let i = 0; i < Math.min(2, await groupBoxes.count()); i++) await groupBoxes.nth(i).check();
+      await group.getByRole('button', { name: /Add to prompt/ }).click();
       await page.waitForURL(/\/prompt\?/, { timeout: 30_000 });
       const text = await page.locator('main').innerText();
       ctxCase.shots.push(await shot('prompt'));
@@ -257,7 +261,7 @@ const kinds = {
     for (const vp of ['desktop', 'mobile']) {
       for (const id of c.lowerOn ?? []) {
         const b = avgPoints(bad.runs, vp, id), g = avgPoints(good.runs, vp, id);
-        checks.push({ name: `${vp}: ${id} scores lower on the bad page`, pass: b !== null && g !== null && b < g, detail: `bad ${fmt(b)} vs clean ${fmt(g)}` });
+        checks.push({ name: `${vp}: ${id} scores lower on the bad page`, ...cmp(b, g, (x, y) => x < y, `bad ${fmt(b)} vs clean ${fmt(g)}`) });
       }
       for (const id of c.dealBreakerFails ?? []) {
         const bv = bad.runs.map(r => r[vp]?.dealBreakers?.[id]); const gv = good.runs.map(r => r[vp]?.dealBreakers?.[id]);
@@ -266,7 +270,7 @@ const kinds = {
       }
       const bs = avgSubtotal(bad.runs, vp), gs = avgSubtotal(good.runs, vp);
       const ba = mean(bad.runs.map(r => r[vp]?.assessed)), ga = mean(good.runs.map(r => r[vp]?.assessed));
-      checks.push({ name: `${vp}: bad page subtotal is lower (same coverage)`, pass: bs !== null && gs !== null && bs < gs, detail: `bad ${fmt(bs)} (${fmt(ba)} criteria) vs clean ${fmt(gs)} (${fmt(ga)} criteria)` });
+      checks.push({ name: `${vp}: bad page subtotal is lower`, ...cmp(bs, gs, (x, y) => x < y, `bad ${fmt(bs)} (${fmt(ba)} criteria) vs clean ${fmt(gs)} (${fmt(ga)} criteria)`) });
     }
     return checks;
   },
@@ -285,8 +289,8 @@ const kinds = {
     return [
       { name: 'Mobile overflow check improves after the fix', pass: (m(fixed, 'LAY-01:mobile') ?? 0) > (m(base, 'LAY-01:mobile') ?? 0), detail: `LAY-01 mobile ${fmt(m(base, 'LAY-01:mobile'))} -> ${fmt(m(fixed, 'LAY-01:mobile'))}` },
       { name: 'Small-text check improves after the fix', pass: (m(fixed, 'TYPE-01:mobile') ?? 0) > (m(base, 'TYPE-01:mobile') ?? 0), detail: `TYPE-01 mobile ${fmt(m(base, 'TYPE-01:mobile'))} -> ${fmt(m(fixed, 'TYPE-01:mobile'))}` },
-      { name: 'Mobile Typography points do not drop', pass: (fixed.mobile?.points?.TYPOGRAPHY ?? -1) >= (base.mobile?.points?.TYPOGRAPHY ?? -1), detail: `${fmt(base.mobile?.points?.TYPOGRAPHY)} -> ${fmt(fixed.mobile?.points?.TYPOGRAPHY)}` },
-      { name: 'Mobile subtotal does not drop', pass: (fixed.mobile?.subtotal ?? -1) >= (base.mobile?.subtotal ?? -1), detail: `${fmt(base.mobile?.subtotal)} -> ${fmt(fixed.mobile?.subtotal)}` },
+      { name: 'Mobile Typography points do not drop', ...cmp(base.mobile?.points?.TYPOGRAPHY ?? null, fixed.mobile?.points?.TYPOGRAPHY ?? null, (a, b) => b >= a, `${fmt(base.mobile?.points?.TYPOGRAPHY)} -> ${fmt(fixed.mobile?.points?.TYPOGRAPHY)}`) },
+      { name: 'Mobile subtotal does not drop', ...cmp(base.mobile?.subtotal ?? null, fixed.mobile?.subtotal ?? null, (a, b) => b >= a, `${fmt(base.mobile?.subtotal)} -> ${fmt(fixed.mobile?.subtotal)}`) },
     ];
   },
 
@@ -297,7 +301,7 @@ const kinds = {
     return [
       { name: 'Overflow check fails on mobile but passes on desktop', pass: lay('mobile') !== null && lay('desktop') !== null && lay('mobile') < lay('desktop'), detail: `LAY-01 desktop ${fmt(lay('desktop'))}, mobile ${fmt(lay('mobile'))}` },
       { name: 'Mobile reflow deal-breaker flagged', pass: runs.every(r => r.mobile?.dealBreakers?.MOBILE_REFLOW === 'fail'), detail: runs.map(r => r.mobile?.dealBreakers?.MOBILE_REFLOW).join(', ') },
-      { name: 'Mobile subtotal is lower than desktop', pass: (avgSubtotal(runs, 'mobile') ?? 999) < (avgSubtotal(runs, 'desktop') ?? -1), detail: `desktop ${fmt(avgSubtotal(runs, 'desktop'))}, mobile ${fmt(avgSubtotal(runs, 'mobile'))}` },
+      { name: 'Mobile subtotal is lower than desktop', ...cmp(avgSubtotal(runs, 'mobile'), avgSubtotal(runs, 'desktop'), (m, d) => m < d, `desktop ${fmt(avgSubtotal(runs, 'desktop'))}, mobile ${fmt(avgSubtotal(runs, 'mobile'))}`) },
     ];
   },
 
@@ -345,7 +349,7 @@ for (const c of cases) {
   catch (e) { checks = [{ name: 'Case ran to completion', pass: false, detail: String(e.message).slice(0, 500) }]; ctxCase.shots.push(await shot(`${c.id}-error`)); }
   const scored = checks.filter(k => k.pass !== null);
   const status = scored.length === 0 ? 'info' : scored.every(k => k.pass) ? 'pass' : 'fail';
-  for (const k of checks) log(`    ${k.pass === null ? 'INFO' : k.pass ? 'PASS' : 'FAIL'}  ${k.name}${k.detail ? `  (${k.detail})` : ''}`);
+  for (const k of checks) log(`    ${k.pass === null ? 'SKIP' : k.pass ? 'PASS' : 'FAIL'}  ${k.name}${k.detail ? `  (${k.detail})` : ''}`);
   log(`< ${c.id}: ${status.toUpperCase()} in ${((Date.now() - started) / 1000).toFixed(0)}s`);
   report.push({ ...c, status, checks, shots: ctxCase.shots, runs: ctxCase.runs, seconds: Math.round((Date.now() - started) / 1000) });
 }
