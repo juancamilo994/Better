@@ -11,6 +11,7 @@ import { JudgeError, validateDecision, type Judge, type JudgeInput } from '../ju
 import { SubQJudge } from '../judges/subq.ts';
 import { Store } from '../store.ts';
 import { combinedQuality } from './quality.ts';
+import { dealBreakerObservations } from './dealbreakers.ts';
 import { aggregate } from './aggregation.ts';
 import { deterministic, missingEvidence, unassessed } from './checks.ts';
 import { buildAssessment, groundedSuggestions, loadCheckRegistry, reconciledScores } from './evidence.ts';
@@ -80,17 +81,24 @@ export async function evaluateProject(store: Store, projectId: string, options: 
   const suggestions=explain(id,rubric,results);
   const assessment=registry?buildAssessment(registry,profile,captures,results,suggestions):undefined;
   const scoringResults=assessment?reconciledScores(results,assessment):results;
+  // A run is complete when both captures succeeded and every points criterion
+  // was assessed. Supporting checks and ledger states without a connected
+  // verifier stay unknown by design, so they do not make every run partial.
+  const pointsCriteria = rubric.criteria.filter(c => rubric.combined ? c.role === 'points' : c.channel === 'quality' && c.weight > 0);
+  const pointsIncomplete = captures.some(c => c.status !== 'ready') || pointsCriteria.some(c => captures.some(capture => scoringResults.find(r => r.criterionId === c.id && r.viewport === capture.viewport)?.status !== 'assessed'));
+  const quality = (fixtures: boolean) => ({ desktop: combinedQuality(rubric, scoringResults, 'desktop', dealBreakerObservations(captures, 'desktop'), fixtures), mobile: combinedQuality(rubric, scoringResults, 'mobile', dealBreakerObservations(captures, 'mobile'), fixtures) });
   const run: Run = {
     id, projectId, parentRunId: parent?.id ?? null, createdAt: new Date().toISOString(),
-    status: captures.every(c => c.status === 'failed') ? 'failed' : setupNeeded ? 'setup_needed' : (results.some(r => r.status === 'failed' || r.status === 'not_assessed') || assessment?.ledger.some(e=>e.coverage==='unknown'||e.coverage==='partial')) ? 'partial' : 'complete',
+    status: captures.every(c => c.status === 'failed') ? 'failed' : setupNeeded ? 'setup_needed' : pointsIncomplete ? 'partial' : 'complete',
     mode: judge.provenance, buildLabel: project.source === 'controlled_demo' ? demoVersion : options.buildLabel ?? 'Unspecified build (see captured content hash)', source: project.source,
     rubric, profile,
     versions: { rubric: `${rubric.version}:${objectHash(rubric)}`, profile: `${profile.version}:${objectHash(profile)}`, judge: judge.version, prompt: PROMPT_VERSION, capture: `${CAPTURE_VERSION}:${objectHash({ viewports: VIEWPORTS, browser: captures[0]?.browser, os: `${platform()}-${release()}`, expectedText: expectedText ?? null })}`, aggregation: AGGREGATION_VERSION, ...(registry?{checks:`${registry.version}:${objectHash(registry)}`,reconciliation:'post-visual-1.0.0'}:{}) },
     captures, results, suggestions:assessment?groundedSuggestions(suggestions,assessment):suggestions, ...(assessment?{assessment}:{}),
     axes: { desktop: aggregate(rubric, scoringResults, 'desktop'), mobile: aggregate(rubric, scoringResults, 'mobile') },
-    ...(rubric.combined ? { quality: { desktop: combinedQuality(rubric, scoringResults, 'desktop'), mobile: combinedQuality(rubric, scoringResults, 'mobile') } } : {}),
+    // Fixture points are summarized separately and always labeled sample data.
+    ...(rubric.combined ? { quality: quality(false), ...(judge.provenance === 'fixture' ? { fixtureQuality: quality(true) } : {}) } : {}),
     fixtureAxes: { desktop: aggregate(rubric, scoringResults, 'desktop', true), mobile: aggregate(rubric, scoringResults, 'mobile', true) },
-    manifest: { os: `${platform()}-${release()}`, browser: captures[0]?.browser ?? 'unavailable', readiness: 'GET-only; successful HTML; networkidle; fonts/images ready; optional text marker; freeze scripts/animations; identical DOM before/after screenshot; bounded capture', expectedText: expectedText ?? null, deviceScale: 1, input: { desktop: 'pointer', mobile: 'touch-emulated' }, state: 'default-frozen; light; reduced-motion; en-US; UTC', capturedBuildHash: objectHash(captures.map(c => c.contentHash)), repositorySource: 'not_connected', referenceIds: [] },
+    manifest: { os: `${platform()}-${release()}`, browser: captures[0]?.browser ?? 'unavailable', readiness: 'GET-only; successful HTML; load plus bounded network idle; failed subresources counted, not fatal; fonts/images ready; optional text marker; freeze scripts/animations; identical DOM before/after screenshot; bounded capture', expectedText: expectedText ?? null, deviceScale: 1, input: { desktop: 'pointer', mobile: 'touch-emulated' }, state: 'default-frozen; light; reduced-motion; en-US; UTC', capturedBuildHash: objectHash(captures.map(c => c.contentHash)), repositorySource: 'not_connected', referenceIds: [] },
     judgeAttempts,
   };
   return store.saveRun(run);

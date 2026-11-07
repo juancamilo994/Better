@@ -6,6 +6,7 @@ import type { Artifact, Capture, Project, Viewport } from '../domain.ts';
 import { hash } from '../config.ts';
 import { publicGet, publicTarget } from './network.ts';
 import { DEMO_URL, demoPage, type DemoVersion } from './demo.ts';
+import { measure } from './measure.ts';
 
 export const VIEWPORTS = { desktop: { width: 1440, height: 900 }, mobile: { width: 390, height: 844 } } as const;
 const blankFacts = () => ({ scrollWidth: 0, clientWidth: 0, elements: [], text: '', title: '', truncated: false });
@@ -26,12 +27,14 @@ export async function capturePage(project: Project, runId: string, directory: st
     for (const [key, size] of Object.entries(VIEWPORTS)) {
       const viewport = key as Viewport;
       const context = await browser.newContext({ viewport: size, deviceScaleFactor: 1, isMobile: viewport === 'mobile', hasTouch: viewport === 'mobile', locale: 'en-US', timezoneId: 'UTC', colorScheme: 'light', reducedMotion: 'reduce', serviceWorkers: 'block', acceptDownloads: false, permissions: [], ignoreHTTPSErrors: false });
+      // Subresource problems degrade a capture instead of voiding it: real sites
+      // routinely carry 404s, beacons and analytics. Each is counted and disclosed.
       let blockedRequests = 0;
-      let resourceFailure = false;
+      let failedResources = 0;
       let totalBytes = 0;
       let requests = 0;
       let documentHash = '';
-      await context.routeWebSocket('**/*', route => { blockedRequests++; resourceFailure = true; route.close(); });
+      await context.routeWebSocket('**/*', route => { blockedRequests++; route.close(); });
       await context.route('**/*', async route => {
         try {
           if (route.request().method() !== 'GET' || ++requests > 160) throw new Error('Request blocked.');
@@ -46,11 +49,10 @@ export async function capturePage(project: Project, runId: string, directory: st
           if (route.request().resourceType() === 'document' && !route.request().frame().parentFrame() && response.status >= 200 && response.status < 300) documentHash = hash(response.body);
           totalBytes += response.body.length;
           if (totalBytes > 32 * 1024 * 1024) throw new Error('Capture budget exceeded.');
-          if (response.status >= 400) resourceFailure = true;
+          if (response.status >= 400) failedResources++;
           await route.fulfill(response);
         } catch {
           blockedRequests++;
-          resourceFailure = true;
           await route.abort('blockedbyclient').catch(() => {});
         }
       });
@@ -60,15 +62,17 @@ export async function capturePage(project: Project, runId: string, directory: st
       context.on('page', popup => { if (popup !== page) void popup.close(); });
       const capturedAt = new Date().toISOString();
       try {
-        const response = await page.goto(project.url, { waitUntil: 'networkidle', timeout: 25_000 });
+        const response = await page.goto(project.url, { waitUntil: 'load', timeout: 25_000 });
+        // Sites that poll never reach network idle; wait a bounded time, then proceed.
+        const networkIdle = await page.waitForLoadState('networkidle', { timeout: 8_000 }).then(() => true, () => false);
         if (!response?.ok()) throw new Error('Navigation did not return a successful page.');
         if (!response.headers()['content-type']?.includes('text/html')) throw new Error('Capture requires an HTML page.');
         await page.evaluate(async () => {
           document.querySelectorAll('img').forEach(img => { img.loading = 'eager'; });
           await document.fonts.ready;
-          await Promise.all(Array.from(document.images).map(img => img.decode()));
+          // One undecodable image must not void the capture; it stays visible as broken.
+          await Promise.allSettled(Array.from(document.images).map(img => img.decode()));
         });
-        if (resourceFailure) throw new Error('A resource was blocked or failed. This capture cannot be graded.');
         if (expectedText && !(await page.locator('body').innerText()).includes(expectedText)) throw new Error('Expected page marker is missing.');
         await page.addStyleTag({ content: '* , *::before, *::after { animation-play-state: paused !important; transition: none !important; caret-color: transparent !important; }' });
         await page.evaluate(() => {
@@ -93,11 +97,17 @@ export async function capturePage(project: Project, runId: string, directory: st
           });
           return { html: document.documentElement.outerHTML, height: document.documentElement.scrollHeight, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth, elements, text: document.body.innerText, title: document.title, truncated: visible.length > 1200 };
         });
-        if (!snapshot.text.trim() || snapshot.height > 12_000 || snapshot.scrollWidth > 12_000 || snapshot.html.length > 4_000_000) throw new Error('Empty page or capture size limit exceeded.');
-        const screenshot = await page.screenshot({ fullPage: false, type: 'png', timeout: 12_000 });
-        const fullScreenshot = await page.screenshot({ fullPage: true, type: 'png', timeout: 12_000 });
+        if (!snapshot.text.trim() || snapshot.scrollWidth > 12_000 || snapshot.html.length > 4_000_000) throw new Error('Empty page or capture size limit exceeded.');
+        // Long pages keep their first 12,000px of full-page evidence; the clip is disclosed.
+        const fullPageClipped = snapshot.height > 12_000;
+        const screenshot = await page.screenshot({ fullPage: false, type: 'png', caret: 'initial', timeout: 12_000 });
+        const fullScreenshot = await page.screenshot({ fullPage: true, type: 'png', caret: 'initial', timeout: 12_000, ...(fullPageClipped ? { clip: { x: 0, y: 0, width: size.width, height: 12_000 } } : {}) });
         const finalHtml = await page.evaluate(() => document.documentElement.outerHTML);
-        if (finalHtml !== snapshot.html || resourceFailure) throw new Error('Page changed during capture or a resource failed.');
+        if (finalHtml !== snapshot.html) throw new Error('Page changed during capture.');
+        // axe-core needs the event loop: re-enable scripts only after all evidence
+        // above is saved, and bound the engine run so a page cannot stall capture.
+        await session.send('Emulation.setScriptExecutionDisabled', { value: false });
+        const measurements = await measure(page, viewport);
         const artifacts: Artifact[] = [];
         const save = async (kind: Artifact['kind'], bytes: Buffer, extension: string) => {
           const file = `${viewport}.${extension}`;
@@ -110,10 +120,11 @@ export async function capturePage(project: Project, runId: string, directory: st
         await save('dom', Buffer.from(snapshot.html), 'html');
         await save('styles', Buffer.from(JSON.stringify(snapshot.elements, null, 2)), 'styles.json');
         await save('text', Buffer.from(snapshot.text), 'txt');
+        await save('measurements', Buffer.from(JSON.stringify(measurements, null, 2)), 'measurements.json');
         const facts = { scrollWidth: snapshot.scrollWidth, clientWidth: snapshot.clientWidth, elements: snapshot.elements, text: snapshot.text, title: snapshot.title, truncated: snapshot.truncated };
-        captures.push({ viewport, ...size, status: 'ready', url: page.url(), capturedAt, state: 'default-frozen', artifacts, facts, browser: browser.version(), contentHash: hash(snapshot.html + hash(screenshot)), documentHash, blockedRequests });
+        captures.push({ viewport, ...size, status: 'ready', url: page.url(), capturedAt, state: 'default-frozen', artifacts, facts, browser: browser.version(), contentHash: hash(snapshot.html + hash(screenshot)), documentHash, blockedRequests, failedResources, networkIdle, fullPageClipped, measurements });
       } catch (error) {
-        const known = error instanceof Error && ['Navigation did not', 'Capture requires', 'A resource was', 'Expected page', 'Empty page', 'Page changed'].some(prefix => error.message.startsWith(prefix));
+        const known = error instanceof Error && ['Navigation did not', 'Capture requires', 'Expected page', 'Empty page', 'Page changed'].some(prefix => error.message.startsWith(prefix));
         captures.push({ viewport, ...size, status: 'failed', reason: known ? (error as Error).message : 'Capture failed or readiness timed out. No design verdict was produced.', url: project.url, capturedAt, state: 'default-frozen', artifacts: [], facts: blankFacts(), browser: browser.version(), contentHash: '', documentHash, blockedRequests });
       } finally { await context.close(); }
     }

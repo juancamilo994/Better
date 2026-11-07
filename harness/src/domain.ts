@@ -20,7 +20,7 @@ export const criterionSchema = z.object({
   id: z.string().regex(/^[A-Z0-9-]+$/), axis: z.string().nullable(),
   title: z.string(), channel: z.enum(['quality', 'taste', 'ai-isms', 'motion', 'reference']),
   lane: z.enum(['deterministic', 'visual', 'unsupported']),
-  rule: z.enum(['overflow', 'small-text', 'image-alt']).optional(),
+  rule: z.enum(['overflow', 'small-text', 'image-alt', 'type-scale', 'spacing-scale']).optional(),
   threshold: z.number().optional(), weight: z.number().nonnegative(),
   instructions: z.string(), requires: z.array(z.enum(['screenshot', 'dom', 'styles', 'text', 'pair', 'runtime', 'measurement', 'reference', 'preferences'])),
   anchors: z.array(z.string()), scoreValues: z.array(z.number().finite()).optional(),
@@ -62,13 +62,16 @@ export const rubricSchema = z.object({
   if (new Set(findings).size !== findings.length) ctx.addIssue({ code: 'custom', message: 'Each issue must have one scoring home.' });
 });
 export type Rubric = z.infer<typeof rubricSchema>;
-export interface Artifact { id: string; runId: string; viewport: Viewport; state: 'default-frozen'; kind: 'screenshot' | 'full_screenshot' | 'dom' | 'styles' | 'text'; file: string; sha256: string; bytes: number; width?: number; height?: number }
+export interface Artifact { id: string; runId: string; viewport: Viewport; state: 'default-frozen'; kind: 'screenshot' | 'full_screenshot' | 'dom' | 'styles' | 'text' | 'measurements'; file: string; sha256: string; bytes: number; width?: number; height?: number }
+export interface MeasuredNode { outcome: 'pass' | 'fail' | 'unknown'; target: string; ratio?: number; expected?: number }
+export interface Measurements { engine: string | null; contrast: MeasuredNode[]; targetSize: MeasuredNode[]; spacing: Record<string, number>; reflow320: { scrollWidth: number; clientWidth: number } | null }
 export interface ElementFact { id: string; tag: string; text: string; fontSize: number; lineHeight: string; color: string; background: string; width: number; height: number; x: number; y: number; alt: string | null }
 export interface Capture {
   viewport: Viewport; width: number; height: number; status: 'ready' | 'failed'; reason?: string;
   url: string; capturedAt: string; state: 'default-frozen'; artifacts: Artifact[];
   facts: { scrollWidth: number; clientWidth: number; elements: ElementFact[]; text: string; title: string; truncated: boolean };
   browser: string; contentHash: string; documentHash: string; blockedRequests: number;
+  failedResources?: number; networkIdle?: boolean; fullPageClipped?: boolean; measurements?: Measurements;
 }
 export interface Result {
   criterionId: string; viewport: Viewport; channel: Channel; axis: string | null;
@@ -92,6 +95,7 @@ export interface Run {
   captures: Capture[]; results: Result[]; suggestions: Suggestion[];
   axes: Record<Viewport, AxisScore[]>; fixtureAxes: Record<Viewport, AxisScore[]>;
   quality?: Record<Viewport, QualitySummary>;
+  fixtureQuality?: Record<Viewport, QualitySummary>;
   assessment?: Assessment;
   manifest: { os: string; browser: string; readiness: string; expectedText: string | null; deviceScale: number; input: Record<Viewport, string>; state: string; capturedBuildHash: string; repositorySource: 'not_connected'; referenceIds: string[] };
   judgeAttempts: { viewport: Viewport; criterionId: string; status: string; code: string }[];

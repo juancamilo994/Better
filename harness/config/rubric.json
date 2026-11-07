@@ -468,6 +468,74 @@
       "role": "supporting"
     },
     {
+      "id": "TYPE-02-SCALE",
+      "axis": "TYPOGRAPHY",
+      "title": "Typography: type scale",
+      "channel": "quality",
+      "lane": "deterministic",
+      "instructions": "Count distinct visible text sizes. The Combined rubric treats more than about five as a warning sign. Supporting evidence only; it adds no deduction.",
+      "requires": [
+        "styles"
+      ],
+      "anchors": [
+        "More distinct text sizes than the configured warning level.",
+        "Reserved for a future calibrated anchor.",
+        "Reserved for a future calibrated anchor.",
+        "Distinct text sizes stay within the configured warning level."
+      ],
+      "weight": 0,
+      "findings": [
+        {
+          "id": "TOO_MANY_TYPE_SIZES",
+          "label": "Shorten the type scale",
+          "problem": "The page uses more distinct text sizes than the configured warning level.",
+          "change": "Collapse text to a short type scale of about five sizes and scale up the lead text.",
+          "effect": "A shorter scale may make hierarchy easier to read.",
+          "priority": "medium",
+          "dependencies": [],
+          "conflicts": [],
+          "example": "type"
+        }
+      ],
+      "rule": "type-scale",
+      "threshold": 5,
+      "role": "supporting"
+    },
+    {
+      "id": "SYSTEM-01-SPACING",
+      "axis": "SYSTEM",
+      "title": "System consistency: spacing scale",
+      "channel": "quality",
+      "lane": "deterministic",
+      "instructions": "Measure the share of margin, padding and gap values on the 4/8 px scale (4, 8, 12, 16, 24, 32, 48, 64, 96). Supporting evidence only; it adds no deduction.",
+      "requires": [
+        "measurement"
+      ],
+      "anchors": [
+        "Too few spacing values sit on the configured scale.",
+        "Reserved for a future calibrated anchor.",
+        "Reserved for a future calibrated anchor.",
+        "Spacing values mostly sit on the configured scale."
+      ],
+      "weight": 0,
+      "findings": [
+        {
+          "id": "OFF_SCALE_SPACING",
+          "label": "Use one spacing scale",
+          "problem": "Many margin, padding and gap values fall outside the 4/8 px scale.",
+          "change": "Move spacing onto one 4/8 px scale, with space between groups at least twice the space inside them.",
+          "effect": "Consistent spacing may make grouping clearer.",
+          "priority": "low",
+          "dependencies": [],
+          "conflicts": [],
+          "example": "spacing"
+        }
+      ],
+      "rule": "spacing-scale",
+      "threshold": 0.75,
+      "role": "supporting"
+    },
+    {
       "id": "TYPE-02",
       "axis": "VISUAL",
       "title": "Message clarity and redundant filler",
@@ -672,7 +740,8 @@
       "Source says about half, about 2 points per usability failure, and points per AI red flag without exact amounts or rounding. Current proposed choices use zero, exact half and full only; intermediate point allocation remains unresolved. No automatic per-flag deductions.",
       "Overlapping issues require one scoring home; supporting checks never add deductions. AI-isms belong under Originality without an authorship claim.",
       "Missing evidence stays unknown. No missing-evidence normalization or cross-viewport total.",
-      "Simplified usability checks do not establish complete WCAG conformance. Contrast, adaptation and error-prevention calibration need more examples."
+      "Simplified usability checks do not establish complete WCAG conformance. Contrast, adaptation and error-prevention calibration need more examples.",
+      "The 75% on-scale spacing threshold and the distinct-type-size count are harness proposals pending Elle's confirmation; both are supporting checks with no deduction."
     ],
     "feedbackTargetMs": 100,
     "feedbackDealBreakerMs": 400,

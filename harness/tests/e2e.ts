@@ -45,7 +45,7 @@ try {
   assert.equal(result(baseline, 'MOT-01').score, null);
   assert.equal(result(baseline, 'ADAPT-01').evidenceIds.length, 2);
   for (const capture of baseline.captures) {
-    assert.equal(capture.artifacts.length, 5);
+    assert.equal(capture.artifacts.length, 6);
     for (const artifact of capture.artifacts) {
       const response: Response = await fetch(`${base}/api/runs/${baseline.id}/evidence/${encodeURIComponent(artifact.id)}`);
       assert.equal(response.status, 200);

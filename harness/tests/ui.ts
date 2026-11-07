@@ -67,7 +67,7 @@ try {
  assert.equal(run.results.find(r=>r.criterionId==='INTERACTION-POINTS')?.score,null);
  assert.equal(run.results.find(r=>r.criterionId==='MOT-01')?.score,null);
  assert.equal(run.results.find(r=>r.criterionId==='ADAPT-01')?.evidenceIds.length,2);
- assert.equal(run.quality?.desktop.dealBreakers.every(d=>d.verdict==='unknown'),true);
+ assert.equal(run.quality?.desktop.dealBreakers.find(d=>d.id==='MOBILE_REFLOW')?.verified,true);assert.equal(run.quality?.desktop.dealBreakers.find(d=>d.id==='KEYBOARD_FOCUS')?.verdict,'unknown');
  const boxes=page.locator('#fixes input');assert.ok(await boxes.count()>0);await boxes.first().check();
  await page.locator('#handoff').click();await page.locator('#prompt-panel').waitFor({state:'visible'});
  assert.match(await page.locator('#prompt').inputValue(),/Selected/);
