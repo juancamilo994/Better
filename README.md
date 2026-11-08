@@ -4,7 +4,9 @@
 
 Paste a URL. Better loads the page on a laptop and a phone, scores it against a 10-criterion design rubric, shows what's weak and why, and turns the fixes you pick into one prompt for Cursor, Claude Code, Lovable, v0 or Devin. After your agent applies it, re-check the same project and watch the score move.
 
-> Status: hackathon MVP. Everything runs locally on one machine. There is no hosted version yet.
+**[See it live: real results from the engine](https://yitzybitzyspider.github.io/better-demo/)**
+
+> Status: hackathon MVP. The live site shows recorded evaluations; scanning your own URL runs locally (see Quick start).
 
 ## How it works
 
@@ -115,6 +117,7 @@ npm run eval -- --suite core --judge subq      # live judge, uses SubQ credit
 | `harness/config/rubric.json` | The rubric: criteria, weights, anchors, deal-breakers | Elle |
 | `lovable/` | Context pack for building the UI in Lovable | Yitzy |
 | `PRD.md` | Product requirements | Juan |
+| `docs/archive/` | Superseded drafts (the original 8-axis rubric) | Elle |
 | `PRODUCT.md` | Product summary for design work | Juan |
 | `TEAM.md` | Roles, decisions, open questions, working agreement. **Read before contributing** | Everyone |
 
