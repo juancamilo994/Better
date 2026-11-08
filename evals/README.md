@@ -43,7 +43,7 @@ Group 5 (deal-breaker cap at 49) is covered inside `pair-contrast`; the cap only
 
 ## Test pages
 
-`evals/pages/` holds controlled pages with planted defects (tiny type, low contrast, clutter, mobile-only overflow) and clean twins. The harness blocks localhost and private addresses on purpose, so the pages are served from this branch on GitHub through raw.githack.com. Change the host with `--pages-base`.
+`evals/pages/` holds controlled pages with planted defects (tiny type, low contrast, clutter, mobile-only overflow) and clean twins. The harness blocks localhost and private addresses on purpose, so the pages are served from main on GitHub through raw.githack.com. Change the host with `--pages-base`.
 
 Cases and suites live in `cases.json`; add a case there and, if it needs new logic, a matching `kind` in `run.mjs`.
 

@@ -23,7 +23,7 @@ const { values: opt } = parseArgs({
     hold: { type: 'string', default: '4' },
     'harness-dir': { type: 'string', default: resolve(here, '../harness') },
     'web-dir': { type: 'string', default: resolve(here, '../apps/web') },
-    'pages-base': { type: 'string', default: 'https://raw.githack.com/juancamilo994/Better/yitzy/eval-runner/evals/pages/' },
+    'pages-base': { type: 'string', default: 'https://raw.githack.com/juancamilo994/Better/main/evals/pages/' },
     'harness-port': { type: 'string', default: '3100' },
     'web-port': { type: 'string', default: '3101' },
     'no-log': { type: 'boolean', default: false },
