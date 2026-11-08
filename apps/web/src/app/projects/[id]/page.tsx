@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { api } from '@/lib/harness';
 import { reevaluateAction } from '@/lib/actions';
 import { RadarChart } from '@/components/RadarChart';
+import { ScoreOrb } from '@/components/orb/ScoreOrb';
+import { orbProps } from '@/lib/orb';
 import { SubmitButton } from '@/components/SubmitButton';
 import { ghostQuality, scoreDelta } from '@/lib/history';
 import type { Run } from '@/lib/harness/types';
@@ -77,6 +79,8 @@ export default async function ScorePage({
           </p>
         )}
       </section>
+
+      <ScoreOrb {...orbProps(runs, run, { seed: project.url })} className="max-w-[720px]" />
 
       <RadarChart run={run} qualitySource={sample} sample={!!sample} ghost={ghostQuality(runs, run)} />
 

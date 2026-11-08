@@ -1,0 +1,1148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Score Orb</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05060a;
+    --panel: rgba(16, 18, 26, 0.66);
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #e9ecf3;
+    --muted: #8a90a2;
+    --good: #cfe3ff;
+    --mid: #c9b98f;
+    --bad: #ff6a3d;
+    --up: #8ff0b4;
+    --scan: #66c6ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; overflow: hidden; }
+  canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,0.65) 100%); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  [hidden] { display: none !important; }
+
+  .hud { position: fixed; left: 28px; top: 24px; pointer-events: none; max-width: 360px; }
+  .hud .tag { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .chip { font-size: 10px; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); }
+  .chip.cap { color: var(--bad); border-color: rgba(255,106,61,0.45); }
+  .chip.partial { color: var(--scan); border-color: rgba(102,198,255,0.4); }
+  .hud .scoreRow { display: flex; align-items: flex-end; gap: 12px; }
+  .hud .from { font-family: "JetBrains Mono", monospace; font-size: 34px; font-weight: 600; color: var(--muted); padding-bottom: 8px; display: flex; gap: 10px; align-items: center; }
+  .hud .from small { font-size: 14px; }
+  .hud .from i { font-style: normal; font-size: 24px; opacity: 0.6; }
+  .hud .score { font-family: "JetBrains Mono", monospace; font-size: 88px; font-weight: 600; line-height: 1; letter-spacing: -0.04em;
+    background: linear-gradient(180deg, #fff 0%, #9aa3b8 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hud .score small { font-size: 22px; -webkit-text-fill-color: var(--muted); margin-left: 6px; letter-spacing: 0; }
+  .delta { font-family: "JetBrains Mono", monospace; font-size: 16px; padding-bottom: 12px; opacity: 0; transition: opacity .4s; white-space: nowrap; }
+  .delta.show { opacity: 1; }
+  .delta.up { color: var(--up); } .delta.down { color: var(--bad); }
+  .hud .band { margin-top: 10px; font-size: 15px; color: var(--muted); }
+  .hud .sub { margin-top: 6px; font-size: 12px; color: var(--muted); opacity: 0.8; }
+  .hud .movers { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .hud .movers span { font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); background: rgba(5,6,10,0.5); }
+  .hud .movers b { font-family: "JetBrains Mono", monospace; margin-left: 6px; }
+  .hud .movers .up b { color: var(--up); } .hud .movers .down b { color: var(--bad); } .hud .movers .new b { color: var(--scan); }
+  .hud .site { margin-top: 10px; font-size: 12px; font-family: "JetBrains Mono", monospace; color: var(--muted); }
+
+  .captions { position: fixed; inset: 0; pointer-events: none; }
+  .caption { position: absolute; transform: translate(-50%, 0); text-align: center; white-space: nowrap; transition: opacity .3s; }
+  .caption .k { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .caption .v { font-family: "JetBrains Mono", monospace; font-size: 20px; font-weight: 600; margin-top: 2px; }
+  .caption .v small { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .caption .w { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .panel { position: fixed; right: 20px; top: 20px; bottom: 20px; width: 330px; padding: 18px; border-radius: 18px;
+    background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+  .panel h2 { margin: 0 0 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+  .panel h2 label { text-transform: none; letter-spacing: 0; font-weight: 400; display: flex; gap: 6px; align-items: center; }
+  .mini { font-size: 11px; color: var(--muted); margin: 10px 0 6px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pills button { font: inherit; font-size: 12px; color: var(--text); background: rgba(255,255,255,0.05); border: 1px solid var(--line);
+    padding: 6px 10px; border-radius: 999px; cursor: pointer; transition: background .15s, border-color .15s; }
+  .pills button:hover { background: rgba(255,255,255,0.1); }
+  .pills button.on { border-color: rgba(207,227,255,0.6); background: rgba(207,227,255,0.12); }
+  .pills button.play { border-color: rgba(255,106,61,0.5); }
+  .pills button.capbtn.on { border-color: rgba(255,106,61,0.7); background: rgba(255,106,61,0.14); }
+  .pills.seg { gap: 0; }
+  .pills.seg button { border-radius: 0; flex: 1; }
+  .pills.seg button:first-child { border-radius: 999px 0 0 999px; }
+  .pills.seg button:last-child { border-radius: 0 999px 999px 0; }
+  select { width: 100%; font: inherit; font-size: 12px; color: var(--text); background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+  select option { background: #10121a; }
+  .note { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.45; }
+
+  .axis { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 8px; align-items: center; border-radius: 8px; padding: 2px 4px; margin: 0 -4px; transition: background .3s; }
+  .axis.flash { background: rgba(102,198,255,0.12); }
+  .axis label { font-size: 13px; }
+  .axis label em { font-style: normal; color: var(--muted); font-size: 11px; margin-left: 4px; }
+  .axis output { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); min-width: 24px; text-align: right; }
+  .axis .na { font: inherit; font-size: 10px; letter-spacing: 0.08em; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; cursor: pointer; }
+  .axis.unknown .na { color: var(--scan); border-color: rgba(102,198,255,0.5); }
+  .axis.unknown input { opacity: 0.25; }
+  .axis.unknown output { color: var(--scan); }
+  .axis input { grid-column: 1 / -1; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 4px;
+    background: linear-gradient(90deg, var(--bad), #8a90a2 50%, var(--good)); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.15); cursor: pointer; }
+  input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; cursor: pointer; }
+  input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--scan); }
+  .axes { display: flex; flex-direction: column; gap: 10px; }
+  .look { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .row input[type=range] { width: 150px; background: rgba(255,255,255,0.15); }
+
+  .labels { position: fixed; inset: 0; pointer-events: none; }
+  .lbl { position: absolute; transform: translate(-50%, -50%); font-size: 11px; white-space: nowrap; padding: 3px 8px; border-radius: 999px;
+    background: rgba(5,6,10,0.55); border: 1px solid var(--line); color: var(--text); }
+  .lbl b { font-family: "JetBrains Mono", monospace; font-weight: 600; margin-left: 6px; }
+  .lbl.focus { border-color: rgba(102,198,255,0.6); }
+
+  .tip { position: fixed; z-index: 5; pointer-events: none; width: 280px; padding: 12px 14px; border-radius: 12px; background: rgba(10,12,18,0.88);
+    border: 1px solid var(--line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font-size: 12px; line-height: 1.45; opacity: 0; transition: opacity .15s; }
+  .tip.show { opacity: 1; }
+  .tip h3 { margin: 0 0 4px; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; }
+  .tip h3 span { font-family: "JetBrains Mono", monospace; }
+  .tip p { margin: 6px 0 0; color: var(--muted); }
+  .tip .k { color: var(--text); }
+  .tip .up { color: var(--up); } .tip .down { color: var(--bad); }
+
+  @media (max-width: 760px) {
+    .panel { top: auto; left: 12px; right: 12px; width: auto; height: 44vh; bottom: 12px; }
+    .hud { left: 16px; top: 14px; }
+    .hud .score { font-size: 60px; }
+    .hud .from { font-size: 24px; }
+    .hud .movers { display: none; }
+    .tip { display: none; }
+    .caption .v { font-size: 16px; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl" role="img" aria-label="Score orb"></canvas>
+<div class="vignette"></div>
+<div class="labels" id="labels"></div>
+<div class="captions">
+  <div class="caption" id="capB"><div class="k">Before</div><div class="v"></div><div class="w"></div></div>
+  <div class="caption" id="capA"><div class="k">After</div><div class="v"></div><div class="w"></div></div>
+</div>
+<div class="tip" id="tip"></div>
+<div class="sr-only" aria-live="polite" id="live"></div>
+
+<div class="hud" id="hud">
+  <div class="tag"><span id="hudTag">Better score</span><span class="chip partial" id="chipPartial" hidden>Partial</span><span class="chip cap" id="chipCap" hidden>Deal-breaker failed</span></div>
+  <div class="scoreRow">
+    <div class="from" id="from" hidden><span id="fromScore"></span><i>→</i></div>
+    <div class="score"><span id="score">0</span><small id="outOf">/100</small></div>
+    <div class="delta" id="delta"></div>
+  </div>
+  <div class="band" id="band"></div>
+  <div class="sub" id="sub"></div>
+  <div class="movers" id="movers"></div>
+  <div class="site" id="site"></div>
+</div>
+
+<aside class="panel" id="panel">
+  <section>
+    <h2>View</h2>
+    <div class="pills seg" id="modePills"><button data-mode="single" class="on">Single</button><button data-mode="compare">Before / After</button></div>
+  </section>
+  <section>
+    <h2 id="runHeading">Harness run</h2>
+    <select id="runSelect"><option>Looking for the harness on :3000...</option></select>
+    <div id="beforeWrap" hidden>
+      <div class="mini">Before</div>
+      <select id="beforeSelect"></select>
+    </div>
+    <div class="pills" style="margin-top:8px" id="viewportPills">
+      <button data-vp="desktop" class="on">Desktop</button><button data-vp="mobile">Mobile</button>
+    </div>
+    <div class="note" id="runNote"></div>
+  </section>
+  <section>
+    <h2 id="presetHeading">Presets</h2>
+    <div class="pills" id="presets"></div>
+  </section>
+  <section>
+    <h2><span id="axesHeading">Rubric axes</span> <label><input type="checkbox" id="snap"> Snap to anchors</label></h2>
+    <div class="axes" id="axes"></div>
+  </section>
+  <section class="look">
+    <h2>Look</h2>
+    <div class="row">Axis labels <input type="checkbox" id="showLabels" checked></div>
+    <div class="row">Auto-rotate <input type="checkbox" id="autoRotate" checked></div>
+    <div class="row">Liquid speed <input type="range" id="speed" min="0" max="3" step="0.05" value="1"></div>
+    <div class="row">Glow <input type="range" id="bloom" min="0" max="1.5" step="0.01" value="0.45"></div>
+    <div class="row">Exposure <input type="range" id="exposure" min="0.4" max="2" step="0.01" value="1"></div>
+    <div class="pills"><button id="snapshot">Save PNG</button></div>
+  </section>
+</aside>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ---------------------------------------------------------------------------
+// Rubric (mirrors harness/config/rubric.json, version elle-combined-proposed-2026-11-07.5)
+// ---------------------------------------------------------------------------
+const AXES = [
+  ['HIER', 'Hierarchy', 12, 'Attention, emphasis and reading order for the stated core job.'],
+  ['DENSITY', 'Information density', 12, 'Useful information, grouping, whitespace and redundant filler.'],
+  ['FLOW', 'Flow & effort', 10, 'Observed task flow and effort.'],
+  ['INTERACTION', 'Interaction & feedback', 12, 'Verified behavior and feedback, not just apparent affordances.'],
+  ['AUDIENCE', 'Audience & tone fit', 12, 'Fit to the declared audience, desired feeling and core job.'],
+  ['ORIGINALITY', 'Originality', 10, 'Distinctive, purposeful expression, including AI-isms.'],
+  ['VISUAL', 'Visual communication', 10, 'Visual communication and meaning; message clarity.'],
+  ['SYSTEM', 'System consistency', 8, 'Consistent component and visual language.'],
+  ['TYPOGRAPHY', 'Typography', 6, 'Type readability and typographic expression.'],
+  ['USABILITY', 'Usability basics', 8, 'Evidence-bounded usability basics.'],
+].map(([id, title, weight, problem]) => ({ id, title, weight, problem }));
+const ANCHORS = ['Main failure for this axis is present.', 'Passes with one clear flaw.', 'Passes every check, supported by evidence.'];
+const DEAL_BREAKERS = {
+  BODY_CONTRAST: 'Body text contrast at least 4.5:1', LARGE_TEXT_CONTRAST: 'Large text contrast at least 3:1',
+  NON_TEXT_CONTRAST: 'Icons, borders and outlines at least 3:1', PLACEHOLDER_CONTRAST: 'Placeholder contrast at least 4.5:1',
+  TARGET_SIZE: 'Targets at least 24 by 24 px', KEYBOARD_FOCUS: 'Keyboard focus always visible',
+  COLOR_ONLY: 'Color is never the only signal', FEEDBACK_DELAY: 'Visible response under 400 ms', MOBILE_REFLOW: 'No horizontal scrolling at 320 px',
+};
+const N_AX = AXES.length;
+const BANDS = [
+  [90, 'Distinctive and effortless. Ship it.'],
+  [75, 'Strong, with fixable flaws.'],
+  [60, 'Works, but generic or effortful.'],
+  [40, 'Real problems users will feel.'],
+  [0, "Fails its audience. Rethink, don't polish."],
+];
+const bandFor = (n) => BANDS.find(([min]) => n >= min)[1];
+const TOTAL_W = AXES.reduce((s, a) => s + a.weight, 0);
+
+// Axis regions: a zig-zag ring around the equator (alternating +/-22 degrees latitude)
+// so every axis passes the camera during rotation. Poles blend their neighbours.
+const axisDirs = AXES.map((_, i) => {
+  const lat = (i % 2 ? -1 : 1) * 0.38, lon = (i / N_AX) * Math.PI * 2;
+  return new THREE.Vector3(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon));
+});
+const SOFT_K = 7; // softmax sharpness of region boundaries (shared with the shader)
+const regionWeights = (dir) => {
+  const w = axisDirs.map(a => Math.exp(SOFT_K * (dir.dot(a) - 1)));
+  const s = w.reduce((x, y) => x + y, 0);
+  return w.map(x => x / s);
+};
+const N_SPIKES = 72;
+function hashSeed(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 2147483646 + 1; }
+
+// ---------------------------------------------------------------------------
+// Renderer, scene, camera
+// ---------------------------------------------------------------------------
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+let pixelRatio = Math.min(devicePixelRatio, 2);
+renderer.setPixelRatio(pixelRatio);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05060a);
+const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+camera.position.set(0, 0.5, 7.2);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 4;
+controls.autoRotateSpeed = 0.6;
+
+function buildEnvironment() {
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.SphereGeometry(40, 64, 32), new THREE.ShaderMaterial({
+    side: THREE.BackSide, toneMapped: false,
+    vertexShader: `varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader: `varying vec3 vP; void main(){
+      float y = vP.y;
+      vec3 c = mix(vec3(0.01,0.012,0.02), vec3(0.06,0.07,0.12), smoothstep(-0.6, 0.05, y));
+      c = mix(c, vec3(0.16,0.15,0.22), smoothstep(0.05, 0.9, y));
+      c += vec3(0.25,0.22,0.35) * exp(-abs(y)*14.0) * 0.6;
+      gl_FragColor = vec4(c, 1.0); }`,
+  })));
+  const strip = (w, h, color, k, pos) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(k), side: THREE.DoubleSide, toneMapped: false }));
+    m.position.copy(pos); m.lookAt(0, 0, 0); env.add(m);
+  };
+  strip(14, 5, 0xffffff, 5.0, new THREE.Vector3(0, 14, 2));
+  strip(1.2, 16, 0x7fe8ff, 3.5, new THREE.Vector3(-13, 2, 5));
+  strip(1.2, 16, 0xff7ad9, 3.0, new THREE.Vector3(13, 1, -4));
+  strip(10, 0.8, 0xffb37a, 2.5, new THREE.Vector3(2, -6, -12));
+  strip(3, 3, 0xffffff, 8.0, new THREE.Vector3(6, 6, 12));
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const tex = pmrem.fromScene(env, 0.015).texture;
+  pmrem.dispose();
+  return tex;
+}
+scene.environment = buildEnvironment();
+
+// ---------------------------------------------------------------------------
+// Orb shader. r(p) = 1 + liquid + lumps + shards + spikes - crack groove - unassessed dent
+// D(p): local deficit, U(p): local "not assessed" share, both softmax-blended from axes.
+// ---------------------------------------------------------------------------
+const NOISE_GLSL = /* glsl */`
+// 3D simplex noise, Ashima Arts / Stefan Gustavson (MIT).
+vec3 soMod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 soMod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 soPermute(vec4 x){return soMod289(((x*34.0)+1.0)*x);}
+vec4 soTaylor(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0);
+  const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy));
+  vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz);
+  vec3 l=1.0-g;
+  vec3 i1=min(g.xyz,l.zxy);
+  vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx;
+  vec3 x2=x0-i2+C.yyy;
+  vec3 x3=x0-D.yyy;
+  i=soMod289(i);
+  vec4 p=soPermute(soPermute(soPermute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857;
+  vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z);
+  vec4 x_=floor(j*ns.z);
+  vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy;
+  vec4 y=y_*ns.x+ns.yyyy;
+  vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy);
+  vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0;
+  vec4 s1=floor(b1)*2.0+1.0;
+  vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+  vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 q0=vec3(a0.xy,h.x);
+  vec3 q1=vec3(a0.zw,h.y);
+  vec3 q2=vec3(a1.xy,h.z);
+  vec3 q3=vec3(a1.zw,h.w);
+  vec4 norm=soTaylor(vec4(dot(q0,q0),dot(q1,q1),dot(q2,q2),dot(q3,q3)));
+  q0*=norm.x;q1*=norm.y;q2*=norm.z;q3*=norm.w;
+  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+  m=m*m;
+  return 42.0*dot(m*m,vec4(dot(q0,x0),dot(q1,x1),dot(q2,x2),dot(q3,x3)));
+}
+float crackField(vec3 p){ return abs(snoise(p*1.25+vec3(17.0))); }
+`;
+
+const VERT_HEAD = /* glsl */`
+#define N_AX ${N_AX}
+#define N_SPIKES ${N_SPIKES}
+uniform float uTime;
+uniform float uCap;
+uniform int uFocus;
+uniform float uFocusAmt;
+uniform vec3 uAxis[N_AX];
+uniform float uDef[N_AX];
+uniform float uKnown[N_AX];
+uniform vec4 uSpike[N_SPIKES];     // xyz dir, w angular width
+uniform vec3 uSpikeAmp[N_SPIKES];  // x length, y sharpness, z cos(width)
+varying float vDef;
+varying float vTip;
+varying float vUnk;
+varying float vFocus;
+varying vec3 vSph;
+${NOISE_GLSL}
+
+vec2 regionDU(vec3 p){
+  float s=0.0, u=0.0, w=0.0;
+  for(int i=0;i<N_AX;i++){ float k=exp(${SOFT_K}.0*(dot(p,uAxis[i])-1.0)); s+=k*uDef[i]; u+=k*(1.0-uKnown[i]); w+=k; }
+  return vec2(s,u)/max(w,1e-5);
+}
+float focusShare(vec3 p){
+  if(uFocus<0) return 0.0;
+  float f=0.0, w=0.0;
+  for(int i=0;i<N_AX;i++){ float k=exp(${SOFT_K}.0*(dot(p,uAxis[i])-1.0)); w+=k; if(i==uFocus) f=k; }
+  return uFocusAmt*f/max(w,1e-5);
+}
+// Thorn profile: h = len * (1 - angle/width)^sharpness (soft cone -> needle as sharpness rises).
+float spikeField(vec3 p, out float tip){
+  float m=0.0; tip=0.0;
+  for(int j=0;j<N_SPIKES;j++){
+    vec3 sa=uSpikeAmp[j];
+    if(sa.x<0.002) continue;
+    float c=dot(p,uSpike[j].xyz);
+    if(c<sa.z) continue;
+    float t=1.0-acos(clamp(c,-1.0,1.0))/uSpike[j].w;
+    float h=sa.x*pow(max(t,0.0),sa.y);
+    if(h>m){ m=h; tip=t; }
+  }
+  return m;
+}
+float shapeR(vec3 p, out float tip, out float D, out float U){
+  vec2 du=regionDU(p); D=du.x; U=du.y;
+  float t=uTime;
+  vec3 w=vec3(snoise(p*0.9+vec3(0.0,t*0.07,0.0)), snoise(p*0.9+vec3(5.2,-t*0.05,1.3)), 0.0);
+  float liquid=snoise(p*1.3+w*0.6+vec3(0.0,t*0.12,t*0.08))*(0.018+0.07*D);
+  float lumps=snoise(p*2.4+11.0+vec3(t*0.03))*0.17*smoothstep(0.12,0.6,D);
+  float r=0.0, a=0.5, f=3.6;
+  for(int o=0;o<4;o++){ float n=1.0-abs(snoise(p*f+3.1*float(o))); r+=a*n*n*n; f*=2.07; a*=0.5; }
+  float shards=r*0.24*smoothstep(0.3,1.0,D);
+  float sp=spikeField(p, tip);
+  float groove=uCap*(1.0-smoothstep(0.0,0.07,crackField(p)))*0.06;
+  return 1.0+liquid+lumps+shards+sp-groove-U*0.04;
+}
+`;
+
+function patchShader(shader, uniforms) {
+  Object.assign(shader.uniforms, uniforms);
+  shader.vertexShader = VERT_HEAD + shader.vertexShader
+    .replace('#include <beginnormal_vertex>', /* glsl */`
+      // Displace along the sphere direction; rebuild the normal from two displaced
+      // neighbours on the tangent plane (finite differences).
+      vec3 p0=normalize(position);
+      float tip0, D0, U0;
+      float r0=shapeR(p0, tip0, D0, U0);
+      vec3 helper=abs(p0.y)<0.99?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0);
+      vec3 tg=normalize(cross(helper,p0));
+      vec3 bt=cross(p0,tg);
+      const float EPS=0.003;
+      vec3 p1=normalize(p0+tg*EPS), p2=normalize(p0+bt*EPS);
+      float tT, tD, tU;
+      vec3 P0=p0*r0;
+      vec3 P1=p1*shapeR(p1,tT,tD,tU);
+      vec3 P2=p2*shapeR(p2,tT,tD,tU);
+      vec3 objectNormal=normalize(cross(P1-P0,P2-P0));
+      if(dot(objectNormal,p0)<0.0) objectNormal=-objectNormal;
+      vDef=D0; vTip=tip0; vUnk=U0; vFocus=focusShare(p0); vSph=p0;
+      vec3 dispPos=P0;
+    `)
+    .replace('#include <begin_vertex>', 'vec3 transformed = dispPos;');
+
+  shader.fragmentShader = /* glsl */`
+    uniform float uCap;
+    varying float vDef; varying float vTip; varying float vUnk; varying float vFocus; varying vec3 vSph;
+    ${NOISE_GLSL}
+  ` + shader.fragmentShader
+    .replace('#include <color_fragment>', /* glsl */`
+      #include <color_fragment>
+      float unk = smoothstep(0.15, 0.85, vUnk);
+      diffuseColor.rgb *= mix(vec3(0.98,0.99,1.0), vec3(0.34,0.31,0.33), smoothstep(0.15,0.95,vDef));
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.28,0.34,0.42), unk);   // unscanned: dull slate
+      diffuseColor.rgb *= 1.0 - 0.35*uCap;                                     // capped: tarnished
+    `)
+    .replace('#include <roughnessmap_fragment>', /* glsl */`
+      #include <roughnessmap_fragment>
+      roughnessFactor = mix(roughnessFactor, 0.38, smoothstep(0.35,1.0,vDef));
+      roughnessFactor = mix(roughnessFactor, 0.55, unk);
+    `)
+    .replace('#include <emissivemap_fragment>', /* glsl */`
+      #include <emissivemap_fragment>
+      float heat = smoothstep(0.8,1.0,vTip) * smoothstep(0.3,0.85,vDef);
+      totalEmissiveRadiance += vec3(1.0,0.22,0.06) * heat * 1.8;
+      vec3 gq = vSph*9.0;
+      vec3 gd = abs(fract(gq-0.5)-0.5)/max(fwidth(gq),vec3(1e-4));
+      float gline = 1.0 - clamp(min(min(gd.x,gd.y),gd.z), 0.0, 1.0);
+      totalEmissiveRadiance += vec3(0.35,0.75,1.0) * gline * unk * 0.9;
+      float cn = crackField(vSph);
+      float crack = 1.0 - smoothstep(0.0, 0.016 + fwidth(cn)*1.5, cn);
+      totalEmissiveRadiance += vec3(1.0,0.28,0.06) * crack * uCap * 3.0;
+      float rim = pow(1.0 - abs(dot(normal, normalize(vViewPosition))), 2.5);
+      totalEmissiveRadiance += vec3(0.55,0.8,1.0) * vFocus * (0.1 + 0.9*rim);
+    `);
+}
+
+const lowPower = innerWidth < 760 || (navigator.hardwareConcurrency || 8) <= 4;
+let sharedGeo = new THREE.IcosahedronGeometry(1, lowPower ? 72 : 110);
+sharedGeo.deleteAttribute('normal');
+sharedGeo.deleteAttribute('uv');
+sharedGeo = mergeVertices(sharedGeo);
+sharedGeo.computeVertexNormals();
+
+// ---------------------------------------------------------------------------
+// Orb: one scored shape. target[i] is 0..1 or null (not assessed); current/known ease toward it.
+// ---------------------------------------------------------------------------
+class Orb {
+  constructor() {
+    this.target = new Array(N_AX).fill(0.5);
+    this.current = new Array(N_AX).fill(0.5);
+    this.known = new Array(N_AX).fill(1);
+    this.def = new Array(N_AX).fill(0);
+    this.capTarget = 0; this.capCur = 0; this.failed = [];
+    this.meta = '';          // caption subtitle (site / run time / preset)
+    this.spikes = [];
+    this.uniforms = {
+      uTime: { value: 0 }, uCap: { value: 0 }, uFocus: { value: -1 }, uFocusAmt: { value: 0 },
+      uAxis: { value: axisDirs }, uDef: { value: this.def }, uKnown: { value: this.known },
+      uSpike: { value: Array.from({ length: N_SPIKES }, () => new THREE.Vector4()) },
+      uSpikeAmp: { value: Array.from({ length: N_SPIKES }, () => new THREE.Vector3(0, 1, 1)) },
+    };
+    this.material = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, metalness: 1.0, roughness: 0.07, clearcoat: 1.0, clearcoatRoughness: 0.05,
+      iridescence: 0.8, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 620], envMapIntensity: 1.25,
+    });
+    const u = this.uniforms;
+    this.material.onBeforeCompile = (shader) => patchShader(shader, u);
+    this.mesh = new THREE.Mesh(sharedGeo, this.material);
+    this.mesh.frustumCulled = false;
+    scene.add(this.mesh);
+    this.seed = null;
+    this.setSeed('better');
+  }
+  setSeed(str) {
+    if (str === this.seed) return;
+    this.seed = str;
+    let seed = hashSeed(str);
+    const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    this.spikes = [];
+    for (let j = 0; j < N_SPIKES; j++) {
+      const u = rand() * 2 - 1, phi = rand() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+      const dir = new THREE.Vector3(s * Math.cos(phi), u, s * Math.sin(phi));
+      const sp = { dir, width: 0.13 + rand() * 0.2, length: 0.55 + rand() * 0.75, phase: rand() * Math.PI * 2, w: regionWeights(dir) };
+      this.spikes.push(sp);
+      this.uniforms.uSpike.value[j].set(dir.x, dir.y, dir.z, sp.width);
+      this.uniforms.uSpikeAmp.value[j].z = Math.cos(sp.width);
+    }
+  }
+  copyFrom(o, instant = false) {
+    this.target = [...o.target]; this.capTarget = o.capTarget; this.failed = [...o.failed]; this.meta = o.meta;
+    this.setSeed(o.seed);
+    if (instant) { for (let i = 0; i < N_AX; i++) { this.current[i] = o.current[i]; this.known[i] = o.known[i]; } this.capCur = o.capCur; }
+  }
+  snap() {
+    for (let i = 0; i < N_AX; i++) { if (this.target[i] !== null) this.current[i] = this.target[i]; this.known[i] = this.target[i] === null ? 0 : 1; }
+    this.capCur = this.capTarget;
+  }
+  summary() {
+    const assessed = [];
+    this.target.forEach((f, i) => { if (f !== null) assessed.push(i); });
+    const earned = assessed.reduce((s, i) => s + this.target[i] * AXES[i].weight, 0);
+    const assessedMax = assessed.reduce((s, i) => s + AXES[i].weight, 0);
+    const complete = assessed.length === N_AX;
+    const raw = complete ? earned / TOTAL_W * 100 : null;
+    const capped = raw; // deal-breaker failures warn but never change the score (product decision 2026-11-07)
+    return { assessed, earned, assessedMax, complete, raw, capped };
+  }
+  // Animated (eased) numbers for display.
+  live() {
+    const s = this.summary();
+    const earned = s.assessed.reduce((acc, i) => acc + this.current[i] * AXES[i].weight, 0);
+    const raw = earned / TOTAL_W * 100;
+    return { ...s, earnedNow: earned, rawNow: raw, shown: s.complete ? Math.round(raw) : Math.round(earned) };
+  }
+  update(dt, t, liquidTime, focusIdx, focusAmt) {
+    const ease = 1 - Math.exp(-dt * 2.6);
+    for (let i = 0; i < N_AX; i++) {
+      this.known[i] += ((this.target[i] === null ? 0 : 1) - this.known[i]) * ease;
+      if (this.target[i] !== null) this.current[i] += (this.target[i] - this.current[i]) * ease;
+      this.def[i] = Math.pow(1 - this.current[i], 1.15) * this.known[i];
+    }
+    this.capCur += (this.capTarget - this.capCur) * ease;
+    const u = this.uniforms;
+    u.uCap.value = this.capCur;
+    u.uTime.value = liquidTime;
+    if (focusIdx >= 0) u.uFocus.value = focusIdx; else if (focusAmt < 0.01) u.uFocus.value = -1;
+    u.uFocusAmt.value = focusAmt;
+    this.spikes.forEach((s, j) => {
+      const D = s.w.reduce((acc, w, i) => acc + w * this.def[i], 0);
+      const twitch = reduceMotion ? 1 : 1 + 0.07 * D * Math.sin(t * (2.5 + D * 4) + s.phase);
+      const a = u.uSpikeAmp.value[j];
+      a.x = s.length * Math.pow(D, 1.6) * 1.1 * twitch;
+      a.y = 1.0 + 4.0 * D;
+    });
+    const l = this.live();
+    const overallDef = l.assessedMax ? 1 - l.earnedNow / l.assessedMax : 0;
+    this.material.iridescence = 0.05 + 0.85 * Math.max(0, 1 - overallDef * 2.2) * (1 - 0.8 * this.capCur);
+  }
+}
+
+const A = new Orb();      // "after" / the main orb, driven by the sliders
+const B = new Orb();      // "before", only visible in compare mode
+B.mesh.visible = false;
+B.mesh.scale.setScalar(0.001);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.45, 0.55, 0.82);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ---------------------------------------------------------------------------
+// UI state
+// ---------------------------------------------------------------------------
+let compare = false;
+let focus = -1, pinned = -1, focusAmt = 0;
+let demoTimer = null;
+const $ = (id) => document.getElementById(id);
+const hudEl = $('hud'), panelEl = $('panel');
+const presetsEl = $('presets'), axesEl = $('axes'), labelsEl = $('labels'), tipEl = $('tip');
+const sliders = [], outputs = [], rows = [], labels = [];
+
+function syncRow(i) {
+  const f = A.target[i];
+  rows[i].classList.toggle('unknown', f === null);
+  if (f !== null) sliders[i].value = Math.round(f * 100);
+  outputs[i].textContent = f === null ? 'N/A' : Math.round(f * 100);
+}
+function syncRows() { for (let i = 0; i < N_AX; i++) syncRow(i); }
+
+// Per-axis movers between before and after, in rubric points.
+function movers() {
+  const out = [];
+  AXES.forEach((a, i) => {
+    const b = B.target[i], f = A.target[i];
+    if (b !== null && f !== null) { const d = (f - b) * a.weight; if (Math.abs(d) >= 0.05) out.push({ i, d, kind: d > 0 ? 'up' : 'down' }); }
+    else if (b === null && f !== null) out.push({ i, d: null, kind: 'new' });
+  });
+  return out.sort((x, y) => (y.d === null ? 0.01 : Math.abs(y.d)) - (x.d === null ? 0.01 : Math.abs(x.d)));
+}
+
+let lastCommitted = null;
+function commit() {
+  // Discrete changes (preset, run load, toggle) drive the delta chip, movers and the live region.
+  const a = A.summary(), b = B.summary();
+  const d = $('delta');
+  let text;
+  if (compare) {
+    if (a.complete && b.complete) {
+      const diff = Math.round(a.capped) - Math.round(b.capped);
+      d.textContent = `${diff > 0 ? '+' : ''}${diff}`;
+      d.className = `delta show ${diff > 0 ? 'up' : diff < 0 ? 'down' : ''}`;
+      text = `Before ${Math.round(b.capped)}, after ${Math.round(a.capped)}, ${diff >= 0 ? 'up' : 'down'} ${Math.abs(diff)}.`;
+    } else {
+      d.className = 'delta';
+      text = `Before: ${b.assessed.length} of ${N_AX} axes assessed. After: ${a.assessed.length} of ${N_AX}. Totals are not comparable until both are complete.`;
+    }
+    const m = movers();
+    $('movers').innerHTML = m.slice(0, 5).map(x => `<span class="${x.kind}">${AXES[x.i].title}<b>${x.d === null ? 'new' : `${x.d > 0 ? '+' : ''}${x.d.toFixed(x.d % 1 ? 1 : 0)} pts`}</b></span>`).join('');
+    if (m.length) text += ' Biggest change: ' + m.slice(0, 2).map(x => `${AXES[x.i].title} ${x.d === null ? 'newly assessed' : (x.d > 0 ? 'up ' : 'down ') + Math.abs(x.d).toFixed(1) + ' points'}`).join(', ') + '.';
+  } else {
+    $('movers').innerHTML = '';
+    const now = a.complete ? Math.round(a.capped) : null;
+    if (now !== null && lastCommitted !== null && now !== lastCommitted) {
+      const diff = now - lastCommitted;
+      d.textContent = `${diff > 0 ? '+' : ''}${diff} vs last`;
+      d.className = `delta show ${diff > 0 ? 'up' : 'down'}`;
+    } else d.className = 'delta';
+    if (now !== null) lastCommitted = now;
+    const worst = a.assessed.slice().sort((x, y) => A.target[x] - A.target[y]).slice(0, 2).map(i => AXES[i].title).join(' and ');
+    text = a.complete
+      ? `Score ${now} of 100. ${bandFor(now)}${A.capTarget ? ' A verified deal-breaker failed (warning only).' : ''} Weakest: ${worst}.`
+      : `Partial: ${a.assessed.length} of ${N_AX} axes assessed, ${Math.round(a.earned)} of ${a.assessedMax} points so far.`;
+  }
+  $('live').textContent = text;
+  canvas.setAttribute('aria-label', `Score orb. ${text}`);
+  if (layout) requestAnimationFrame(() => relayout());   // HUD height may have changed
+}
+
+function setAfter(vals, name, opts = {}) {
+  A.target = [...vals];
+  if (opts.cap !== undefined) { A.capTarget = opts.cap ? 1 : 0; A.failed = opts.breakers || []; }
+  if (opts.meta !== undefined) A.meta = opts.meta;
+  if (opts.seed) A.setSeed(opts.seed);
+  syncRows();
+  capBtn.classList.toggle('on', !!A.capTarget);
+  [...presetsEl.querySelectorAll('[data-name]')].forEach(b => b.classList.toggle('on', b.dataset.name === name));
+  if (!opts.fromRun) {
+    activeRun = null; runSelect.value = '';
+    $('site').textContent = '';
+    if (opts.meta === undefined) A.meta = name || 'Custom';
+    if (!opts.seed) A.setSeed('better');
+  }
+  commit();
+}
+function setBefore(vals, opts = {}) {
+  B.target = [...vals];
+  B.capTarget = opts.cap ? 1 : 0; B.failed = opts.breakers || [];
+  B.meta = opts.meta || '';
+  B.setSeed(opts.seed || 'better');
+  if (opts.instant) B.snap();
+  commit();
+}
+
+// ---------------------------------------------------------------------------
+// Presets
+// ---------------------------------------------------------------------------
+const PRESETS = {
+  'Ship it':       [0.97, 0.94, 0.96, 0.93, 0.95, 0.92, 0.96, 0.98, 0.97, 0.95],
+  'Strong':        [0.88, 0.80, 0.84, 0.72, 0.86, 0.70, 0.82, 0.90, 0.85, 0.78],
+  'Generic':       [0.70, 0.62, 0.68, 0.60, 0.66, 0.35, 0.64, 0.80, 0.72, 0.70],
+  'Real problems': [0.50, 0.42, 0.45, 0.38, 0.55, 0.30, 0.48, 0.60, 0.52, 0.44],
+  'Fails':         [0.15, 0.20, 0.10, 0.18, 0.25, 0.08, 0.22, 0.30, 0.20, 0.12],
+  'Lopsided':      [0.95, 0.90, 0.30, 0.12, 0.88, 0.18, 0.92, 0.50, 0.96, 0.35],
+  'Half scanned':  [1, 1, null, 0.5, 1, null, null, null, 0.5, 1],
+};
+const pill = (text, onClick, cls = '') => { const b = document.createElement('button'); b.textContent = text; b.className = cls; b.onclick = onClick; presetsEl.appendChild(b); return b; };
+for (const [name, vals] of Object.entries(PRESETS)) {
+  const b = pill(name, () => { clearTimeout(demoTimer); setAfter(vals, name, { cap: false }); });
+  b.dataset.name = name;
+}
+pill('Random', () => { clearTimeout(demoTimer); setAfter(AXES.map(() => Math.random()), null, { cap: false, meta: 'Random' }); });
+const capBtn = pill('Deal-breaker failed', () => {
+  A.capTarget = A.capTarget ? 0 : 1; A.failed = A.capTarget ? ['BODY_CONTRAST'] : [];
+  capBtn.classList.toggle('on', !!A.capTarget); commit();
+}, 'capbtn');
+const freezeBtn = pill('Use as before', () => {
+  B.copyFrom(A, true); beforeSelect.value = 'snap'; commit();
+});
+freezeBtn.hidden = true;
+pill('Play fix loop', () => {
+  clearTimeout(demoTimer);
+  const seq = ['Fails', 'Real problems', 'Generic', 'Strong', 'Ship it'];
+  if (compare) { setBefore(PRESETS.Fails, { meta: 'Fails', instant: true }); beforeSelect.value = 'snap'; }
+  let k = 0;
+  const step = () => { setAfter(PRESETS[seq[k]], seq[k], { cap: false }); if (++k < seq.length) demoTimer = setTimeout(step, 2200); };
+  step();
+}, 'play');
+
+// ---------------------------------------------------------------------------
+// Axis sliders (drive the after / main orb)
+// ---------------------------------------------------------------------------
+const snapEl = $('snap');
+AXES.forEach((a, i) => {
+  const row = document.createElement('div');
+  row.className = 'axis';
+  row.innerHTML = `<label for="ax${i}">${a.title}<em>w${a.weight}</em></label><output></output><button class="na" title="Toggle not assessed">N/A</button><input id="ax${i}" type="range" min="0" max="100" value="50">`;
+  const input = row.querySelector('input'), out = row.querySelector('output');
+  input.oninput = () => {
+    clearTimeout(demoTimer);
+    let v = input.value / 100;
+    if (snapEl.checked) { v = Math.round(v * 2) / 2; input.value = v * 100; }
+    A.target[i] = v; syncRow(i);
+    [...presetsEl.querySelectorAll('[data-name]')].forEach(b => b.classList.remove('on'));
+    if (!activeRun) A.meta = 'Custom';
+  };
+  input.onchange = commit;
+  row.querySelector('.na').onclick = () => { A.target[i] = A.target[i] === null ? sliders[i].value / 100 : null; syncRow(i); commit(); };
+  row.onmouseenter = () => { focus = i; };
+  row.onmouseleave = () => { if (focus === i) focus = pinned; };
+  sliders.push(input); outputs.push(out); rows.push(row);
+  axesEl.appendChild(row);
+  const lbl = document.createElement('div');
+  lbl.className = 'lbl';
+  lbl.innerHTML = `<span>${a.title}</span><b></b>`;
+  labelsEl.appendChild(lbl);
+  labels.push(lbl);
+});
+snapEl.onchange = () => {
+  if (!snapEl.checked) return;
+  A.target = A.target.map(f => f === null ? null : Math.round(f * 2) / 2);
+  syncRows(); commit();
+};
+
+const look = { labels: $('showLabels'), rotate: $('autoRotate'), speed: $('speed'), bloom: $('bloom'), exposure: $('exposure') };
+if (reduceMotion) { look.rotate.checked = false; look.speed.value = 0.25; }
+
+// ---------------------------------------------------------------------------
+// Harness runs (via serve.py proxy). Read-only.
+// ---------------------------------------------------------------------------
+const runSelect = $('runSelect'), beforeSelect = $('beforeSelect'), runNote = $('runNote');
+let runs = [], activeRun = null, viewport = 'desktop';
+const host = (r) => new URL(r.project.url).host;
+const when = (r) => new Date(r.run.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+async function loadRunList() {
+  try {
+    const projects = await (await fetch('/api/projects')).json();
+    if (!Array.isArray(projects)) throw new Error(projects.error || 'bad response');
+    const details = await Promise.all(projects.map(p => fetch(`/api/projects/${p.id}`).then(r => r.json()).catch(() => null)));
+    runs = details.filter(Boolean).flatMap(d => d.runs.filter(r => r.quality).map(r => ({ run: r, project: d.project })))
+      .sort((a, b) => b.run.createdAt.localeCompare(a.run.createdAt));
+    const opts = runs.map((r, k) => `<option value="${k}">${host(r)} · ${when(r)} · ${r.run.status}</option>`).join('');
+    runSelect.innerHTML = '<option value="">Pick a run...</option>' + opts;
+    beforeSelect.innerHTML = '<option value="snap">Frozen snapshot</option>' + opts;
+    runNote.textContent = `${runs.length} runs from the local harness.`;
+  } catch (e) {
+    runSelect.innerHTML = '<option>Harness not reachable</option>';
+    runSelect.disabled = true;
+    beforeSelect.innerHTML = '<option value="snap">Frozen snapshot</option>';
+    runNote.textContent = 'Start the harness on :3000 and serve this page with serve.py to load real runs.';
+  }
+}
+
+// The run this one re-assessed: the harness parentRunId, else the previous run of the same site.
+function previousRun(entry) {
+  const byId = runs.find(r => r.run.id === entry.run.parentRunId);
+  if (byId) return byId;
+  return runs.filter(r => r.project.id === entry.project.id && r.run.createdAt < entry.run.createdAt)
+    .sort((a, b) => b.run.createdAt.localeCompare(a.run.createdAt))[0] || null;
+}
+function readRun(entry) {
+  const q = entry.run.quality?.[viewport];
+  if (!q) return null;
+  return {
+    vals: AXES.map(a => { const c = q.criteria.find(x => x.id === a.id); return c && c.points !== null && c.max ? c.points / c.max : null; }),
+    cap: !!q.capApplied,
+    failed: (q.dealBreakers || []).filter(d => d.verdict === 'fail' && d.verified).map(d => d.id),
+    unverified: (q.dealBreakers || []).filter(d => d.verdict === 'unknown' && d.applicable !== false).length,
+    coverage: q.coverage,
+  };
+}
+function applyAfterRun() {
+  if (!activeRun) return;
+  const r = readRun(activeRun);
+  if (!r) { runNote.textContent = `No ${viewport} quality data for this run.`; return; }
+  clearTimeout(demoTimer);
+  setAfter(r.vals, null, { cap: r.cap, breakers: r.failed, fromRun: true, seed: activeRun.project.url, meta: `${when(activeRun)}` });
+  $('site').textContent = `${host(activeRun)} · ${viewport}`;
+  runNote.textContent = `${r.coverage.assessedCriteria}/${r.coverage.totalCriteria} axes assessed · ${r.failed.length} deal-breakers failed · ${r.unverified} unverified.`;
+}
+function applyBeforeRun() {
+  const k = beforeSelect.value;
+  if (k === 'snap') return;
+  const entry = runs[Number(k)];
+  const r = entry && readRun(entry);
+  if (!r) return;
+  setBefore(r.vals, { cap: r.cap, breakers: r.failed, seed: entry.project.url, meta: when(entry) });
+}
+function autoPickBefore() {
+  if (!activeRun) return false;
+  const prev = previousRun(activeRun);
+  if (!prev) return false;
+  beforeSelect.value = String(runs.indexOf(prev));
+  applyBeforeRun();
+  return true;
+}
+runSelect.onchange = () => {
+  activeRun = runs[Number(runSelect.value)] || null;
+  applyAfterRun();
+  if (compare && activeRun && !autoPickBefore()) runNote.textContent += ' No earlier run of this site, so before stays a frozen snapshot.';
+};
+beforeSelect.onchange = () => { if (beforeSelect.value === 'snap') { B.copyFrom(A, true); commit(); } else applyBeforeRun(); };
+$('viewportPills').onclick = (e) => {
+  const vp = e.target.dataset?.vp; if (!vp) return;
+  viewport = vp;
+  [...$('viewportPills').children].forEach(b => b.classList.toggle('on', b.dataset.vp === vp));
+  applyAfterRun();
+  if (compare) applyBeforeRun();
+};
+loadRunList();
+
+// ---------------------------------------------------------------------------
+// Mode switching + layout. The camera distance is solved so the orb(s) fill the
+// free area (left of the panel on desktop, above it on phones).
+// ---------------------------------------------------------------------------
+const R_FIT = 1.35;
+let layout = null, layoutCur = null, spin = 0;
+function computeLayout() {
+  const w = innerWidth, h = innerHeight, wide = w > 760;
+  // Keep clear of the score HUD: beside it on wide screens, below it on narrow ones.
+  const hudB = hudEl.getBoundingClientRect().bottom + 8;
+  const avail = wide ? { x: 0, y: compare ? Math.min(hudB, h * 0.3) : 0, w: w - 370, h: h - (compare ? Math.min(hudB, h * 0.3) : 0) }
+    : { x: 0, y: hudB, w, h: Math.max(160, h * 0.56 - hudB) };
+  let pos, scale, extW, extH, side = true;
+  if (!compare) { pos = [[0, 0], [0, 0]]; scale = [1, 0.001]; extW = extH = 2 * R_FIT; }
+  else {
+    side = avail.w / avail.h > 1.05;
+    const s = 0.82, R = 1.75, sep = 2 * R * s * 1.04;   // R: room for full-length thorns
+    pos = side ? [[sep / 2, 0], [-sep / 2, 0]] : [[0, -sep / 2], [0, sep / 2]];  // [after, before]
+    scale = [s, s];
+    extW = side ? sep + 2 * R * s : 2 * R * s;
+    extH = side ? 2 * R * s + 0.9 : sep + 2 * R * s + 0.6;   // room for captions
+  }
+  const tanV = Math.tan(THREE.MathUtils.degToRad(16)), fit = 0.88;
+  const d = Math.max(extW * (h / 2) / (tanV * avail.w * fit), extH * (h / 2) / (tanV * avail.h * fit));
+  return { pos, scale, d, offX: w / 2 - (avail.x + avail.w / 2), offY: h / 2 - (avail.y + avail.h / 2), side };
+}
+let camAnim = true;
+function relayout(animate = true) {
+  layout = computeLayout();
+  if (!layoutCur || !animate) layoutCur = { d: layout.d, offX: layout.offX, offY: layout.offY };
+  camAnim = true;
+  controls.maxDistance = Math.max(14, layout.d + 4);
+}
+function setMode(m) {
+  const next = m === 'compare';
+  if (next === compare) return;
+  compare = next;
+  [...$('modePills').children].forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  $('beforeWrap').hidden = !compare;
+  freezeBtn.hidden = !compare;
+  $('runHeading').textContent = compare ? 'After run' : 'Harness run';
+  $('axesHeading').textContent = compare ? 'After: rubric axes' : 'Rubric axes';
+  $('hudTag').textContent = compare ? 'Before → After' : 'Better score';
+  $('from').hidden = !compare;
+  if (compare) {
+    // Split: before starts as an exact copy sitting on top of after, then slides apart.
+    B.mesh.position.copy(A.mesh.position);
+    B.mesh.scale.copy(A.mesh.scale);
+    B.mesh.visible = true;
+    B.copyFrom(A, true);
+    beforeSelect.value = 'snap';
+    autoPickBefore();
+    controls.enableRotate = false;
+    controls.autoRotate = false;
+    // Face the pair straight on.
+    camera.position.set(0, 0.35, camera.position.length());
+  } else {
+    controls.enableRotate = true;
+  }
+  relayout();
+  commit();
+}
+$('modePills').onclick = (e) => { if (e.target.dataset?.mode) setMode(e.target.dataset.mode); };
+
+// ---------------------------------------------------------------------------
+// Inspector: hover a region to see what it means (before vs after in compare),
+// click to pin + jump to the slider. Drag spins the pair in compare mode.
+// ---------------------------------------------------------------------------
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const hitSphere = new THREE.Sphere();
+const hit = new THREE.Vector3(), inv = new THREE.Quaternion();
+let pointerDown = null, lastX = 0;
+function regionAt(ev) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  let best = -1, bestDist = Infinity;
+  for (const o of compare ? [A, B] : [A]) {
+    hitSphere.center.copy(o.mesh.position); hitSphere.radius = 1.08 * o.mesh.scale.x;
+    if (!raycaster.ray.intersectSphere(hitSphere, hit)) continue;
+    const dist = hit.distanceTo(camera.position);
+    if (dist > bestDist) continue;
+    bestDist = dist;
+    hit.sub(o.mesh.position).normalize().applyQuaternion(inv.copy(o.mesh.quaternion).invert());
+    let bd = -2;
+    axisDirs.forEach((a, i) => { const d = a.dot(hit); if (d > bd) { bd = d; best = i; } });
+  }
+  return best;
+}
+const fmt = (f) => f === null ? 'N/A' : Math.round(f * 100);
+function showTip(i, x, y) {
+  if (i < 0) { tipEl.classList.remove('show'); return; }
+  const a = AXES[i], f = A.target[i];
+  let head = fmt(f), body;
+  if (compare) {
+    const b = B.target[i];
+    head = `${fmt(b)} → ${fmt(f)}`;
+    let change;
+    if (b === null && f === null) change = 'Not assessed in either run.';
+    else if (b === null) change = '<span class="up">Newly assessed</span> in the after run.';
+    else if (f === null) change = 'Assessed before, but not in the after run.';
+    else {
+      const d = (f - b) * a.weight;
+      change = Math.abs(d) < 0.05 ? 'No change.' : `<span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? '+' : ''}${d.toFixed(1)} points</span> of ${a.weight}.`;
+    }
+    body = `<p>${a.problem}</p><p class="k">${change}</p>`;
+  } else {
+    const anchor = f === null ? 'No evidence was scored for this axis yet, so the orb shows a scan lattice instead of guessing.'
+      : ANCHORS[f < 0.25 ? 0 : f < 0.75 ? 1 : 2];
+    const lost = f === null ? '' : `<p><span class="k">${(a.weight * (1 - f)).toFixed(1)}</span> of ${a.weight} points lost here.</p>`;
+    body = `<p>${a.problem}</p><p class="k">${anchor}</p>${lost}`;
+  }
+  tipEl.innerHTML = `<h3>${a.title}<span>${head}</span></h3>${body}`;
+  const w = 280, pad = 16;
+  tipEl.style.left = `${Math.min(x + pad, innerWidth - w - pad)}px`;
+  tipEl.style.top = `${Math.min(y + pad, innerHeight - tipEl.offsetHeight - pad)}px`;
+  tipEl.classList.add('show');
+}
+canvas.addEventListener('pointerdown', (e) => { pointerDown = [e.clientX, e.clientY]; lastX = e.clientX; });
+canvas.addEventListener('pointermove', (e) => {
+  if (e.buttons) {
+    tipEl.classList.remove('show');
+    if (compare) { spin += (e.clientX - lastX) * 0.008; lastX = e.clientX; }
+    return;
+  }
+  const i = regionAt(e);
+  focus = i >= 0 ? i : pinned;
+  showTip(i, e.clientX, e.clientY);
+  canvas.style.cursor = i >= 0 ? 'pointer' : 'grab';
+});
+canvas.addEventListener('pointerleave', () => { focus = pinned; tipEl.classList.remove('show'); });
+canvas.addEventListener('pointerup', (e) => {
+  if (!pointerDown || Math.hypot(e.clientX - pointerDown[0], e.clientY - pointerDown[1]) > 5) return;
+  const i = regionAt(e);
+  pinned = i === pinned ? -1 : i;
+  focus = pinned;
+  if (i >= 0) {
+    rows[i].scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+    rows[i].classList.add('flash'); setTimeout(() => rows[i].classList.remove('flash'), 900);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Snapshot: orb(s) + score card composited into one PNG.
+// ---------------------------------------------------------------------------
+$('snapshot').onclick = () => {
+  composer.render();
+  const src = renderer.domElement;
+  const out = document.createElement('canvas');
+  out.width = src.width; out.height = src.height;
+  const ctx = out.getContext('2d');
+  ctx.drawImage(src, 0, 0);
+  const s = pixelRatio;
+  const headline = compare ? `${$('fromScore').textContent} → ${$('score').textContent}` : $('score').textContent;
+  ctx.fillStyle = '#e9ecf3';
+  ctx.font = `600 ${72 * s}px "JetBrains Mono", monospace`;
+  ctx.fillText(headline, 28 * s, 100 * s);
+  ctx.fillStyle = '#8a90a2';
+  ctx.font = `${15 * s}px Inter, sans-serif`;
+  ctx.fillText($('band').textContent, 28 * s, 130 * s);
+  ctx.fillText($('site').textContent, 28 * s, 152 * s);
+  if (compare) {
+    for (const id of ['capB', 'capA']) {
+      const el = $(id), r = el.getBoundingClientRect();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#8a90a2'; ctx.font = `${11 * s}px Inter, sans-serif`;
+      ctx.fillText(el.querySelector('.k').textContent.toUpperCase(), (r.left + r.width / 2) * s, (r.top + 12) * s);
+      ctx.fillStyle = '#e9ecf3'; ctx.font = `600 ${20 * s}px "JetBrains Mono", monospace`;
+      ctx.fillText(el.querySelector('.v').textContent, (r.left + r.width / 2) * s, (r.top + 36) * s);
+      ctx.textAlign = 'left';
+    }
+  }
+  const a = document.createElement('a');
+  a.download = `better-orb-${headline.replace(/\D+/g, '-')}.png`;
+  a.href = out.toDataURL('image/png');
+  a.click();
+};
+
+// ---------------------------------------------------------------------------
+// Frame loop
+// ---------------------------------------------------------------------------
+const clock = new THREE.Clock();
+let liquidTime = 0, frames = 0, fpsAcc = 0, adapted = false;
+const v = new THREE.Vector3(), camDir = new THREE.Vector3(), tmp = new THREE.Vector3();
+const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  composer.setSize(w, h);
+  camera.aspect = w / h;
+  relayout(!!layoutCur);
+}
+addEventListener('resize', resize);
+resize();
+
+function captionFor(o) {
+  const l = o.live();
+  if (l.complete) return { v: `${l.shown}<small>/100</small>`, w: `${o.meta}${o.capTarget ? ' · deal-breaker' : ''}` };
+  return { v: `${l.shown}<small>/${l.assessedMax}</small>`, w: `${o.meta} · ${l.assessed.length}/${N_AX} assessed` };
+}
+
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  liquidTime += dt * Number(look.speed.value);
+
+  if (!adapted && t > 0.5) { frames++; fpsAcc += dt; if (frames === 90) { adapted = true; if (frames / fpsAcc < 40 && pixelRatio > 1) { pixelRatio = 1; renderer.setPixelRatio(1); resize(); } } }
+
+  // Layout transition: orbs slide/scale, camera distance + view offset ease.
+  const k = 1 - Math.exp(-dt * 4);
+  [A, B].forEach((o, idx) => {
+    const [px, py] = layout.pos[idx];
+    o.mesh.position.x += (px - o.mesh.position.x) * k;
+    o.mesh.position.y += (py - o.mesh.position.y) * k;
+    const s = o.mesh.scale.x + (layout.scale[idx] - o.mesh.scale.x) * k;
+    o.mesh.scale.setScalar(s);
+  });
+  if (!compare && B.mesh.scale.x < 0.02) B.mesh.visible = false;
+  layoutCur.offX += (layout.offX - layoutCur.offX) * k;
+  layoutCur.offY += (layout.offY - layoutCur.offY) * k;
+  camera.setViewOffset(innerWidth, innerHeight, layoutCur.offX, layoutCur.offY, innerWidth, innerHeight);
+  if (camAnim) {
+    layoutCur.d += (layout.d - layoutCur.d) * k;
+    camera.position.setLength(layoutCur.d);
+    if (Math.abs(layout.d - layoutCur.d) < 0.01) camAnim = false;
+  }
+  camera.updateProjectionMatrix();
+
+  focusAmt += ((focus >= 0 ? 1 : 0) - focusAmt) * (1 - Math.exp(-dt * 8));
+  A.update(dt, t, liquidTime, focus, focusAmt);
+  if (B.mesh.visible) B.update(dt, t, liquidTime, focus, focusAmt);
+
+  // Rotation: orbit the camera in single mode, spin both orbs in sync in compare mode.
+  if (compare) {
+    if (look.rotate.checked) spin += dt * 0.25;
+    A.mesh.rotation.y = B.mesh.rotation.y = spin;
+    controls.autoRotate = false;
+  } else controls.autoRotate = look.rotate.checked;
+  controls.update();
+  bloom.strength = Number(look.bloom.value);
+  renderer.toneMappingExposure = Number(look.exposure.value);
+
+  // HUD
+  const a = A.live(), b = B.live();
+  $('chipPartial').hidden = a.complete && (!compare || b.complete);
+  $('chipCap').hidden = !(A.capTarget && a.complete);
+  $('score').textContent = a.shown;
+  $('outOf').textContent = a.complete ? '/100' : `/${a.assessedMax}`;
+  if (compare) {
+    $('fromScore').innerHTML = b.complete ? `${b.shown}` : `${b.shown}<small>/${b.assessedMax}</small>`;
+    $('band').textContent = a.complete ? bandFor(a.shown) : `${N_AX - a.assessed.length} of ${N_AX} axes not assessed in the after run.`;
+    $('sub').textContent = a.complete && b.complete ? (A.capTarget ? 'A verified deal-breaker failed in the after run (warning only, score unchanged).' : '')
+      : 'Totals are not comparable until both runs are fully assessed. Per-axis changes below are.';
+  } else if (a.complete) {
+    $('band').textContent = bandFor(a.shown);
+    $('sub').textContent = A.capTarget ? `Warning only, score unchanged. Failed: ${A.failed.map(id => DEAL_BREAKERS[id] || id).join(', ') || 'a deal-breaker'}.` : '';
+  } else {
+    $('band').textContent = `${N_AX - a.assessed.length} of ${N_AX} axes not assessed yet.`;
+    $('sub').textContent = `No band until every axis is scored. Points shown are out of the assessed weight only.${A.capTarget ? ' A verified deal-breaker failed (warning only).' : ''}`;
+  }
+
+  const w = innerWidth, h = innerHeight;
+  const hudR = hudEl.getBoundingClientRect(), panelR = panelEl.getBoundingClientRect();
+
+  // Captions under each orb (compare only).
+  [['capA', A], ['capB', B]].forEach(([id, o]) => {
+    const el = $(id);
+    if (!compare) { el.style.opacity = 0; return; }
+    const c = captionFor(o);
+    el.querySelector('.v').innerHTML = c.v;
+    el.querySelector('.w').textContent = c.w;
+    tmp.copy(o.mesh.position); tmp.y -= R_FIT * o.mesh.scale.x * 1.02;
+    tmp.project(camera);
+    el.style.left = `${(tmp.x * 0.5 + 0.5) * w}px`;
+    el.style.top = `${(-tmp.y * 0.5 + 0.5) * h}px`;
+    el.style.opacity = o.mesh.scale.x > 0.5 ? 1 : 0;
+  });
+
+  // Axis labels (single mode only; compare relies on the inspector to stay clean).
+  const showLabels = look.labels.checked && !compare;
+  labelsEl.style.display = showLabels ? '' : 'none';
+  if (showLabels) {
+    camDir.copy(camera.position).normalize();
+    labels.forEach((el, i) => {
+      const d = tmp.copy(axisDirs[i]).applyQuaternion(A.mesh.quaternion);
+      const facing = d.dot(camDir);
+      v.copy(d).multiplyScalar((1.45 + A.def[i] * 0.6) * A.mesh.scale.x).add(A.mesh.position).project(camera);
+      const x = (v.x * 0.5 + 0.5) * w, y = (-v.y * 0.5 + 0.5) * h;
+      el.style.left = `${x}px`; el.style.top = `${y}px`;
+      const lw = el.offsetWidth / 2, lh = el.offsetHeight / 2;
+      const box = { left: x - lw, right: x + lw, top: y - lh, bottom: y + lh };
+      const blocked = overlaps(box, hudR) || overlaps(box, panelR) || box.left < 4 || box.right > w - 4;
+      el.style.opacity = blocked ? 0 : Math.max(0, Math.min(1, (facing + 0.05) * 2.5)).toFixed(2);
+      el.classList.toggle('focus', i === focus);
+      const bEl = el.querySelector('b');
+      if (A.target[i] === null) { bEl.textContent = 'N/A'; bEl.style.color = 'var(--scan)'; }
+      else {
+        const pct = Math.round(A.current[i] * 100);
+        bEl.textContent = pct;
+        bEl.style.color = pct >= 75 ? 'var(--good)' : pct >= 50 ? 'var(--mid)' : 'var(--bad)';
+      }
+    });
+  }
+
+  composer.render();
+  requestAnimationFrame(tick);
+}
+
+setAfter(PRESETS.Strong, 'Strong', { cap: false });
+A.snap();
+tick();
+</script>
+</body>
+</html>
