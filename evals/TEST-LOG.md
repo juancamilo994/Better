@@ -49,7 +49,7 @@ Stopped by request to redesign the visuals; results up to that point:
 | honest-private, honest-unreachable | PASS | Refused | Same as free mode |
 | pair-typography | not finished | | Stopped during the clean page |
 
-### 2026-11-07 23:45 UTC: investigation, why the same page gets different scores
+### 2026-11-07: investigation, why the same page gets different scores
 
 **Question.** Paul's handoff says an unchanged page moves 6 to 11 points between runs. Why?
 
@@ -93,7 +93,7 @@ This also makes scores move smoothly when a page really improves, instead of in 
 
 **Bigger warning this exposed.** On most criteria SubQ's confidence is only 0.3 to 0.6, and it almost never picks zero. A stable score is not yet a meaningful one; the "tells good from bad" pair tests are what check that.
 
-### 2026-11-07 23:50 UTC: investigation, what small prompt changes actually do
+### 2026-11-07: investigation, what small prompt changes actually do
 
 **Question.** Does the wording of the prompt change scores?
 
@@ -118,13 +118,13 @@ This also makes scores move smoothly when a page really improves, instead of in 
 3. **Run the full `core` suite with the live judge** after fix 1, and append the results here.
 4. **Finish the visual redesign of the runner** so each test shows the question, the two pages side by side, scores as bars, and a plain verdict.
 
-### 2026-11-08 00:05 UTC: fix verified live (PR #5, `yitzy/stable-judge-labels`)
+### 2026-11-08: fix verified live (PR #5, `yitzy/stable-judge-labels`)
 
 **Expected beforehand.** With stable image labels, the unchanged demo scores identically on every run.
 
 **Result.** Three live runs on the fix branch: desktop **71, 71, 71**, mobile **56, 56, 56**, all 20 criterion scores identical. Unit tests 60/60, including a new test that two runs with different run IDs send byte-identical requests. PASS.
 
-### 2026-11-08 00:15 UTC: edge case testing, trying to break the judge and the capture
+### 2026-11-08: edge case testing, trying to break the judge and the capture
 
 60 passing tests showed the plumbing works, not that the judge is right; the run-ID bug got past all of them. These cases each change one thing, with the expected result written first. Judge cases are single replayed requests (desktop demo, stable labels applied; `evals/probes/edge-cases.mjs`). Capture cases ran on a free harness with the judge off.
 
@@ -166,7 +166,7 @@ This also makes scores move smoothly when a page really improves, instead of in 
 
 **Next edge cases to run** (need the live judge): a stronger injection (repeated, and inside an image); a dynamic page scored 3 times to measure real-world drift; the bad-vs-clean pair tests on the fixed harness; and a page whose brief is copied with stray whitespace.
 
-### 2026-11-08 00:45 UTC: fixes for the first two holes (PR #15), and issues for the rest
+### 2026-11-08: fixes for the first two holes (PR #15), and issues for the rest
 
 Each hole from edge case testing is now a GitHub issue: #6 brief wording, #7 live content, #8 contrast cap, #9 failure messages, #10 failed-run fingerprint, #12 probability-weighted scoring, #13 prompt injection, #14 pair tests with the live judge.
 
@@ -195,13 +195,13 @@ Suite on PR #15: 64/64. Suite on the draft branch: 65/65.
 | pair-contrast | YES | Faint text trips the contrast deal-breaker on the broken page only, and the broken page gets the lower total. | Better scored the broken page lower where it should (laptop: subtotal 47 vs 83). met: desktop: body contrast fails on the broken page (broken: fail); met: desktop: body contrast does not fail on the clean page (clean: pass); met: desktop: broken page gets the lower subtotal (broken 47 vs clean 83); met: mobile: body contrast fails on the broken page (broken: fail); met: mobile: body contrast does not fail on the clean page (clean: pass); met: mobile: broken page gets the lower subtotal (broken 52 vs clean 87) |
 | mobile-only | YES | The sideways-scroll check fails on the phone only, the phone deal-breaker trips, and the phone view scores lower. | Better caught that the page breaks on phones and scored the phone view lower. met: Sideways scrolling detected on the phone only (overflow check laptop 4, phone 1 (of 4)); met: Phone reflow deal-breaker flagged (fail); met: Phone gets the lower subtotal (laptop 83, phone 80) |
 
-### 2026-11-08 00:13 UTC: runner, pair-typography, judge `subq` (run was cut short when the browser window closed; result recorded by hand)
+### 2026-11-08 00:12 UTC: runner, pair-typography, judge `subq` (run was cut short when the browser window closed; result recorded by hand)
 
 | Test | Answer | Expected | What happened |
 |---|---|---|---|
 | pair-typography | NO (partly) | The page with tiny, messy text gets fewer Typography points and a lower total than its clean twin. | Totals: laptop 61 vs 83, phone 59 vs 87 (met). Phone Typography 0 vs 3 (met). **Laptop Typography 3 vs 3 (MISSED):** the judge did not mark down 9 to 23px text on the laptop view, although the harness's own text-size check flags it. |
 
-### 2026-11-08 00:20 UTC: summary, issue #14 (does the judge tell bad pages from clean ones?)
+### 2026-11-08: summary, issue #14 (does the judge tell bad pages from clean ones?)
 
 Run on the harness with #5, #15 and #16 applied (stable labels, brief normalization, parallel calls). One run per page.
 
