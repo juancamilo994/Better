@@ -50,9 +50,12 @@ export async function capturePage(project: Project, runId: string, directory: st
   try {
     browser = await chromium.launch({ headless: true, chromiumSandbox: true, proxy: { server: `http://127.0.0.1:${proxyPort}`, bypass: '<-loopback>' }, args: ['--disable-quic', '--force-webrtc-ip-handling-policy=disable_non_proxied_udp'] });
     const captures: Capture[] = [];
-    for (const [key, size] of Object.entries(VIEWPORTS)) {
+    const active = browser;
+    // Desktop and mobile load in separate contexts and run at the same time;
+    // results are ordered desktop, then mobile, as before.
+    const captureOne = async ([key, size]: [string, { width: number; height: number }]) => {
       const viewport = key as Viewport;
-      const context = await browser.newContext({ viewport: size, deviceScaleFactor: 1, isMobile: viewport === 'mobile', hasTouch: viewport === 'mobile', locale: 'en-US', timezoneId: 'UTC', colorScheme: 'light', reducedMotion: 'reduce', serviceWorkers: 'block', acceptDownloads: false, permissions: [], ignoreHTTPSErrors: false });
+      const context = await active.newContext({ viewport: size, deviceScaleFactor: 1, isMobile: viewport === 'mobile', hasTouch: viewport === 'mobile', locale: 'en-US', timezoneId: 'UTC', colorScheme: 'light', reducedMotion: 'reduce', serviceWorkers: 'block', acceptDownloads: false, permissions: [], ignoreHTTPSErrors: false });
       // Subresource problems degrade a capture instead of voiding it: real sites
       // routinely carry 404s, beacons and analytics. Each is counted and disclosed.
       let blockedRequests = 0;
@@ -159,12 +162,15 @@ export async function capturePage(project: Project, runId: string, directory: st
         await save('text', Buffer.from(snapshot.text), 'txt');
         await save('measurements', Buffer.from(JSON.stringify(measurements, null, 2)), 'measurements.json');
         const facts = { scrollWidth: snapshot.scrollWidth, clientWidth: snapshot.clientWidth, elements: snapshot.elements, text: snapshot.text, title: snapshot.title, truncated: snapshot.truncated, brokenImages: snapshot.brokenImages, headingLevels: snapshot.headingLevels, controls: snapshot.controls };
-        captures.push({ viewport, ...size, status: 'ready', url: page.url(), capturedAt, state: 'default-frozen', artifacts, facts, browser: browser.version(), contentHash: hash(snapshot.html + hash(screenshot)), layoutHash: layoutFingerprint(snapshot), documentHash, blockedRequests, failedResources, networkIdle, fullPageClipped, measurements, pageErrors });
+        captures.push({ viewport, ...size, status: 'ready', url: page.url(), capturedAt, state: 'default-frozen', artifacts, facts, browser: active.version(), contentHash: hash(snapshot.html + hash(screenshot)), layoutHash: layoutFingerprint(snapshot), documentHash, blockedRequests, failedResources, networkIdle, fullPageClipped, measurements, pageErrors });
       } catch (error) {
         const known = error instanceof Error && ['Navigation did not', 'Capture requires', 'Expected page', 'Empty page', 'Page changed'].some(prefix => error.message.startsWith(prefix));
-        captures.push({ viewport, ...size, status: 'failed', reason: known ? (error as Error).message : 'Capture failed or readiness timed out. No design verdict was produced.', url: project.url, capturedAt, state: 'default-frozen', artifacts: [], facts: blankFacts(), browser: browser.version(), contentHash: '', documentHash, blockedRequests });
+        captures.push({ viewport, ...size, status: 'failed', reason: known ? (error as Error).message : 'Capture failed or readiness timed out. No design verdict was produced.', url: project.url, capturedAt, state: 'default-frozen', artifacts: [], facts: blankFacts(), browser: active.version(), contentHash: '', documentHash, blockedRequests });
       } finally { await context.close(); }
-    }
+    };
+    await Promise.all(Object.entries(VIEWPORTS).map(captureOne));
+    const order = Object.keys(VIEWPORTS);
+    captures.sort((a, b) => order.indexOf(a.viewport) - order.indexOf(b.viewport));
     return captures;
   } finally {
     await browser?.close();

@@ -1,3 +1,4 @@
+import { mapLimited, judgeConcurrency } from '../util/limit.ts';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -46,8 +47,11 @@ export async function evaluateProject(store: Store, projectId: string, options: 
   catch {
     captures = Object.entries(VIEWPORTS).map(([viewport, dimensions]) => ({ viewport: viewport as 'desktop' | 'mobile', ...dimensions, status: 'failed', reason: 'Capture unavailable: destination blocked, browser missing, or navigation failed. No result was fabricated.', url: project.url, capturedAt: new Date().toISOString(), state: 'default-frozen', artifacts: [], facts: { scrollWidth: 0, clientWidth: 0, elements: [], text: '', title: '', truncated: false }, browser: 'unavailable', contentHash: '', documentHash: '', blockedRequests: 0 }));
   }
-  const results: Result[] = [];
-  const judgeAttempts: Run['judgeAttempts'] = [];
+  // Judge calls are independent, so they run concurrently; every slot keeps its
+  // place so results, suggestions and attempts come out in the same order as before.
+  type Slot = { result?: Result; attempt?: Run['judgeAttempts'][number]; task?: () => Promise<void> };
+  const slots: Slot[] = [];
+  const results = { push: (result: Result) => { slots.push({ result }); } };
   for (const capture of captures) {
     const pair = captures.find(c => c.viewport !== capture.viewport);
     // First visual assessment receives page evidence and brief only, never detector results or pattern counts.
@@ -60,6 +64,9 @@ export async function evaluateProject(store: Store, projectId: string, options: 
       }
       if (criterion.lane === 'deterministic') { results.push(deterministic(criterion, capture)); continue; }
       const input: JudgeInput = { criterion, capture, pairedCapture: pair, profile, source: project.source, demoVersion, issues: criterion.role === 'points' ? rubric.combined?.issueCatalog : undefined, images: [] };
+      const slot: Slot = {};
+      slots.push(slot);
+      slot.task = async () => {
       try {
         const sources = criterion.requires.includes('pair') ? [capture, pair!] : [capture];
         for (const source of sources) {
@@ -69,20 +76,25 @@ export async function evaluateProject(store: Store, projectId: string, options: 
           input.images.push({ evidenceId: artifact.id, mediaType: 'image/png', base64: bytes.toString('base64') });
         }
         const result = validateDecision(await judge.evaluate(input), input, judge);
-        results.push(result);
-        judgeAttempts.push({ viewport: capture.viewport, criterionId: criterion.id, status: result.status, code: judge.provenance === 'fixture' ? 'labeled_fixture' : 'validated_response' });
+        slot.result = result;
+        slot.attempt = { viewport: capture.viewport, criterionId: criterion.id, status: result.status, code: judge.provenance === 'fixture' ? 'labeled_fixture' : 'validated_response' };
       } catch (error) {
         const code = error instanceof JudgeError ? error.code : 'judge_failed';
         const setup = ['setup_needed', 'paid_calls_disabled'].includes(code);
-        results.push({ ...unassessed(criterion, capture, code, setup ? 'not_assessed' : 'failed'), provenance: judge.provenance });
-        judgeAttempts.push({ viewport: capture.viewport, criterionId: criterion.id, status: 'failed', code });
+        slot.result = { ...unassessed(criterion, capture, code, setup ? 'not_assessed' : 'failed'), provenance: judge.provenance };
+        slot.attempt = { viewport: capture.viewport, criterionId: criterion.id, status: 'failed', code };
       }
+      };
     }
   }
+  const pending = slots.filter(s => s.task);
+  await mapLimited(pending, judgeConcurrency(), s => s.task!());
+  const finished = slots.map(s => s.result!);
+  const judgeAttempts: Run['judgeAttempts'] = slots.flatMap(s => s.attempt ? [s.attempt] : []);
   const setupNeeded = judgeAttempts.some(a => ['setup_needed', 'paid_calls_disabled'].includes(a.code)) || (project.source === 'public_url' && judge.provenance === 'fixture');
-  const suggestions=explain(id,rubric,results);
-  const assessment=registry?buildAssessment(registry,profile,captures,results,suggestions):undefined;
-  const scoringResults=assessment?reconciledScores(results,assessment):results;
+  const suggestions=explain(id,rubric,finished);
+  const assessment=registry?buildAssessment(registry,profile,captures,finished,suggestions):undefined;
+  const scoringResults=assessment?reconciledScores(finished,assessment):finished;
   // A run is complete when both captures succeeded and every points criterion
   // was assessed. Supporting checks and ledger states without a connected
   // verifier stay unknown by design, so they do not make every run partial.
@@ -109,7 +121,7 @@ export async function evaluateProject(store: Store, projectId: string, options: 
     mode: judge.provenance, buildLabel: project.source === 'controlled_demo' ? demoVersion : options.buildLabel ?? 'Unspecified build (see captured content hash)', source: project.source,
     rubric, profile,
     versions: { rubric: `${rubric.version}:${objectHash(rubric)}`, profile: `${profile.version}:${objectHash(profile)}`, judge: judge.version, prompt: PROMPT_VERSION, capture: `${CAPTURE_VERSION}:${objectHash({ viewports: VIEWPORTS, browser: captures[0]?.browser, os: `${platform()}-${release()}`, expectedText: expectedText ?? null })}`, aggregation: AGGREGATION_VERSION, ...(registry?{checks:`${registry.version}:${objectHash(registry)}`,reconciliation:'post-visual-1.0.0'}:{}), ...(detectorRegistry ? { detector: `${detectorRegistry.version}:${objectHash(detectorRegistry)}` } : {}) },
-    captures, results, suggestions: finalSuggestions, ...(assessment?{assessment}:{}),
+    captures, results: finished, suggestions: finalSuggestions, ...(assessment?{assessment}:{}),
     axes: { desktop: aggregate(rubric, scoringResults, 'desktop'), mobile: aggregate(rubric, scoringResults, 'mobile') },
     // Fixture points are summarized separately and always labeled sample data.
     ...(rubric.combined ? { quality: quality(false), ...(judge.provenance === 'fixture' ? { fixtureQuality: quality(true) } : {}) } : {}),
