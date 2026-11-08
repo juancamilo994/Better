@@ -18,6 +18,7 @@ h1{font-size:clamp(28px,4.2vw,44px);line-height:1.08;letter-spacing:-.03em;margi
 .flow{display:grid;grid-template-columns:1fr 300px 1fr;gap:14px;align-items:start}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
 .card h2{margin:0;font-size:18px}.card .meta{color:var(--muted);font-size:13px;margin:2px 0 10px;overflow-wrap:anywhere}
+.orb{position:relative;width:100%;height:300px;border-radius:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,var(--chip),var(--card))}.orb canvas{display:block;width:100%;height:100%;cursor:grab}.orbcap{font-size:12px;color:var(--muted);margin:4px 0 10px}
 .shot{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line);background:var(--chip)}.shot.phone{object-fit:contain}
 .score{display:flex;align-items:baseline;gap:10px;margin:12px 0 8px}.score b{font-size:52px;line-height:1;letter-spacing:-.04em}.score span{color:var(--muted);font-size:13px}
 .up{font-weight:800;color:var(--good);font-size:20px}
@@ -42,7 +43,24 @@ details{margin-top:8px}summary{cursor:pointer;font-weight:650;font-size:13px}pre
 <div class="flow" id="flow"></div>
 <p class="note" id="note"></p>
 </div>
+<script src="orb.js"></script>
 <script>
+const orbs = {};
+function mountOrbs() {
+  if (!window.BetterOrb) return;
+  for (const v of D.versions) {
+    const canvas = document.getElementById(`orb-${v.key}`); if (!canvas) continue;
+    const s = v[vp];
+    const state = { fractions: s.criteria.map(c => c.points === null ? null : c.points / c.max), warning: s.dealBreakers.some(d => d.verdict === 'fail') };
+    try {
+      orbs[v.key]?.dispose();
+      const engine = new window.BetterOrb.OrbEngine({ canvas, axisCount: s.criteria.length, seed: v.url, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, background: null });
+      const box = canvas.parentElement.getBoundingClientRect(); engine.resize(box.width, box.height);
+      engine.setStates(state, null, true); engine.setCompare(false); engine.setActive(true);
+      orbs[v.key] = engine;
+    } catch (e) { canvas.parentElement.remove(); }
+  }
+}
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 let D, vp = 'desktop';
 const fails = v => v.dealBreakers.filter(d => d.verdict === 'fail').length;
@@ -50,6 +68,8 @@ function version(v, other, isV2) {
   const s = v[vp]; const o = other[vp];
   return `<section class="card">
     <h2>${esc(v.label)}</h2><div class="meta">${esc(v.url)}</div>
+    <div class="orb"><canvas id="orb-${v.key}" role="img" aria-label="Shape of the ${esc(v.label)} score"></canvas></div>
+    <div class="orbcap">Smooth is strong; lumps and thorns are lost points; glowing cracks are failed deal-breakers. Drag to spin.</div>
     <img class="shot${vp === 'mobile' ? ' phone' : ''}" src="${esc(v.images[vp])}" alt="${esc(v.label)}, ${vp}">
     <div class="score"><b>${s.total}</b><span>/ 100 on ${vp === 'mobile' ? 'phone' : 'laptop'}</span>${isV2 && s.total > o.total ? `<span class="up">+${s.total - o.total}</span>` : ''}</div>
     <div class="bars">${s.criteria.map((c, i) => `<div class="row${!isV2 && c.points !== null && o.criteria[i].points !== null && c.points < o.criteria[i].points ? ' worse' : ''}"><span class="t">${esc(c.title)}</span><span class="track"><span class="fillb" style="width:${c.points === null ? 0 : Math.round(100 * c.points / c.max)}%"></span></span><span class="v">${c.points === null ? 'n/a' : `${c.points}/${c.max}`}</span></div>`).join('')}</div>
@@ -71,6 +91,7 @@ function render() {
   document.getElementById('flow').innerHTML = version(v1, v2, false) + middle(v1) + version(v2, v1, true);
   document.getElementById('vp').innerHTML = ['desktop', 'mobile'].map(x => `<button aria-pressed="${x === vp}" data-vp="${x}">${x === 'desktop' ? 'Laptop' : 'Phone'}</button>`).join('');
   document.querySelectorAll('#vp button').forEach(b => b.onclick = () => { vp = b.dataset.vp; render(); });
+  mountOrbs();
 }
 fetch('data/compare.json').then(r => r.json()).then(d => {
   D = d; const b = d.versions[0].brief;
