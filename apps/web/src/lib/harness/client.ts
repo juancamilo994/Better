@@ -1,4 +1,5 @@
 import type {
+  BriefSuggestion,
   CompareResult,
   CreateProjectInput,
   CreateRunInput,
@@ -38,6 +39,7 @@ const post = <T>(path: string, body: unknown) =>
   request<T>(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 export const harness = {
+  suggestBrief: (url: string) => post<BriefSuggestion>('/brief-suggestion', { url }),
   health: () => request<{ ok: boolean; mode: string; paidCallsEnabled: boolean; busy: boolean }>('/health'),
   getRubric: () => request<Rubric>('/rubric'),
   listProjects: () => request<Project[]>('/projects'),
