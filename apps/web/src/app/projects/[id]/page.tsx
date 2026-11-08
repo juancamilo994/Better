@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/harness';
 import { reevaluateAction } from '@/lib/actions';
-import { RadarChart } from '@/components/RadarChart';
 import { ScoreOrb } from '@/components/orb/ScoreOrb';
 import { orbProps } from '@/lib/orb';
 import { SubmitButton } from '@/components/SubmitButton';
@@ -194,10 +193,6 @@ export default async function ScorePage({
         </div>
 
         <div className="flex min-w-0 flex-col gap-6 self-start">
-          <div className="rounded-[var(--radius)] bg-score-panel p-6 shadow-device">
-            <RadarChart run={run} qualitySource={sample} sample={!!sample} ghost={ghost} />
-          </div>
-
           {shot && (
             <figure className="overflow-hidden rounded-[var(--radius)] bg-score-panel shadow-device">
               {/* eslint-disable-next-line @next/next/no-img-element */}
