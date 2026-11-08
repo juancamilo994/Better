@@ -88,6 +88,8 @@ Restart the harness. Each evaluation makes about 26 SubQ calls. Get a key at htt
 
 ## Using Better
 
+The full guide for users is [docs/USING-BETTER.md](docs/USING-BETTER.md). In short:
+
 1. **Create a project** with a name and a public URL. One project is one page; the URL doesn't change.
 2. **Write the brief:** the one job a visitor should complete, who they are, and the feeling you want.
 3. **Read the score:** total out of 100 per device, a chart of the 10 criteria, deal-breaker warnings, and what wasn't assessed.
