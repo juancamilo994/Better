@@ -71,7 +71,7 @@ export interface Capture {
   viewport: Viewport; width: number; height: number; status: 'ready' | 'failed'; reason?: string;
   url: string; capturedAt: string; state: 'default-frozen'; artifacts: Artifact[];
   facts: { scrollWidth: number; clientWidth: number; elements: ElementFact[]; text: string; title: string; truncated: boolean; brokenImages?: number; headingLevels?: number[]; controls?: string[] };
-  browser: string; contentHash: string; documentHash: string; blockedRequests: number;
+  browser: string; contentHash: string; documentHash: string; blockedRequests: number; layoutHash?: string;
   failedResources?: number; networkIdle?: boolean; fullPageClipped?: boolean; measurements?: Measurements; pageErrors?: number;
 }
 export interface Result {
@@ -98,7 +98,7 @@ export interface Run {
   quality?: Record<Viewport, QualitySummary>;
   fixtureQuality?: Record<Viewport, QualitySummary>;
   assessment?: Assessment;
-  manifest: { os: string; browser: string; readiness: string; expectedText: string | null; deviceScale: number; input: Record<Viewport, string>; state: string; capturedBuildHash: string; repositorySource: 'not_connected'; referenceIds: string[] };
+  manifest: { os: string; browser: string; readiness: string; expectedText: string | null; deviceScale: number; input: Record<Viewport, string>; state: string; capturedBuildHash: string; capturedLayoutHash?: string | null; repositorySource: 'not_connected'; referenceIds: string[] };
   judgeAttempts: { viewport: Viewport; criterionId: string; status: string; code: string }[];
 }
 export interface Project { id: string; name: string; url: string; source: Run['source']; createdAt: string; profile: Profile; archivedAt?: string }
