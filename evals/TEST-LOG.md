@@ -184,3 +184,38 @@ Each hole from edge case testing is now a GitHub issue: #6 brief wording, #7 liv
 | Three failed runs | Three different fingerprints | PASS: `incomplete:<runId>` each |
 
 Suite on PR #15: 64/64. Suite on the draft branch: 65/65.
+
+### 2026-11-08 00:14 UTC: runner, custom, judge `subq`, repeat 1
+
+3 yes, 0 no, 0 can't tell, 0 recorded, 176s.
+
+| Test | Answer | Expected | What happened |
+|---|---|---|---|
+| pair-clutter | YES | The cluttered page gets fewer Hierarchy and Information density points and a lower total. | Better scored the broken page lower where it should (laptop: Hierarchy 6 vs 12; Information density 6 vs 12; subtotal 50 vs 83). met: desktop: Hierarchy scores lower on the broken page (broken 6 vs clean 12); met: desktop: Information density scores lower on the broken page (broken 6 vs clean 12); met: desktop: broken page gets the lower subtotal (broken 50 vs clean 83); met: mobile: Hierarchy scores lower on the broken page (broken 6 vs clean 12); met: mobile: Information density scores lower on the broken page (broken 6 vs clean 12); met: mobile: broken page gets the lower subtotal (broken 50 vs clean 87) |
+| pair-contrast | YES | Faint text trips the contrast deal-breaker on the broken page only, and the broken page gets the lower total. | Better scored the broken page lower where it should (laptop: subtotal 47 vs 83). met: desktop: body contrast fails on the broken page (broken: fail); met: desktop: body contrast does not fail on the clean page (clean: pass); met: desktop: broken page gets the lower subtotal (broken 47 vs clean 83); met: mobile: body contrast fails on the broken page (broken: fail); met: mobile: body contrast does not fail on the clean page (clean: pass); met: mobile: broken page gets the lower subtotal (broken 52 vs clean 87) |
+| mobile-only | YES | The sideways-scroll check fails on the phone only, the phone deal-breaker trips, and the phone view scores lower. | Better caught that the page breaks on phones and scored the phone view lower. met: Sideways scrolling detected on the phone only (overflow check laptop 4, phone 1 (of 4)); met: Phone reflow deal-breaker flagged (fail); met: Phone gets the lower subtotal (laptop 83, phone 80) |
+
+### 2026-11-08 00:13 UTC: runner, pair-typography, judge `subq` (run was cut short when the browser window closed; result recorded by hand)
+
+| Test | Answer | Expected | What happened |
+|---|---|---|---|
+| pair-typography | NO (partly) | The page with tiny, messy text gets fewer Typography points and a lower total than its clean twin. | Totals: laptop 61 vs 83, phone 59 vs 87 (met). Phone Typography 0 vs 3 (met). **Laptop Typography 3 vs 3 (MISSED):** the judge did not mark down 9 to 23px text on the laptop view, although the harness's own text-size check flags it. |
+
+### 2026-11-08 00:20 UTC: summary, issue #14 (does the judge tell bad pages from clean ones?)
+
+Run on the harness with #5, #15 and #16 applied (stable labels, brief normalization, parallel calls). One run per page.
+
+| Planted problem | Broken vs clean total (laptop / phone) | Criterion under test | Answer |
+|---|---|---|---|
+| Clutter, no focal point | 50 vs 83 / 50 vs 87 | Hierarchy 6 vs 12, Information density 6 vs 12 | YES |
+| Faint grey text | 47 vs 83 / 52 vs 87 | Contrast deal-breaker on the broken page only | YES |
+| Tiny, messy text | 61 vs 83 / 59 vs 87 | Typography: phone 0 vs 3, **laptop 3 vs 3** | PARTLY |
+| Breaks only on phones | laptop 83 vs phone 80 | Overflow and reflow checks fail on phone only | YES, weakly |
+
+**Answer to #14: mostly yes.** Every broken page scored 22 to 36 points below its clean twin. That is a clear separation, and much stronger evidence than the earlier bitzyspider run suggested.
+
+**Three weaknesses this exposed**
+
+1. **The judge compresses scores.** It almost never gives zero. The cluttered page got exactly half points on all 10 criteria, so even a badly broken page lands near 50 and a clean one near 85. Users will see a narrow 45 to 90 range.
+2. **Laptop Typography ignores tiny text** the harness has already measured (3 of 6 on both the 10px clutter page and the clean 18px page). The measurement and the judge disagree, and the judge wins.
+3. **The phone-only break costs 3 points.** A page that scrolls sideways on every phone scored 80 on phone vs 83 on laptop. The deal-breaker flags it, but the score barely moves.
