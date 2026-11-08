@@ -1,6 +1,6 @@
 # Using Better
 
-Better looks at one page of your website the way a design reviewer would, scores it, and writes the prompt that gets your AI coding agent to fix what's weak. This guide is for people using Better, not building it. To install and run it, see the [README](../README.md). To see real results without installing anything, open the [live demo](https://yitzybitzyspider.github.io/better-demo/).
+Better looks at one page of your website the way a design reviewer would, scores it, and writes the prompt that gets your AI coding agent to fix what's weak. This guide is for people using Better, not building it. To install and run it, see the [README](../README.md). To see real results without installing anything, open the [live demo](https://juancamilo994.github.io/Better/).
 
 ## The loop in five steps
 

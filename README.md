@@ -4,7 +4,7 @@
 
 Paste a URL. Better loads the page on a laptop and a phone, scores it against a 10-criterion design rubric, shows what's weak and why, and turns the fixes you pick into one prompt for Cursor, Claude Code, Lovable, v0 or Devin. After your agent applies it, re-check the same project and watch the score move.
 
-**[See it live: real results from the engine](https://yitzybitzyspider.github.io/better-demo/)**
+**[See it live: real results from the engine](https://juancamilo994.github.io/Better/)**
 
 > Status: hackathon MVP. The live site shows recorded evaluations; scanning your own URL runs locally (see Quick start).
 
