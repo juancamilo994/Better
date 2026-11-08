@@ -2,20 +2,15 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/harness';
 import { reevaluateAction } from '@/lib/actions';
-import { RadarChart } from '@/components/RadarChart';
-import { ScoreGlobe } from '@/components/ScoreGlobe';
+import { ScoreOrb } from '@/components/orb/ScoreOrb';
+import { orbProps } from '@/lib/orb';
 import { SubmitButton } from '@/components/SubmitButton';
 import { Button } from '@/components/ui/button';
 import { ghostQuality, previousComparable, runScore, scoreDelta } from '@/lib/history';
-import type { QualitySummary, Run } from '@/lib/harness/types';
+import type { Run } from '@/lib/harness/types';
 
 export const dynamic = 'force-dynamic';
 
-// Globe vector: criterion points as 0–100 fractions. Unassessed criteria are
-// passed as 100 (no weakness) so they contribute no deformation — the globe
-// stays a texture; honest per-criterion numbers live in the grid below.
-const globeVector = (q?: QualitySummary) =>
-  (q?.criteria ?? []).map(c => (c.points === null ? 100 : (c.points / c.max) * 100));
 
 export default async function ScorePage({
   params,
@@ -61,8 +56,6 @@ export default async function ScorePage({
   const previousRun = previousComparable(runs, run);
   const previousScore = previousRun ? runScore(previousRun) : null;
   const ghost = ghostQuality(runs, run);
-  const currentVector = globeVector(displayQuality);
-  const ghostVector = ghost?.desktop ? globeVector(ghost.desktop) : null;
 
   const headline = run.overall?.desktop?.cappedTotal ?? displayQuality?.cappedTotal ?? displayQuality?.observedSubtotal;
   const mobileHeadline = run.overall?.mobile?.cappedTotal ?? displayMobile?.cappedTotal ?? displayMobile?.observedSubtotal;
@@ -137,15 +130,9 @@ export default async function ScorePage({
                 </span>
               )}
             </div>
-
-            {currentVector.length > 0 && (
-              <div className="mx-auto mt-4 max-w-md">
-                <ScoreGlobe
-                  current={currentVector}
-                  compare={ghostVector ? { label: 'Previous run', scores: ghostVector } : undefined}
-                />
-              </div>
-            )}
+            <div className="mt-4">
+              <ScoreOrb {...orbProps(runs, run, { seed: project.url })} />
+            </div>
 
             <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-5">
               {displayQuality?.criteria.map(c => {
@@ -206,10 +193,6 @@ export default async function ScorePage({
         </div>
 
         <div className="flex min-w-0 flex-col gap-6 self-start">
-          <div className="rounded-[var(--radius)] bg-score-panel p-6 shadow-device">
-            <RadarChart run={run} qualitySource={sample} sample={!!sample} ghost={ghost} />
-          </div>
-
           {shot && (
             <figure className="overflow-hidden rounded-[var(--radius)] bg-score-panel shadow-device">
               {/* eslint-disable-next-line @next/next/no-img-element */}
