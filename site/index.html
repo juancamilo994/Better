@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Better: design scores your AI agent can act on</title>
+<meta name="description" content="Better scores your website's design against a 10-criterion rubric and gives you the exact prompt to make your AI coding agent fix it.">
+<style>
+:root{--bg:#f6f4ef;--fg:#1b1c1a;--muted:#6a6963;--card:#fff;--line:#e3dfd5;--bar:#ddd8cc;--fill:#2f5d8a;--accent:#c2410c;--good:#15803d;--bad:#b91c1c;--chip:#efebe2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111210;--fg:#ecebe6;--muted:#9d9b93;--card:#1b1c19;--line:#2f302c;--bar:#34352f;--fill:#7aa7d8;--accent:#fb923c;--good:#4ade80;--bad:#f87171;--chip:#24251f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:inherit}.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+header.hero{padding:64px 0 32px}.brand{font-weight:800;letter-spacing:-.02em;font-size:20px}
+h1{font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-.03em;margin:18px 0 14px;max-width:820px}
+.lede{font-size:19px;color:var(--muted);max-width:680px;margin:0 0 22px}
+.cta{display:inline-flex;gap:10px;flex-wrap:wrap}.btn{display:inline-block;padding:12px 18px;border-radius:10px;font-weight:650;text-decoration:none;border:1px solid var(--line);background:var(--card)}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:36px 0 8px}.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.step b{display:block;margin-bottom:4px}.step span{color:var(--muted);font-size:14px}
+h2{font-size:28px;letter-spacing:-.02em;margin:48px 0 6px}.sub{color:var(--muted);margin:0 0 16px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tab{padding:9px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);cursor:pointer;font:inherit;font-size:14px;color:inherit}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.story{color:var(--muted);margin:0 0 14px;max-width:820px}
+.compare{display:grid;gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.card h3{margin:0 0 2px;font-size:16px}.card .meta{color:var(--muted);font-size:13px;margin-bottom:10px;overflow-wrap:anywhere}
+.shot{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line);background:var(--chip)}
+.shot.phone{aspect-ratio:16/10;object-fit:contain}
+.vp{display:flex;gap:6px;margin:10px 0}.vp button{font:inherit;font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer}.vp button[aria-pressed="true"]{background:var(--chip);font-weight:650}
+.score{display:flex;align-items:baseline;gap:8px;margin:6px 0 8px}.score b{font-size:40px;letter-spacing:-.03em;line-height:1}.score span{color:var(--muted);font-size:13px}
+.bars{display:grid;gap:4px}.row{display:grid;grid-template-columns:150px 1fr 46px;gap:8px;align-items:center;font-size:13px}
+.row .t{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.track{height:9px;border-radius:5px;background:var(--bar);overflow:hidden}.fillb{display:block;height:100%;background:var(--fill)}
+.row .v{text-align:right;font-variant-numeric:tabular-nums}.row.na .track{background:repeating-linear-gradient(45deg,var(--bar) 0 4px,transparent 4px 8px)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chip{font-size:12px;padding:3px 8px;border-radius:99px;background:var(--chip)}.chip.bad{color:var(--bad);font-weight:650}
+.delta{font-weight:800;color:var(--good)}.delta.neg{color:var(--bad)}
+.fixes{margin-top:14px}.fixes h4{margin:0 0 6px;font-size:14px}.fix{border-top:1px solid var(--line);padding:8px 0;font-size:14px}.fix b{display:block}.fix span{color:var(--muted)}
+details.prompt{margin-top:10px}details.prompt summary{cursor:pointer;font-weight:650;font-size:14px}
+pre{white-space:pre-wrap;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--chip);padding:12px;border-radius:10px;max-height:320px;overflow:auto}
+.copy{font:inherit;font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:inherit;cursor:pointer;margin-top:6px}
+.note{font-size:13px;color:var(--muted);margin-top:18px}
+footer{border-top:1px solid var(--line);margin-top:56px;padding:24px 0 48px;color:var(--muted);font-size:14px}
+@media (max-width:820px){.steps{grid-template-columns:1fr 1fr}.compare{grid-template-columns:1fr!important}.row{grid-template-columns:110px 1fr 42px}header.hero{padding-top:40px}}
+</style>
+</head>
+<body>
+<header class="hero wrap">
+  <div class="brand">Better</div>
+  <h1>Your site feels off. Better tells you why, and how to make your AI fix it.</h1>
+  <p class="lede">Paste a URL. Better scores the design against a 10-criterion rubric on laptop and phone, shows what's weak with evidence, and turns the fixes you pick into one prompt for Cursor, Claude Code, Lovable or v0. Apply it, re-check, watch the score move.</p>
+  <div class="cta"><a class="btn primary" href="#demo">See real results</a><a class="btn" href="https://github.com/juancamilo994/Better">Run it yourself on GitHub</a></div>
+  <div class="steps">
+    <div class="step"><b>1. Paste a URL</b><span>Better reads the site and fills in who it's for and what it should do.</span></div>
+    <div class="step"><b>2. Get a score</b><span>Laptop and phone screenshots, measured checks, and an AI judge score 10 criteria out of 100.</span></div>
+    <div class="step"><b>3. Pick fixes</b><span>Each fix says what's wrong, where, and why it matters.</span></div>
+    <div class="step"><b>4. Copy the prompt</b><span>Paste it into your coding agent, then re-check and see what moved.</span></div>
+  </div>
+</header>
+
+<main class="wrap" id="demo">
+  <h2>Real results</h2>
+  <p class="sub">These are actual Better evaluations, recorded from the live engine. Nothing here is mocked.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <p class="story" id="story"></p>
+  <div class="compare" id="compare"></div>
+  <p class="note" id="recorded"></p>
+</main>
+
+<footer class="wrap">
+  Better is a hackathon project by Juan Camilo, Paul, Elle and Yitzy. Scores come from a versioned rubric (Hierarchy, Information density, Flow &amp; effort, Interaction &amp; feedback, Audience &amp; tone fit, Originality, Visual communication, System consistency, Typography, Usability basics). Anything Better can't see from a still page is shown as "not assessed," never guessed. <a href="https://github.com/juancamilo994/Better">Source on GitHub</a>.
+</footer>
+
+<script>
+const STORIES = [
+  { id: 'fix', label: 'Fix it, watch it move', story: 'A demo shop with small text and a layout that scrolls sideways on phones. Better scored it, the fixes were applied, and the same URL was scored again.', panels: [['demo', 'before', 'Before the fix'], ['demo', 'after', 'After the fix']], delta: true },
+  { id: 'clutter', label: 'Cluttered vs clean', story: 'The same pottery studio built two ways: everything at once, or one clear message and one button. Better should mark down hierarchy and information density on the cluttered one.', panels: [['clutter', 'current', 'Cluttered version'], ['clean', 'current', 'Clean version']], delta: true },
+  { id: 'stripe', label: 'stripe.com', story: 'A real, polished site, scored live.', panels: [['stripe', 'current', 'stripe.com']] },
+  { id: 'linear', label: 'linear.app', story: 'A real, polished site, scored live.', panels: [['linear', 'current', 'linear.app']] },
+];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = n => n === null || n === undefined ? 'n/a' : String(n);
+let DATA;
+function find(key, label) { const p = DATA.projects.find(x => x.key === key); return { project: p, run: p?.runs.find(r => r.label === label) }; }
+function card(key, label, title, other, vp) {
+  const { project, run } = find(key, label);
+  if (!run) return '';
+  const s = run[vp];
+  const img = run.images[vp];
+  const d = other && other[vp] && s.total !== null && other[vp].total !== null ? s.total - other[vp].total : null;
+  const fixes = (run.fixes || []).slice(0, 3);
+  const id = `${key}-${label}`;
+  return `<article class="card">
+    <h3>${esc(title)}</h3><div class="meta">${esc(project.url)} · brief: ${esc(project.brief.task)}; for ${esc(project.brief.audience)}; ${esc(project.brief.feeling)}</div>
+    ${img ? `<img class="shot${vp === 'mobile' ? ' phone' : ''}" src="${esc(img)}" alt="Screenshot of ${esc(title)} on ${vp}" loading="lazy">` : ''}
+    <div class="vp" data-card="${esc(id)}"><button aria-pressed="${vp === 'desktop'}" data-vp="desktop">Laptop</button><button aria-pressed="${vp === 'mobile'}" data-vp="mobile">Phone</button></div>
+    <div class="score"><b>${fmt(s.total)}</b><span>/ 100 · ${s.assessed} of 10 criteria scored${d !== null && d !== 0 ? ` · <span class="delta${d < 0 ? ' neg' : ''}">${d > 0 ? '+' : ''}${d}</span>` : ''}</span></div>
+    <div class="bars">${s.criteria.map(c => `<div class="row${c.points === null ? ' na' : ''}"><span class="t">${esc(c.title)}</span><span class="track"><span class="fillb" style="width:${c.points === null ? 0 : Math.round(100 * c.points / c.max)}%"></span></span><span class="v">${c.points === null ? 'n/a' : `${c.points}/${c.max}`}</span></div>`).join('')}</div>
+    <div class="chips">${s.dealBreakers.length ? s.dealBreakers.map(x => `<span class="chip bad">${esc(x.replace(/_/g, ' ').toLowerCase())}</span>`).join('') : '<span class="chip">No accessibility deal-breakers</span>'}</div>
+    ${fixes.length ? `<div class="fixes"><h4>Top fixes Better suggested</h4>${fixes.map(f => `<div class="fix"><b>${esc(f.label)} <span>(${esc(f.viewport === 'mobile' ? 'phone' : 'laptop')})</span></b><span>${esc(f.problem)}</span></div>`).join('')}</div>` : ''}
+    ${run.prompt ? `<details class="prompt"><summary>The prompt Better wrote for your coding agent</summary><pre>${esc(run.prompt)}</pre><button class="copy" data-copy="${esc(id)}">Copy prompt</button></details>` : ''}
+  </article>`;
+}
+function render(storyId, vp = 'desktop') {
+  const st = STORIES.find(s => s.id === storyId);
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.id === storyId)));
+  document.getElementById('story').textContent = st.story;
+  const runs = st.panels.map(([k, l]) => find(k, l).run);
+  const el = document.getElementById('compare');
+  el.style.gridTemplateColumns = `repeat(${st.panels.length}, minmax(0,1fr))`;
+  el.innerHTML = st.panels.map(([k, l, t], i) => card(k, l, t, st.delta && i === 1 ? runs[0] : null, vp)).join('');
+  el.querySelectorAll('.vp button').forEach(b => b.onclick = () => render(storyId, b.dataset.vp));
+  el.querySelectorAll('.copy').forEach(b => b.onclick = async () => {
+    const [k, l] = b.dataset.copy.split(/-(?=[^-]+$)/); const text = find(k, l).run.prompt;
+    try { await navigator.clipboard.writeText(text); b.textContent = 'Copied'; } catch { b.textContent = 'Select the text to copy'; }
+  });
+}
+fetch('data/demo-data.json').then(r => r.json()).then(d => {
+  DATA = d;
+  document.getElementById('tabs').innerHTML = STORIES.map(s => `<button class="tab" role="tab" data-id="${s.id}">${esc(s.label)}</button>`).join('');
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => render(t.dataset.id));
+  document.getElementById('recorded').textContent = `Recorded ${new Date(d.recordedAt).toLocaleString()} with judge ${d.judge}. Scores are per device; a total out of 100 appears when all 10 criteria can be scored from still captures.`;
+  render('fix');
+}).catch(() => { document.getElementById('story').textContent = 'Could not load the demo data.'; });
+</script>
+</body>
+</html>
