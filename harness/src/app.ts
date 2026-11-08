@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { AppError, profileSchema } from './domain.ts';
 import { loadRubric } from './config.ts';
 import { publicTarget } from './capture/network.ts';
+import { suggestBrief } from './brief/suggest.ts';
 import { DEMO_URL } from './capture/demo.ts';
 import { evaluateProject } from './evaluation/pipeline.ts';
 import { compareRuns, overall, runSummary } from './evaluation/aggregation.ts';
@@ -44,6 +45,11 @@ export function createApp(store: Store) {
   app.get('/api/check-registry', (_req,res)=>res.json(loadCheckRegistry(loadRubric())));
   app.get('/api/projects', (_req, res) => res.json(store.listProjects().map(p => { const latest = store.latestRun(p.id); return { ...p, latestRun: latest ? runSummary(latest) : null }; })));
   app.delete('/api/projects/:id', (req, res) => res.json(store.archiveProject(idSchema.parse(req.params.id))));
+  // Paste a URL, get a brief to confirm: core job, audience and feeling suggested from the site.
+  app.post('/api/brief-suggestion', async (req, res) => {
+    const { url } = z.object({ url: z.string().min(1).max(2048) }).strict().parse(req.body);
+    res.json(await suggestBrief(url));
+  });
   app.post('/api/projects', async (req, res) => {
     const input = createSchema.parse(req.body);
     if (!input.demo && !input.url) throw new AppError('A public URL is required.');

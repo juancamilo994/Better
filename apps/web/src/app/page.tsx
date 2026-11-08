@@ -58,8 +58,8 @@ export default async function ProjectsPage({
       <section aria-label="Create project">
         <h2>New project</h2>
         <form action={beginOnboardingAction}>
-          <label>Name <input name="name" required maxLength={120} /></label>
-          <label>URL <input name="url" type="url" placeholder="https://…" /></label>
+          <label>URL <input name="url" type="url" placeholder="https://…" autoFocus /></label>
+          <label>Name (optional) <input name="name" maxLength={120} placeholder="We'll use the site's name" /></label>
           <label><input name="demo" type="checkbox" /> Demo project (controlled page, no URL needed)</label>
           <SubmitButton pendingLabel="Continuing…">Create</SubmitButton>
         </form>

@@ -1,12 +1,17 @@
 import { harness as real } from './client';
 import { fixtureProject, fixtureProjectDetail, fixtureRubric, fixtureRun, fixtureRunDetail } from './fixtures';
-import type { CreateProjectInput, Handoff, Project, ProjectDetail, Rubric, RunDetail } from './types';
+import type { BriefSuggestion, CreateProjectInput, Handoff, Project, ProjectDetail, Rubric, RunDetail } from './types';
 
 const MOCK = process.env.BETTER_MOCK_MODE === '1';
 
 // Same surface as `harness`, backed by fixtures when BETTER_MOCK_MODE=1.
 // Mock mutations are in-memory per request only — sufficient for UI dev.
 const mock = {
+  suggestBrief: async (url: string): Promise<BriefSuggestion> => ({
+    url, siteName: new URL(url).hostname.replace(/^www\./, ''), description: '',
+    task: 'Sign up or start a free trial', audience: 'Everyday consumers', feeling: 'Trustworthy and modern',
+    confidence: { task: null, audience: null, feeling: null }, source: 'keywords',
+  }),
   health: async () => ({ ok: true, mode: 'fixture', paidCallsEnabled: false, busy: false }),
   getRubric: async (): Promise<Rubric> => fixtureRubric,
   listProjects: async (): Promise<Project[]> => [fixtureProject],

@@ -14,13 +14,13 @@ export async function beginOnboardingAction(formData: FormData) {
   const name = str(formData.get('name'));
   const url = str(formData.get('url'));
   const demo = formData.get('demo') === 'on';
-  if (!name) redirect('/?error=Project+name+is+required.');
+  // Name is optional: the onboarding page names the project after the site.
   if (demo) {
-    const project = await api.createProject({ name, demo: true });
+    const project = await api.createProject({ name: name || 'Demo project', demo: true });
     redirect(`/projects/${project.id}/onboarding`);
   }
   if (!url) redirect('/?error=A+public+URL+is+required.');
-  redirect(`/onboarding?name=${encodeURIComponent(name!)}&url=${encodeURIComponent(url!)}`);
+  redirect(`/onboarding?url=${encodeURIComponent(url!)}${name ? `&name=${encodeURIComponent(name)}` : ''}`);
 }
 
 export async function createProjectWithBriefAction(formData: FormData) {

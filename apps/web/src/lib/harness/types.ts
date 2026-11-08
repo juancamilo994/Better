@@ -336,3 +336,15 @@ export interface CreateRunInput {
   profile?: Profile;
   useLatestRubric?: boolean;
 }
+
+/** Brief suggested from the site itself (POST /api/brief-suggestion). */
+export interface BriefSuggestion {
+  url: string;
+  siteName: string;
+  description: string;
+  task: string;
+  audience: string;
+  feeling: string;
+  confidence: { task: number | null; audience: number | null; feeling: number | null };
+  source: 'subq' | 'keywords';
+}
