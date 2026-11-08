@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Better: V1 to V2</title>
+<meta name="description" content="One page, scored before and after: Better scores it, writes the fix prompt, the agent applies it, Better scores it again.">
+<style>
+:root{--bg:#f6f4ef;--fg:#1b1c1a;--muted:#6a6963;--card:#fff;--line:#e3dfd5;--bar:#ddd8cc;--fill:#2f5d8a;--bad:#b91c1c;--good:#15803d;--chip:#efebe2;--accent:#c2410c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111210;--fg:#ecebe6;--muted:#9d9b93;--card:#1b1c19;--line:#2f302c;--bar:#34352f;--fill:#7aa7d8;--bad:#f87171;--good:#4ade80;--chip:#24251f;--accent:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 ui-sans-serif,system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 16px 64px}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.02em}.brand a{text-decoration:none;color:inherit}
+h1{font-size:clamp(28px,4.2vw,44px);line-height:1.08;letter-spacing:-.03em;margin:14px 0 8px}
+.lede{color:var(--muted);max-width:760px;margin:0 0 10px}
+.brief{display:inline-block;background:var(--chip);border-radius:10px;padding:8px 12px;font-size:14px;margin:6px 0 22px}
+.vp{display:flex;gap:6px;margin:0 0 14px}.vp button{font:inherit;font-size:13px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:inherit;cursor:pointer}.vp button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.flow{display:grid;grid-template-columns:1fr 300px 1fr;gap:14px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+.card h2{margin:0;font-size:18px}.card .meta{color:var(--muted);font-size:13px;margin:2px 0 10px;overflow-wrap:anywhere}
+.shot{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line);background:var(--chip)}.shot.phone{object-fit:contain}
+.score{display:flex;align-items:baseline;gap:10px;margin:12px 0 8px}.score b{font-size:52px;line-height:1;letter-spacing:-.04em}.score span{color:var(--muted);font-size:13px}
+.up{font-weight:800;color:var(--good);font-size:20px}
+.bars{display:grid;gap:4px}.row{display:grid;grid-template-columns:140px 1fr 46px;gap:8px;align-items:center;font-size:13px}.row .t{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{height:9px;border-radius:5px;background:var(--bar);overflow:hidden}.fillb{display:block;height:100%;background:var(--fill)}.row.worse .fillb{background:var(--bad)}.row .v{text-align:right;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.chip{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--chip)}.chip.fail{color:var(--bad);font-weight:700}.chip.pass{color:var(--good)}.chip.unknown{color:var(--muted)}
+.mid{position:sticky;top:16px}.step{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.fix{border-top:1px solid var(--line);padding:9px 0;font-size:13px}.fix b{display:block}.fix span{color:var(--muted)}
+details{margin-top:8px}summary{cursor:pointer;font-weight:650;font-size:13px}pre{white-space:pre-wrap;font:11px/1.45 ui-monospace,Menlo,monospace;background:var(--chip);padding:10px;border-radius:10px;max-height:300px;overflow:auto}
+.arrow{text-align:center;color:var(--muted);font-size:13px;padding:8px 0}
+.agent{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--muted);margin-top:10px}
+.note{font-size:13px;color:var(--muted);margin-top:22px}
+@media (max-width:980px){.flow{grid-template-columns:1fr}.mid{position:static}}
+</style>
+</head>
+<body><div class="wrap">
+<div class="brand"><a href="../">Better</a></div>
+<h1>One page. Scored, fixed, scored again.</h1>
+<p class="lede">Better scores the page against the owner's goal, writes one prompt from the fixes you pick, your coding agent rebuilds it, and Better scores the result. Every number here came from the live engine.</p>
+<div class="brief" id="brief"></div>
+<div class="vp" id="vp"></div>
+<div class="flow" id="flow"></div>
+<p class="note" id="note"></p>
+</div>
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let D, vp = 'desktop';
+const fails = v => v.dealBreakers.filter(d => d.verdict === 'fail').length;
+function version(v, other, isV2) {
+  const s = v[vp]; const o = other[vp];
+  return `<section class="card">
+    <h2>${esc(v.label)}</h2><div class="meta">${esc(v.url)}</div>
+    <img class="shot${vp === 'mobile' ? ' phone' : ''}" src="${esc(v.images[vp])}" alt="${esc(v.label)}, ${vp}">
+    <div class="score"><b>${s.total}</b><span>/ 100 on ${vp === 'mobile' ? 'phone' : 'laptop'}</span>${isV2 && s.total > o.total ? `<span class="up">+${s.total - o.total}</span>` : ''}</div>
+    <div class="bars">${s.criteria.map((c, i) => `<div class="row${!isV2 && c.points !== null && o.criteria[i].points !== null && c.points < o.criteria[i].points ? ' worse' : ''}"><span class="t">${esc(c.title)}</span><span class="track"><span class="fillb" style="width:${c.points === null ? 0 : Math.round(100 * c.points / c.max)}%"></span></span><span class="v">${c.points === null ? 'n/a' : `${c.points}/${c.max}`}</span></div>`).join('')}</div>
+    <div class="chips">${s.dealBreakers.map(d => `<span class="chip ${d.verdict === 'fail' ? 'fail' : d.verdict === 'pass' ? 'pass' : 'unknown'}">${esc(d.id.replace(/_/g, ' ').toLowerCase())}: ${esc(d.verdict)}</span>`).join('')}</div>
+  </section>`;
+}
+function middle(v1) {
+  return `<aside class="card mid">
+    <div class="step">Step 2: pick fixes, copy the prompt</div>
+    <p style="margin:0 0 6px;font-size:14px">Better's top fixes for V1, with the evidence behind each:</p>
+    ${v1.fixes.map(f => `<div class="fix"><b>${esc(f.label)} <span>(${f.viewport === 'mobile' ? 'phone' : 'laptop'})</span></b><span>${esc(f.problem)}</span></div>`).join('')}
+    ${v1.prompt ? `<details><summary>The prompt Better wrote (${v1.prompt.length.toLocaleString()} chars)</summary><pre>${esc(v1.prompt)}</pre></details>` : ''}
+    <div class="agent">Step 3: paste into Cursor, Claude Code or Lovable. The agent rebuilds the page. Better never touches the code.</div>
+    <div class="arrow">Step 4: re-evaluate the same project</div>
+  </aside>`;
+}
+function render() {
+  const [v1, v2] = D.versions;
+  document.getElementById('flow').innerHTML = version(v1, v2, false) + middle(v1) + version(v2, v1, true);
+  document.getElementById('vp').innerHTML = ['desktop', 'mobile'].map(x => `<button aria-pressed="${x === vp}" data-vp="${x}">${x === 'desktop' ? 'Laptop' : 'Phone'}</button>`).join('');
+  document.querySelectorAll('#vp button').forEach(b => b.onclick = () => { vp = b.dataset.vp; render(); });
+}
+fetch('data/compare.json').then(r => r.json()).then(d => {
+  D = d; const b = d.versions[0].brief;
+  document.getElementById('brief').textContent = `Goal both versions are judged against: ${b.task}. For ${b.audience}. Should feel ${b.feeling}.`;
+  document.getElementById('note').textContent = `Recorded ${new Date(d.recordedAt).toLocaleString()} from the live engine (SubQ judge). V1 is a saved copy of the Craigslist front page; V2 is the rebuild at ${d.versions[1].url}. Verified accessibility failures cost 10 points each; "unknown" means no instrument exists yet for that check.`;
+  render();
+});
+</script>
+</body></html>
