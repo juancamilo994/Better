@@ -1,0 +1,15 @@
+{
+  "name": "better-evals",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end eval runner for Better: fresh harness + web app, visible browser, repeated scoring, HTML report.",
+  "scripts": {
+    "eval": "node run.mjs",
+    "eval:smoke": "node run.mjs --suite smoke",
+    "eval:core": "node run.mjs --suite core --judge subq",
+    "eval:list": "node run.mjs --list"
+  },
+  "dependencies": {
+    "playwright": "^1.65.0"
+  }
+}

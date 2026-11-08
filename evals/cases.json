@@ -1,0 +1,184 @@
+{
+  "brief": {
+    "task": "Book a beginner pottery class",
+    "audience": "City adults who have never tried ceramics",
+    "feeling": "Calm and welcoming",
+    "taste": "",
+    "avoid": "",
+    "brand": ""
+  },
+  "suites": {
+    "smoke": [
+      "ui-loop",
+      "improve-demo",
+      "honest-private",
+      "honest-unreachable"
+    ],
+    "core": [
+      "ui-loop",
+      "improve-demo",
+      "pair-typography",
+      "pair-contrast",
+      "pair-clutter",
+      "mobile-only",
+      "stability",
+      "honest-private",
+      "honest-unreachable"
+    ],
+    "full": [
+      "ui-loop",
+      "improve-demo",
+      "pair-typography",
+      "pair-contrast",
+      "pair-clutter",
+      "mobile-only",
+      "stability",
+      "honest-private",
+      "honest-unreachable",
+      "real-world"
+    ]
+  },
+  "cases": [
+    {
+      "id": "ui-loop",
+      "group": "The loop works",
+      "question": "Can a user get from a URL to a copyable fix prompt and back to a new score?",
+      "why": "This is the whole product. If any step breaks, nothing else matters.",
+      "kind": "ui-loop",
+      "expected": "Every step loads, at least one fix is offered, a prompt appears, the rerun shows up in the history, and the browser logs no errors."
+    },
+    {
+      "id": "improve-demo",
+      "group": "Fixing helps",
+      "question": "When a site gets fixed, does Better's score go up?",
+      "why": "The promise to users: apply our fixes, see your score improve. Uses the built-in demo site, which has a broken version and a fixed version.",
+      "kind": "improve-demo",
+      "expected": "After the fix, the sideways-scroll and small-text checks pass and the phone score goes up."
+    },
+    {
+      "id": "pair-typography",
+      "group": "Tells good from bad",
+      "question": "Does Better notice tiny, messy text?",
+      "why": "Same page twice. One has tiny text in a dozen sizes, the other is clean. If Better can't tell them apart, its typography advice is noise.",
+      "kind": "pair",
+      "bad": "typography-bad.html",
+      "badLabel": "Planted problem: tiny, messy text",
+      "good": "typography-clean.html",
+      "goodLabel": "Clean version",
+      "focus": [
+        "TYPOGRAPHY"
+      ],
+      "expected": "The page with tiny, messy text gets fewer Typography points and a lower total than its clean twin."
+    },
+    {
+      "id": "pair-contrast",
+      "group": "Tells good from bad",
+      "question": "Does Better catch text that's too faint to read?",
+      "why": "Low contrast is an accessibility deal-breaker. Elle's rubric caps any site that fails it at 49 out of 100.",
+      "kind": "pair",
+      "bad": "contrast-bad.html",
+      "badLabel": "Planted problem: faint grey text",
+      "good": "contrast-clean.html",
+      "goodLabel": "Clean version",
+      "focus": [],
+      "dealBreaker": "BODY_CONTRAST",
+      "expected": "Faint text trips the contrast deal-breaker on the broken page only, and the broken page gets the lower total."
+    },
+    {
+      "id": "pair-clutter",
+      "group": "Tells good from bad",
+      "question": "Does Better notice a cluttered, everything-at-once page?",
+      "why": "Clutter is the most common problem with AI-built sites. Better should mark down hierarchy and information density.",
+      "kind": "pair",
+      "bad": "clutter-bad.html",
+      "badLabel": "Planted problem: clutter, no focal point",
+      "good": "clutter-clean.html",
+      "goodLabel": "Clean version",
+      "focus": [
+        "HIER",
+        "DENSITY"
+      ],
+      "expected": "The cluttered page gets fewer Hierarchy and Information density points and a lower total."
+    },
+    {
+      "id": "mobile-only",
+      "group": "Phone vs desktop",
+      "question": "Does Better notice a page that only breaks on phones?",
+      "why": "This page looks fine on a laptop but scrolls sideways on a phone. Better should score the phone view lower instead of copying the desktop score.",
+      "kind": "mobile-only",
+      "page": "mobile-break.html",
+      "expected": "The sideways-scroll check fails on the phone only, the phone deal-breaker trips, and the phone view scores lower."
+    },
+    {
+      "id": "stability",
+      "group": "Consistent scores",
+      "question": "Does the same unchanged page get the same score every time?",
+      "why": "If scores wobble on their own, users can't tell whether their fix helped. Target: within 2 points.",
+      "kind": "stability",
+      "page": "typography-clean.html",
+      "minRepeats": 3,
+      "maxSpread": 2,
+      "expected": "Three runs on the same page land within 2 points of each other, with no failed AI calls."
+    },
+    {
+      "id": "honest-private",
+      "group": "Honest failures",
+      "question": "Does Better refuse to scan a private network address?",
+      "why": "Security: Better must never be usable to poke at internal networks.",
+      "kind": "honest",
+      "url": "http://10.0.0.1/",
+      "expectRejected": true,
+      "expected": "Better refuses before scanning, with a clear message."
+    },
+    {
+      "id": "honest-unreachable",
+      "group": "Honest failures",
+      "question": "When a site can't be reached, does Better say so instead of making up a score?",
+      "why": "A made-up score would destroy trust in every other score.",
+      "kind": "honest",
+      "url": "https://better-eval-does-not-exist.invalid/",
+      "expected": "Better says the site could not be reached and shows no score."
+    },
+    {
+      "id": "real-world",
+      "group": "Real sites",
+      "question": "How does Better rate real public sites? (Tracked over time, not pass or fail.)",
+      "why": "A polished site (Stripe) should beat a famously chaotic one (Arngren).",
+      "kind": "real-world",
+      "sites": [
+        {
+          "name": "bitzyspider.com",
+          "url": "https://bitzyspider.com/",
+          "brief": {
+            "task": "Learn who Yitzy is and get in touch",
+            "audience": "Employers and collaborators",
+            "feeling": "Interesting and creative"
+          }
+        },
+        {
+          "name": "stripe.com",
+          "url": "https://stripe.com/",
+          "brief": {
+            "task": "Start accepting payments",
+            "audience": "Founders and developers",
+            "feeling": "Trustworthy and modern"
+          }
+        },
+        {
+          "name": "arngren.net",
+          "url": "https://www.arngren.net/",
+          "brief": {
+            "task": "Find and buy a gadget",
+            "audience": "Norwegian hobby shoppers",
+            "feeling": "Fun and easy"
+          }
+        }
+      ],
+      "expectOrder": [
+        "stripe.com",
+        "arngren.net"
+      ],
+      "expected": "Recorded only. The polished site (Stripe) should score above the chaotic one (Arngren)."
+    }
+  ]
+}
