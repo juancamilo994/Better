@@ -1,42 +1,95 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-/* Better — "The Wall" (nocturnal marquee)
-   Source: Paper file "Better — App UI" + .impeccable/surfaces/apps-web.md
-   One accent only: amber is reserved for focus, deltas, and the seam handle. */
+/* Better — Elle's final UI (ported from the "UI base" Lovable build).
+   Light porcelain ground, deep-green primary, periwinkle score action,
+   oversized radii, Instrument Sans. The fake-mockup and unused option/sidebar
+   tokens from the prototype were dropped; fonts wire to next/font below. */
 
-@theme {
-  /* surfaces */
-  --color-ground: #0b0e13;
-  --color-surface: #151922;
-  --color-elevated: #1f2430;
-  --color-line: #2a303b;
-  --color-tile-dim: #10141b;
-
-  /* text */
-  --color-ink: #e6e6e8;
-  --color-fog: #a4a9b3;
-  --color-dim: #6b7280;
-
-  /* accent + semantics */
-  --color-amber: #ffc857;
-  --color-amber-ink: #0b0e13;
-  --color-live: #4ade80;
-  --color-danger: #f87171;
-
-  /* type */
-  --font-display: "Bebas Neue", "Arial Narrow", sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-
-  /* radii */
-  --radius-tile: 16px;
-  --radius-card: 12px;
-  --radius-chip: 8px;
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-panel: var(--panel);
+  --color-score-panel: var(--score-panel);
+  --color-url-entry: var(--url-entry);
+  --color-url-entry-border: var(--url-entry-border);
+  --color-score-action: var(--score-action);
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --shadow-device: var(--shadow-device);
 }
 
-body {
-  background: var(--color-ground);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+:root {
+  --radius: 1.75rem;
+  --background: oklch(0.96 0.003 140);
+  --foreground: oklch(0.16 0.01 140);
+  --card: oklch(0.95 0.015 100);
+  --card-foreground: oklch(0.16 0.01 140);
+  --popover: oklch(0.95 0.015 100);
+  --popover-foreground: oklch(0.16 0.01 140);
+  --primary: oklch(0.32 0.04 155);
+  --primary-foreground: oklch(0.96 0.015 100);
+  --secondary: oklch(0.72 0.07 160);
+  --secondary-foreground: oklch(0.16 0.01 140);
+  --muted: oklch(0.54 0.02 140);
+  --muted-foreground: oklch(0.36 0.02 140);
+  --accent: oklch(0.66 0.18 45);
+  --accent-foreground: oklch(0.16 0.01 140);
+  --destructive: oklch(0.6 0.2 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.16 0.01 140 / 15%);
+  --input: oklch(0.16 0.01 140 / 20%);
+  --ring: oklch(0.32 0.04 155);
+  --ink: oklch(0.14 0.005 140);
+  --ink-foreground: oklch(0.95 0.015 100);
+  --panel: oklch(0.52 0.022 140);
+  --score-panel: oklch(1 0 0);
+  --url-entry: oklch(0.94 0 0);
+  --url-entry-border: oklch(0.82 0 0);
+  --score-action: oklch(0.9 0.045 235);
+  --globe-surface: oklch(0.79 0.055 220);
+  --globe-light: oklch(0.99 0 0);
+  --shadow-device: 0 40px 80px -30px oklch(0.2 0.02 140 / 45%);
 }
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@utility animate-rise { animation: rise 0.6s cubic-bezier(.2,.8,.2,1) both; }
+@utility tracking-display { letter-spacing: -0.045em; line-height: 0.92; }

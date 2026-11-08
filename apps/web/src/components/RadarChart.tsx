@@ -1,14 +1,13 @@
 import { buildRadar, seriesPath, vertexPoint, type RadarChart as RadarData } from '@/lib/radar';
 import type { QualitySummary, Run, Viewport } from '@/lib/harness/types';
 
-// Functional shell: correct geometry and honest gaps; Paper decides the look.
 const SIZE = 340;
 const CX = SIZE / 2;
 const CY = SIZE / 2 + 6;
 const R = 108;
 const LABEL_R = R + 30;
 
-const SERIES_COLOR = { desktop: '#2563eb', mobile: '#0d9488' } as const;
+const SERIES_COLOR = { desktop: 'var(--primary)', mobile: 'var(--secondary)' } as const;
 
 export function RadarChart({
   run,
@@ -32,20 +31,20 @@ export function RadarChart({
 
   return (
     <figure>
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label="Score by rubric axis">
+      <svg viewBox={`-70 0 ${SIZE + 140} ${SIZE}`} role="img" aria-label="Score by rubric axis" className="mx-auto w-full max-w-md">
         {[0.25, 0.5, 0.75, 1].map(f => (
-          <polygon key={f} points={ring(f)} fill="none" stroke="#e5e7eb" strokeWidth="1" />
+          <polygon key={f} points={ring(f)} fill="none" style={{ stroke: 'var(--border)' }} strokeWidth="1" />
         ))}
         {chart.axes.map((a, i) => {
           const [x, y] = vertexPoint(i, n, 1, R, CX, CY);
-          return <line key={a.id} x1={CX} y1={CY} x2={x} y2={y} stroke="#e5e7eb" strokeWidth="1" />;
+          return <line key={a.id} x1={CX} y1={CY} x2={x} y2={y} style={{ stroke: 'var(--border)' }} strokeWidth="1" />;
         })}
         {ghostChart?.series.map(s => s.segments.length > 0 && (
           <path
             key={`ghost-${s.viewport}`}
             d={seriesPath(s, n, R, CX, CY)}
             fill="none"
-            stroke="#9ca3af"
+            style={{ stroke: 'var(--muted-foreground)' }}
             strokeWidth="1"
             strokeDasharray="3 3"
           />
@@ -72,16 +71,16 @@ export function RadarChart({
           const [x, y] = vertexPoint(i, n, 1, LABEL_R, CX, CY);
           const anchor = x < CX - 10 ? 'end' : x > CX + 10 ? 'start' : 'middle';
           const desk = chart.series[0]?.vertices[i];
-          const label = desk && desk.points !== null ? `${desk.points}/${a.max}` : '—';
+          const label = desk && desk.points !== null ? `${desk.points}/${desk.max}` : '—';
           return (
-            <text key={a.id} x={x} y={y} fontSize="10" textAnchor={anchor} fill="#374151">
+            <text key={a.id} x={x} y={y} fontSize="10" textAnchor={anchor} className="fill-foreground">
               <tspan fontWeight="600">{a.title}</tspan>
-              <tspan x={x} dy="12" fill={label === '—' ? '#9ca3af' : '#6b7280'}>{label}</tspan>
+              <tspan x={x} dy="12" className={label === '—' ? 'fill-muted' : 'fill-muted-foreground'}>{label}</tspan>
             </text>
           );
         })}
       </svg>
-      <figcaption>
+      <figcaption className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         {chart.series.map(s => (
           <span key={s.viewport}>
             <span style={{ color: SERIES_COLOR[s.viewport] }}>■</span> {s.viewport} {s.total.score}/{s.total.max}
